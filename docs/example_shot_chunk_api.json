@@ -1,0 +1,167 @@
+{
+  "1": {
+    "class_type": "LoadImage",
+    "inputs": {
+      "image": "01_big.png"
+    }
+  },
+  "2": {
+    "class_type": "Basic data handling: StringSplitDataList",
+    "inputs": {
+      "string": "2250,2250,2250,2250,2250,2250,2248,2248,2248,2248,2246,2246,2244,2244,2242,2242,2240,2240,2238,2238,2236,2234,2232,2232,2230,2228,2226,2224,2224,2222,2220,2218,2216,2214,2212,2210,2208,2206,2204,2202,2200,2196,2194,2192,2190,2188,2186,2184,2182,2180,2176,2174,2172,2170,2168,2166,2164,2162,2160,2158",
+      "sep": ",",
+      "maxsplit": -1
+    }
+  },
+  "3": {
+    "class_type": "Basic data handling: CastToInt",
+    "inputs": {
+      "input": [
+        "2",
+        0
+      ]
+    }
+  },
+  "4": {
+    "class_type": "Basic data handling: StringSplitDataList",
+    "inputs": {
+      "string": "4000,4000,4000,4000,3998,3998,3998,3996,3996,3994,3994,3992,3990,3990,3988,3986,3984,3982,3980,3978,3974,3972,3970,3966,3964,3962,3958,3956,3952,3948,3946,3942,3938,3936,3932,3928,3924,3920,3918,3914,3910,3906,3902,3898,3894,3890,3886,3882,3878,3874,3870,3866,3862,3858,3854,3850,3846,3842,3840,3836",
+      "sep": ",",
+      "maxsplit": -1
+    }
+  },
+  "5": {
+    "class_type": "Basic data handling: CastToInt",
+    "inputs": {
+      "input": [
+        "4",
+        0
+      ]
+    }
+  },
+  "6": {
+    "class_type": "Basic data handling: StringSplitDataList",
+    "inputs": {
+      "string": "375,375,375,375,375,375,376,376,376,376,377,377,378,378,379,379,380,380,381,381,382,383,384,384,385,386,387,388,388,389,390,391,392,393,394,395,396,397,398,399,400,402,403,404,405,406,407,408,409,410,412,413,414,415,416,417,418,419,420,421",
+      "sep": ",",
+      "maxsplit": -1
+    }
+  },
+  "7": {
+    "class_type": "Basic data handling: CastToInt",
+    "inputs": {
+      "input": [
+        "6",
+        0
+      ]
+    }
+  },
+  "8": {
+    "class_type": "Basic data handling: StringSplitDataList",
+    "inputs": {
+      "string": "0,0,0,0,1,1,1,2,2,3,3,4,5,5,6,7,8,9,10,11,13,14,15,17,18,19,21,22,24,26,27,29,31,32,34,36,38,40,41,43,45,47,49,51,53,55,57,59,61,63,65,67,69,71,73,75,77,79,80,82",
+      "sep": ",",
+      "maxsplit": -1
+    }
+  },
+  "9": {
+    "class_type": "Basic data handling: CastToInt",
+    "inputs": {
+      "input": [
+        "8",
+        0
+      ]
+    }
+  },
+  "10": {
+    "class_type": "ImageCrop+",
+    "inputs": {
+      "image": [
+        "1",
+        0
+      ],
+      "width": [
+        "3",
+        0
+      ],
+      "height": [
+        "5",
+        0
+      ],
+      "position": "top-left",
+      "x_offset": [
+        "7",
+        0
+      ],
+      "y_offset": [
+        "9",
+        0
+      ]
+    }
+  },
+  "11": {
+    "class_type": "ImageResize+",
+    "inputs": {
+      "image": [
+        "10",
+        0
+      ],
+      "width": 1080,
+      "height": 1920,
+      "interpolation": "lanczos",
+      "method": "stretch",
+      "condition": "always",
+      "multiple_of": 0
+    }
+  },
+  "13": {
+    "class_type": "DrawText+",
+    "inputs": {
+      "text": "The war did not end in 1974.",
+      "font": "ShareTechMono-Regular.ttf",
+      "size": 44,
+      "color": "#FFFFFF",
+      "background_color": "#00000000",
+      "shadow_distance": 2,
+      "shadow_blur": 2,
+      "shadow_color": "#000000",
+      "horizontal_align": "center",
+      "vertical_align": "bottom",
+      "offset_x": 0,
+      "offset_y": -420,
+      "direction": "ltr",
+      "img_composite": [
+        "11",
+        0
+      ]
+    }
+  },
+  "12": {
+    "class_type": "ImageListToBatch+",
+    "inputs": {
+      "image": [
+        "13",
+        0
+      ]
+    }
+  },
+  "14": {
+    "class_type": "VHS_VideoCombine",
+    "inputs": {
+      "images": [
+        "12",
+        0
+      ],
+      "frame_rate": 30,
+      "loop_count": 0,
+      "filename_prefix": "memoacts_demo_en/shot_01_c0",
+      "format": "video/h264-mp4",
+      "pix_fmt": "yuv420p",
+      "crf": 19,
+      "save_metadata": true,
+      "trim_to_audio": false,
+      "pingpong": false,
+      "save_output": true
+    }
+  }
+}

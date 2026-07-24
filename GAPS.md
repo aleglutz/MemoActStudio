@@ -1,0 +1,9 @@
+# GAPS.md — stock-node compromises hit during P1
+
+Per SPEC.md §0/§6.1.5: every point where a stock / Cloud-supported node forces a compromise is recorded **as it is hit**. This file is the P2 backlog for `comfyui-memoacts`.
+
+| # | Function | Stock-node compromise | Impact in the PoC | P2 implication |
+|---|---|---|---|---|
+| 1 | Subtitle burn-in, non-Latin (RU, **HY** — mandated course languages) | `DrawText+` (essentials) ships exactly one font, Share Tech Mono, **Latin-only** — verified 2026-07-24: RU and HY render as tofu boxes. No font-install path on Cloud (pack dir read-only); no libass anywhere | Cloud-side text rendering works for EN only. Workaround: subtitle strips pre-rendered outside the graph (PIL + Noto Sans/Noto Sans Armenian) as per-shot transparent PNGs, composited via core `ImageCompositeMasked`; EN track may use `DrawText+` live for the teaching demo | `nodes_subs.py` with ffmpeg libass + explicit font control is confirmed necessary, not speculative; Armenian shaping test moves to P2 acceptance |
+| 2 | Per-shot memory | List-map crux **passed** (not a compromise), but one 240-frame shot costs ~11.5 GiB server RAM — source-res crop intermediates are held for the whole shot before resize collects | Chunk shots to ≤60 frames on Cloud (RAM unknown); per-shot RAM scales with *source* image resolution, not output | P2 motion engine renders frame-streaming through ffmpeg, never materialising a shot as tensors — this measurement is the justification |
+| 3 | Subtitle overlay on batches | `DrawText+` with a **batched** `img_composite` collapses the batch to a single frame (verified 2026-07-24: 60-frame chunk → 1-frame segment) | Run `DrawText+` in **list domain** (before `ImageListToBatch+`) — same text mapped per frame. Works, but renders text N times: full demo render 139 s vs 54 s without text (~2.6×) | `nodes_subs.py` burns subtitles once per segment via libass, not per frame — second justification after #1 |

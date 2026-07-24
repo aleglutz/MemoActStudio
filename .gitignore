@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+projects/*/generated/
+projects/*/reel_p1.mp4
+projects/demo_en/narration.wav
+projects/demo_en/images/
