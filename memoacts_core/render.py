@@ -119,6 +119,7 @@ def _escape_filter_path(path: Path) -> str:
 
 def encode(frames: Iterable[Image.Image], out_path: Path, fps: int, *,
            narration: Path | None = None, ass: Path | None = None,
+           fontsdir: Path | None = None,
            crf: int = 19, out_w: int = OUT_W, out_h: int = OUT_H) -> Path:
     """Stream frames into one ffmpeg process and write a finished MP4.
 
@@ -140,7 +141,13 @@ def encode(frames: Iterable[Image.Image], out_path: Path, fps: int, *,
     if narration is not None:
         cmd += ["-i", str(narration)]
     if ass is not None:
-        cmd += ["-vf", f"subtitles='{_escape_filter_path(ass)}'"]
+        # fontsdir lets libass find a font shipped with the project instead of
+        # one installed system-wide — which matters for the September rented
+        # machines, where nothing should depend on a manual font install.
+        vf = f"subtitles='{_escape_filter_path(ass)}'"
+        if fontsdir is not None:
+            vf += f":fontsdir='{_escape_filter_path(fontsdir)}'"
+        cmd += ["-vf", vf]
     cmd += ["-c:v", "libx264", "-crf", str(crf), "-pix_fmt", "yuv420p",
             "-preset", "medium"]
     if narration is not None:
@@ -188,9 +195,10 @@ def encode(frames: Iterable[Image.Image], out_path: Path, fps: int, *,
 
 def render_reel(shots: Iterable[ShotRender], out_path: Path, fps: int, *,
                 narration: Path | None = None, ass: Path | None = None,
+                fontsdir: Path | None = None,
                 crf: int = 19, out_w: int = OUT_W, out_h: int = OUT_H,
                 on_upscale: str = "warn") -> Path:
     """Whole reel, one pass, constant memory. The P1 concat step disappears."""
     return encode(reel_frames(shots, out_w, out_h, on_upscale), out_path, fps,
-                  narration=narration, ass=ass, crf=crf,
+                  narration=narration, ass=ass, fontsdir=fontsdir, crf=crf,
                   out_w=out_w, out_h=out_h)
