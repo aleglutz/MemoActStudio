@@ -61,35 +61,83 @@ node_id: "", node_type: "", traceback: []}`, and `execution_status` is `null` �
 the worker died before reporting a single node. No OOM attribution, no node
 error. The same graph shape succeeded at 11, 15 and 36 frames.
 
-**Not memory.** The obvious hypothesis fails: `shot_03_c0` is 60 frames of the
-*800×1000* source, whose crop intermediates total ~400 MB — nowhere near a
-limit. Failure tracks execution *duration*, not source resolution: every job
-that ran ≥34 s died, both that ran ≤8 s survived.
+### Diagnosis, after a sequential probe — **a per-job execution time limit**
 
-**⚠ The experiment is confounded, and the confound is mine.** Versus this
-morning's successful single 36-frame run, two variables changed at once: chunk
-size *and* concurrency (8 jobs submitted together, queue waits of 1.5–240 s show
-heavy contention). The data cannot separate "long jobs die" from "jobs die under
-concurrent load". The clean next test is resubmitting the failed chunks **one at
-a time**.
+The batch run confounded two variables (chunk size *and* concurrency), so the
+failed chunks were resubmitted **one at a time**, queue waits ~2 s, nothing else
+running. That isolates it:
 
-**Cost of the failure.** Failed jobs still burn GPU: 264 s of execution produced
-**nothing**. With the two successes (14.2 s), the batch spent **278 s to deliver
-26 frames**. The projection had been ~215 s for 379 frames. Cumulative for the
-day: ~299 s of execution, **62 of 415 frames** actually rendered.
+| Chunk | Frames | Source crop | Exec | Outcome |
+|---|---|---|---|---|
+| shot_02_c2 | 11 | 1268×2256 | **5.56 s** | ✅ |
+| shot_01_c1 | 36 | 2250×4000 | **19.53 s** | ✅ *(morning, also alone)* |
+| shot_03_c0 | 60 | 562×1000 | **20.72 s** | ✅ |
+| shot_02_c0 | 60 | 1268×2256 | **44.21 s** | ❌ |
+| shot_01_c0 | 60 | 2250×4000 | **49.37 s** | ❌ |
+
+**The cliff is execution duration, somewhere between ~21 s and ~44 s.**
+Everything under ~21 s completed; everything over ~44 s died, alone or not.
+`49.37 s` appears twice across independent runs, suggesting a hard cap near
+~50 s with earlier reclaims under load.
+
+This single mechanism explains *all* of the day's data, including the batch:
+contention inflated execution (jobs needing ~20 s took 34–49 s) and pushed them
+over the same cliff. Concurrency is not a separate failure mode — it is a way of
+*causing* the duration failure.
+
+**Two hypotheses were tested and killed along the way**, both recorded because
+the reasoning is reusable:
+- *Memory / source resolution.* Dead: 60 frames of the 800×1000 source (~400 MB
+  of crop intermediates) succeeded, while 60 frames of the 4000×2400 source
+  (~2 GB) failed — but so did the 36-frame run of the *largest* source succeed
+  at ~3.9 GB. Size does not order the outcomes; duration does.
+- *Frame count as such.* Dead: 60 frames passes or fails depending on the
+  source, because source resolution sets the *time per frame*, not the limit.
+
+**Consequence: the ≤60-frame chunk ceiling is wrong for Cloud, for a reason
+unrelated to why it was chosen.** It was picked from local RAM measurement
+(#2). Cloud needs a *time* budget: size chunks so predicted execution stays
+**under ~20 s**, which from the successful runs means roughly
+
+| Source crop | s/frame | Safe chunk |
+|---|---|---|
+| 562×1000 | 0.345 | ~55 frames |
+| 2250×4000 | 0.542 | ~35 frames |
+
+i.e. **~30 frames as a conservative universal default, not 60** — and properly,
+a per-shot figure derived from source resolution. Note the per-frame rates come
+only from *successful* runs; a killed job's execution time does not measure the
+work it needed.
+
+**Cost.** Failed jobs still burn GPU — a killed job is charged for the time it
+ran and delivers nothing. Day total: **~419 s of execution for 122 of 415 frames
+rendered (29 %)**, across the morning single run (20.7 s), the 8-job batch
+(278 s, 26 frames) and the sequential probe (120 s, 71 frames).
+
+**Still unrendered: `shot_01_c0`, `shot_02_c0`, `shot_02_c1`, `shot_04_c0`,
+`shot_04_c1`** — 293 frames. Every one is ≥53 frames, i.e. all sit in the
+danger zone. They cannot simply be resubmitted; the shot table needs
+regenerating at a smaller `--max-chunk` first.
 
 **Consequence for the August intensive — this is the real damage.** Part 1 puts
 **30 students on Cloud** (SPEC §0). Eight concurrent jobs from one account
-produced a 75 % failure rate. A seminar where students submit at the same time
-is precisely this load pattern, at four times the scale. Before any Cloud
-teaching session:
-- establish whether the failure is duration-driven, concurrency-driven, or both;
-- if duration: cap the teaching exercise well under the observed cliff (≤36
-  frames survived; ≥34 s of execution did not) — which means very short reels;
-- if concurrency: student submissions must be staggered, and a seminar plan that
-  assumes simultaneous rendering is not viable;
-- either way, the facilitator needs a recovery story, because students *will*
-  hit this and the error message names no cause they can act on.
+produced a 75 % failure rate, because contention pushed ordinary jobs past the
+time limit. A seminar where students render simultaneously is that load pattern
+at four times the scale. Required before any Cloud teaching session:
+
+- **Re-chunk to a time budget, not a frame count.** Target ≤20 s predicted
+  execution per job (~30 frames typical). This is a change to
+  `generate_shots.py --max-chunk` and to the exported graphs.
+- **Assume contention makes it worse.** The safe chunk size measured on an idle
+  account is not safe with 30 students submitting; leave real headroom, and
+  treat any seminar plan that assumes simultaneous rendering as unvalidated
+  until tested at something like cohort scale.
+- **Give the facilitator a recovery story.** "RIP to the server your workflow was
+  running on" names no cause a student can act on, attributes to no node, and
+  looks identical to a platform outage. Students will hit it.
+- **Note it costs credits to fail.** A room of students retrying failed renders
+  burns budget with nothing to show, which is a Sachkosten risk as much as a
+  teaching one.
 
 **What did hold up:** the cost model. Per-frame execution across all successful
 runs is consistent — 0.593 s (11 fr), 0.513 s (15 fr), 0.542 s (36 fr). The
