@@ -14,6 +14,27 @@ Withdrawn rows are struck through rather than deleted — the evidence stays use
 | 4 | Getting source images onto Cloud | `POST /api/upload/image` is **content-addressed**: it ignores the requested `filename` and stores the file under its SHA-256 digest (verified 2026-07-28: `01_big.png` → `a003f3b5…c5e.png`). Bare-filename `LoadImage` references therefore never resolve on Cloud | Every exported chunk graph must have its `LoadImage.image` rewritten to the digest the upload returned, *after* upload — the graph is not submittable as exported. Breaks the "upload under the exact filename" assumption in `manifest.json` and the hand-build path in `docs/PARTICIPANT_GRAPH_RECIPE.md` (a facilitator uploading via the Cloud UI gets a hash they must paste back into every `LoadImage`) | Submission tooling owns an upload→digest map and patches graphs before submit; the manifest should carry a `cloud_name` field per image. Facilitator recipe needs an explicit "your filename will change" step |
 | 5 | Run instrumentation on Cloud | Cloud deliberately zeroes resource telemetry: `/api/system_stats` returns `devices: []`, `ram_total: 0`, `ram_free: 0`, and `/api/jobs/{prompt_id}` carries **no memory field**. No credits/usage endpoint is exposed to the MCP token either | **Peak RAM is not measurable on Cloud** — the ~11.5 GiB figure in #2 and the ≤60-frame chunk ceiling stay justified by *local* measurement only, never confirmed against Cloud hardware. Cost must be derived from wall-clock: `/api/jobs/{prompt_id}` does give `create_time` / `execution_start_time` / `execution_end_time` | Budget modelling (SPEC §6.1.4) uses execution-window seconds as the GPU-second proxy; the RAM ceiling that drives chunk sizing remains an unvalidated assumption on Cloud and must be re-derived empirically (bisect chunk size until OOM) if chunking is ever relaxed |
 
+## P2 findings — carried over from P1 code, found while building the pack
+
+**Resolution guard was incomplete (found 2026-07-28, fixed in `render.py`).**
+`schedule.compute` clamps the zoom *rate* so motion never digs below the output
+width, and flags `clamped`. But a source can be too small **before any zoom**:
+demo_en's `03_small.png` (800×1000) yields a 562px-wide 9:16 window against a
+1080px output, so every frame is enlarged 1.92× — and P1 did this silently, in
+both the local and Cloud renders. Clamping the rate cannot fix it; the rate had
+already been clamped to zero, which is also why that shot renders completely
+static (344 of 415 unique frames, not 415).
+
+This violated a stated non-negotiable ("never silently upscale", CLAUDE.md /
+SPEC §5.2). `render.py` now enforces the SPEC-specified policy at render time —
+`on_upscale = warn` (default) | `error` | `allow`.
+
+Consequence to keep in view: **the guard is only as good as the shot's image
+assignment.** Warning at render time is late — by then the creator has already
+chosen that image for that shot. The P2 GUI should surface `max_zoom` per shot
+*at selection time* (SPEC §5.2 wants a live preview anyway), so the warning
+becomes a choice rather than a report.
+
 ## Cloud validation run — 2026-07-28 (P1_GRAPH verification step 4)
 
 First real Cloud execution of the frozen chain. `shot_01_c1` (36 frames), submitted
