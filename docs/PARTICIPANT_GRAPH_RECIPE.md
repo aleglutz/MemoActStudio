@@ -33,12 +33,22 @@ confirmed present on Cloud (`SURVEY.md §2.1`).
 | 6–9 | **CastToInt** ×4 (Basic data handling) | wire each from its split node |
 | 10 | **🔧 Image Crop** (`ImageCrop+`, essentials) | `position=top-left`; convert `width,height,x_offset,y_offset` to inputs (right-click → convert widget to input) and wire w→width, h→height, x→x_offset, y→y_offset; image ← node 1 |
 | 11 | **🔧 Image Resize** (`ImageResize+`) | 1080×1920, `lanczos`, `stretch`, `always`, multiple_of 0; image ← 10 |
-| 12 | **🔧 Draw Text** (`DrawText+`) | shot text (EN track only — see GAPS #1), size 44, white, shadow 2/2, align center/bottom, offset_y −420; `img_composite` ← 11. **Must sit here, before batching** (GAPS #3) |
+| 12 | **🔧 Draw Text** (`DrawText+`) | shot text (English — the only language, SPEC v3.1), size 44, white, shadow 2/2, align center/bottom, offset_y −420; `img_composite` ← 11. **Must sit here, before batching** (GAPS #3) |
 | 13 | **🔧 Image List To Batch** (`ImageListToBatch+`) | image ← 12 |
 | 14 | **Video Combine** (VHS) | frame_rate 30, format `video/h264-mp4`, pix_fmt `yuv420p`, crf 19, filename_prefix `reel/shot_NN_cK`, no audio |
 
-RU/HY variant: replace 12 with **Load Image** (subtitle strip PNG, uploaded) →
-**ImageCompositeMasked** (core; destination ← 11, source ← strip, mask ← strip alpha).
+> **⚠ Your uploaded filename will change.** Comfy Cloud stores every upload under
+> a long hexadecimal (SHA-256) name — upload `01_big.png` and it becomes something
+> like `a003f3b5….png`. **Node 1 must reference that hashed name, not your
+> original filename** — a typed original filename fails with "invalid image file".
+> Always pick the file from the Load Image dropdown instead of typing a name.
+> This bites once per image and is the likeliest way this recipe goes wrong.
+> (`GAPS.md` #4 — verified via the upload API 2026-07-28; **how the Cloud UI
+> labels the file in that dropdown is not yet verified — check this before the
+> seminar**, since it decides whether participants can recognise their own image.)
+
+*(The former RU/HY subtitle-strip variant is removed — SPEC v3.1 makes the
+project English-only, and `DrawText+` covers English directly.)*
 
 ## 2. Duplicate per chunk
 

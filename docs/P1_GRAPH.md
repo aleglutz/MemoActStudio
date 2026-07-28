@@ -1,6 +1,13 @@
 # P1 graph — Cloud PoC from stock nodes
 
-Status: **approved 2026-07-24** (Option 1, verification order, EN subtitle track, generator as `memoacts_core` seed) **with three amendments applied below:** memory-aware chain (no whole-reel batches), HY+RU font testing, frozen generator contract. Per SPEC §0/§6.1. Companion to SURVEY.md §2 (coverage verdicts).
+Status: **approved 2026-07-24** (Option 1, verification order, EN subtitle track, generator as `memoacts_core` seed) **with three amendments applied:** memory-aware chain (no whole-reel batches), HY+RU font testing, frozen generator contract. Per SPEC §0/§6.1. Companion to SURVEY.md §2 (coverage verdicts).
+
+**Updated 2026-07-28.** Verification step 4 (Cloud) **passed** — list domain and
+list-map broadcast both transfer, so fallbacks 1 and 2 stay unused; see `GAPS.md`
+§"Cloud validation run". Two Cloud gaps found (#4 hashed uploads, #5 no
+telemetry). Separately, **SPEC v3.1** makes the project English-only, which
+retires the HY+RU font amendment above — `GAPS.md` #1 is withdrawn and
+`DrawText+` is now the intended subtitle path rather than a compromise.
 
 **Memory rule (governs the whole graph):** IMAGE tensors are float32 `[B,H,W,3]` — one 1080×1920 frame ≈ 25 MB, 240 frames ≈ 6 GB, the full 4500-frame reel ≈ 112 GB. Never materialise more than one shot (chunked to ~60 frames if needed) as a batch; never build one batch for the whole reel.
 
@@ -70,7 +77,12 @@ One global per-frame table (frame → image index + crop rect) driving a single 
    **✅ DONE 2026-07-24** on `projects/demo_en` (4 shots, TTS narration, one deliberately under-resolved image): generator → 9 chunked segments (`tools/run_p1_local.py`, 139 s) → concat+mux (`tools/assemble_reel.py`) → **415 frames, 13.833 s vs narration 13.831 s**; verbatim digits on screen; `[CLAMPED]`/`[DIGITS]`/confidence flags all exercised. One fix recorded: no `-shortest` in the mux (drops the final frame when audio is ms-shorter than video). RU alignment validation still pending real Sidur narration (no RU TTS voice on this machine).
 4. Cloud: same graph, one validation run → measure GPU-seconds → credit budget ×cohort vs Sachkosten (§6.1.4).
    **Pre-flight ✅ 2026-07-28:** all 8 node classes of the frozen chain exist in the Cloud per-pack subsets (`SURVEY.md §2.1`) — no substitution needed. Ready-to-load graphs for every `demo_en` chunk: `python tools/run_p1_local.py --project projects/demo_en --export-all <dir>` (offline, no server). Order on the day: **one chunk first** (`shot_01_c1`, 36 frames — the cheapest that still exercises list-map + crop + text + encode), read peak RAM/GPU-s, only then the remaining 8.
-5. Cloud: Sidur 18-shot facilitator run.
+5. Cloud: full 9-chunk `demo_en` run → credit measurement for SPEC §6.1.4.
+   **Blocked on the `GAPS.md` #4 digest rewrite** — exported graphs reference bare
+   filenames and Cloud stores uploads under their SHA-256.
+6. ~~Cloud: Sidur 18-shot facilitator run.~~ **Retargeted (SPEC v3.1):** Sidur is
+   no longer a dev fixture. This step becomes the facilitator run on the new
+   **English** project, awaited from the project owner.
 6. Every stock-node compromise hit → `GAPS.md` at the moment it's hit.
 
 ## Fallbacks if the crux fails (in order)

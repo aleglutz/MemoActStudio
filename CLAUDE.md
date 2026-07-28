@@ -12,7 +12,12 @@ A ComfyUI-based production workflow replicating the subset of CapCut functionali
 
 **P1 — Cloud PoC.** Assemble a working reel graph on Comfy Cloud from stock / Cloud-supported nodes only. Reduced functionality is expected and acceptable. Deadline: demonstrable at seminar 4–5 of the running online intensive.
 
-Not P1: the custom node pack, six effect families, multilingual burn-in, video fragments, per-shot GUI editing. Those are P2, scoped by `GAPS.md`.
+Not P1: the custom node pack, six effect families, video fragments, per-shot GUI editing. Those are P2, scoped by `GAPS.md`.
+
+**Scope corrections, SPEC v3.1 (2026-07-28) — read §changelog before planning:**
+- **English only.** Translation (RU/DE/HY) is out of project scope — handled separately with local DeepL + whisperX. No multilingual burn-in, no Armenian, no RU normalisation.
+- **`projects/sidur` is not a dev fixture.** A new English script + narration is awaited from the project owner; until then `projects/demo_en` is the only working fixture.
+- **Students run on Comfy Cloud, permanently** — they cannot be made to depend on personal hardware. Consequence to keep in view: `comfyui-memoacts` cannot be installed on Cloud, so under the current plan the pack never reaches students. Unresolved, SPEC §10.
 
 ## Priority principle
 
@@ -43,13 +48,14 @@ Not P1: the custom node pack, six effect families, multilingual burn-in, video f
 | `SURVEY.md` | Existing-node survey + Comfy Cloud coverage, adopt/wrap/build decisions |
 | `ALIGNERS.md` | Aligner evaluation. Decided: stable-ts primary, behind an `Aligner` interface |
 | `GAPS.md` | Every compromise forced by stock nodes in P1 — this is the P2 backlog |
-| `HARDENING.md` | Deferred portability/offline items for September |
-| `projects/sidur/` | Reference test project (RU narration, ~18 shots, archival stills) |
+| `HARDENING.md` | Deferred portability items (much reduced — students are on Cloud, not local) |
+| `projects/demo_en/` | Working fixture (4 synthetic stills, 13.8 s) — pipeline mechanics only |
+| `projects/sidur/` | Reference material only — **not** a dev or acceptance fixture (SPEC v3.1) |
 
 ## Non-negotiables
 
 - **Open source end to end** on anything production-critical — the grant (Auswärtiges Amt, Zuwendungsbescheid) commits the project to open-source AI tools. Non-commercial-licensed components are tolerable for demos and fallbacks only, and every adopted component's licence goes in `SURVEY.md`.
-- **Subtitles are never transcribed.** The script is ground truth; alignment computes timings only. Verbatim script text reaches the screen.
+- **Subtitles are never transcribed.** The script is ground truth; alignment computes timings only. Verbatim script text reaches the screen. (This survives v3.1 unchanged — it is *why* the workflow beats CapCut's auto-subtitles, independent of language count.)
 - **Never silently upscale** an image beyond its native resolution.
 - **Narration audio passes through untouched** — never re-encoded avoidably, never time-stretched.
 - Cloud runs cost credits per GPU-second. Iterate locally, validate on Cloud.

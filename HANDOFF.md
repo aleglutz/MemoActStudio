@@ -1,80 +1,79 @@
-# HANDOFF — session state as of 2026-07-28 (updated end of day)
+# HANDOFF — session state as of 2026-07-28 (evening; supersedes the morning version)
 
-Read CLAUDE.md and SPEC.md first as always. This file is the delta: exactly
-where the last session stopped and what the next session does first. Delete or
-update this file once its contents are stale.
+Read `CLAUDE.md` and `SPEC.md` first as always — **SPEC is now v3.1 and its
+changelog is the most important thing in this file's vicinity.** This file is the
+delta: where the last session stopped and what the next one does first.
 
-## Where we are
+## What changed today
 
-P1 (Cloud PoC) is **done locally, end to end** and committed at `9310ccd`:
+**1. First Comfy Cloud validation run — PASSED** (commit `16634f7`).
 
-- `tools/generate_shots.py` → shots.json (frozen schema 1.0, `docs/SHOTS_SCHEMA.md`)
-  + crop CSVs + per-shot report, stable-ts alignment, digit normalisation,
-  resolution guard.
-- `tools/run_p1_local.py` builds/submits the verified stock-node chain
-  (LoadImage → StringSplitDataList/CastToInt ×4 → ImageCrop+ (list) →
-  ImageResize+ 1080×1920 → DrawText+ in **list domain** → ImageListToBatch+ →
-  VHS_VideoCombine, ≤60-frame chunks).
-- `tools/assemble_reel.py` concats segments + muxes narration outside the graph
-  (no `-shortest` — it drops the last frame).
-- Proven on `projects/demo_en`: 415 frames / 13.833 s vs narration 13.831 s.
-- All compromises recorded: `GAPS.md` #1 (DrawText+ is Latin-only → RU/HY via
-  PNG strips), #2 (~11.5 GiB RAM per 240-frame shot → chunking), #3 (DrawText+
-  collapses batches → list domain, ~2.6× render cost).
-- Facilitator hand-build recipe for the Cloud UI: `docs/PARTICIPANT_GRAPH_RECIPE.md`
-  (companion: `docs/example_shot_chunk_api.json`, the exact exported graph).
+`shot_01_c1`, 36 frames, prompt `1cd9ef5f-e7bd-422e-be3c-27450af063e7`. Both
+hypothesised failure modes came back **negative**, so neither `P1_GRAPH` fallback
+is needed:
 
-Added 2026-07-28 (Cloud prep, done without Cloud access):
+- 36 frames out, not 1 → Cloud honours the **list domain**; the `GAPS.md` #3
+  workaround transfers intact.
+- All 36 frames unique (framemd5) with visible zoom → the **list-map broadcast**
+  transfers; coarse-step motion not needed.
+- Output 1080×1920 / 30 fps / 1.200 s / h264-yuv420p, EN burn-in correct.
+- Cost: **20.724 s** execution window, 0.542 s/frame, 2.709 s queue wait.
 
-- **Cloud node-availability pre-flight passed** — all 8 node classes of the
-  frozen chain are in the Cloud per-pack *subsets*, checked node by node
-  (`SURVEY.md §2.1`). No substitution needed; the fallbacks in P1_GRAPH.md stay
-  live only for execution semantics, not availability.
-- `run_p1_local.py --export-all <dir>` writes every chunk graph + a
-  `manifest.json` (images, per-chunk text, frame counts) **with no server
-  running** — so the Cloud run needs no local ComfyUI. Verified on demo_en:
-  9 chunks, 415 frames (matches the local render), and `shot_01_c0.json` is
-  byte-identical to the frozen `docs/example_shot_chunk_api.json`.
+Two Cloud-only gaps found and recorded — `GAPS.md` **#4** (uploads are
+content-addressed: `/api/upload/image` ignores the filename and stores under the
+SHA-256 digest, so exported graphs are **not submittable unchanged**) and **#5**
+(Cloud zeroes resource telemetry — peak RAM is unmeasurable there; only
+`GET /api/jobs/{prompt_id}` gives timing).
 
-## Next task (the only open P1 item)
+**2. Roadmap corrected by the project owner → SPEC v3.1.** Three decisions:
 
-**Cloud validation run + credit measurement** (P1_GRAPH.md verification steps 4–5):
+- **English only.** Translation (RU/DE/HY) leaves project scope entirely — done
+  separately with local DeepL + whisperX. Knock-ons applied across the repo:
+  `GAPS.md` #1 withdrawn (Latin-only font stops being a blocker and becomes the
+  intended path); SPEC §2.4 "languages are passes" withdrawn; §5.5 multilingual
+  out; RU number-inflection open item closed; `ALIGNERS.md` rescoped to EN
+  (stable-ts now very likely sufficient, bake-off demoted to confirmation,
+  MMS_FA dropped); `HARDENING.md` Armenian items dropped.
+- **`projects/sidur` is not a dev fixture** — it was a planning example. A new
+  **English** script + narration is awaited from the project owner; acceptance
+  §6.2 retargets to it. `projects/demo_en` is the only working fixture meanwhile.
+- **Students run on Comfy Cloud, permanently** — no dependence on personal
+  hardware. This voided most of `HARDENING.md` (USB model distribution,
+  participant install audit) and raised a live architectural question, below.
 
-1. Submit ONE `demo_en` shot-chunk on Comfy Cloud — confirms the list-map
-   mechanism transfers (availability is already confirmed, `SURVEY.md §2.1`).
-   Use `shot_01_c1` (36 frames): cheapest chunk that still exercises
-   list-map + crop + resize + text + encode.
-2. Then the full 9-segment demo_en set, once. Record GPU-seconds from the
-   dashboard → budget ×cohort vs Sachkosten (SPEC §6.1.4).
-3. Then the Sidur 18-shot facilitator run (needs real Sidur narration for the
-   RU alignment validation — no RU TTS voice on this machine).
+## Open question blocking the P2 scope freeze
 
-First moves in the fresh session, so nothing is re-derived:
+`comfyui-memoacts` **cannot be installed on Comfy Cloud**. With students now
+permanently on Cloud, the pack under the current plan serves the video-series
+production only and **never reaches the students** — their capability ceiling
+stays at the P1 stock-node feature set, essentially permanently. Either that
+split is accepted deliberately, or a third track is needed (growing
+student-facing capability *within* stock nodes). Recorded as SPEC §10; **asked of
+the project owner, not yet answered.** It changes what `GAPS.md` is a backlog
+*for*, so do not freeze P2 scope before it is settled.
 
-- Graphs are already built and byte-verified — do **not** rebuild them.
-  `projects/demo_en/cloud_graphs/` (gitignored): 9 chunk graphs +
-  `manifest.json` listing the 4 images to upload and per-chunk text/frames.
-- Upload the 4 images so `LoadImage` resolves them by the exact filenames in
-  the manifest (`01_big.png`, `02_wide.png`, `03_small.png`, `04_tall.png`);
-  the graphs reference bare filenames.
-- Submit `shot_01_c1.json` alone (36 frames). Check: 36 frames out, not 1
-  (a 1-frame result = the GAPS #3 batch-collapse, i.e. Cloud runs DrawText+
-  outside list domain) and motion is present (a static segment = list-map
-  broadcast did not transfer → P1_GRAPH fallback 1, coarse-step motion).
-- Record GPU-seconds and peak RAM for that chunk before submitting the rest.
+Second, lower-priority open item: does the **September offline workshop** still
+exist? If yes, the struck `HARDENING.md` items must be revived wholesale.
 
-**Blocker RESOLVED 2026-07-28:** Comfy Cloud MCP
-(`https://cloud.comfy.org/mcp`, HTTP) is authenticated —
-`claude mcp get comfy-cloud` reports **✔ Connected**. Scope is *local*, private
-to the MemoActStudio project (the worktree inherits it); it is a CLI-added
-server, so it appears in Claude Code's `/mcp` panel, **not** in claude.ai
-connector settings — that is where it "goes missing".
+## Next task
 
-The session that authenticated it still had no `mcp__comfy-cloud__*` tools: the
-tool registry is built at startup. **Start a fresh session to get the tools.**
-If `mcp__comfy-cloud__*` still does not appear, fall back to the Cloud UI per
-`docs/PARTICIPANT_GRAPH_RECIPE.md` — every input for that is already exported
-(`projects/demo_en/cloud_graphs/`, see `--export-all` above).
+**Full 9-chunk `demo_en` Cloud run** (P1_GRAPH verification step 5) — the credit
+measurement that feeds SPEC §6.1.4.
+
+- The 4 images are **already uploaded**; digests are in the run log of the
+  2026-07-28 session (re-upload is cheap and idempotent with `overwrite=true`).
+- **8 remaining graphs still need the #4 digest rewrite** before submission —
+  `projects/demo_en/cloud_graphs/*.json` reference bare filenames and will fail.
+  Worth teaching `run_p1_local.py --export-all` to emit a `cloud_name` field, or
+  adding a small patch step to the submission path.
+- Current projection, **unconfirmed**: ~225 s of graph execution for 415 frames
+  plus ~9× per-chunk overhead ≈ 4–4.5 min billable. Extrapolated from one
+  36-frame sample (the *smallest* chunk) — do not feed it into the cohort budget
+  before the real run.
+- `docs/PARTICIPANT_GRAPH_RECIPE.md` needs a fix for #4 — a facilitator uploading
+  via the Cloud UI gets a hash they must paste into every `LoadImage`.
+
+Then: the new English project, once its script + narration arrive.
 
 ## Local environment notes
 
@@ -83,12 +82,20 @@ If `mcp__comfy-cloud__*` still does not appear, fall back to the Cloud UI per
   `C:\Users\Aleg\beehAIve\ComfyUI-Easy-Install\ComfyUI-Easy-Install`:
   `.\python_embeded\python.exe -I ComfyUI\main.py --windows-standalone-build`
   → serves on 127.0.0.1:8188; check with GET /system_stats.
+- Not needed for Cloud work: `--export-all` runs offline, and submission goes
+  through the `comfy-cloud` MCP.
 - Hand-added locally (not in a lockfile anywhere): `ComfyUI_essentials` cloned
   into custom_nodes (heavy requirements deliberately NOT installed);
   `stable-ts` + `num2words` in the **embedded** python.
+- `comfy-cloud` MCP is authenticated and working. It is a CLI-added **local
+  scope** server → appears in Claude Code's `/mcp` panel, never in claude.ai
+  connector settings. The session that authenticates it has no
+  `mcp__comfy-cloud__*` tools; the registry is fixed at startup, so a fresh
+  session is required after authenticating.
 
 ## Deferred validations (documented, not tasks)
 
-- RU alignment quality on real Sidur narration (ALIGNERS.md bake-off protocol).
-- Armenian rendering via the PNG-strip path (GAPS.md #1).
-- HARDENING.md holds all offline/portability items for September (P3).
+- ~~RU alignment quality on real Sidur narration~~ — dropped with v3.1.
+- ~~Armenian rendering via the PNG-strip path~~ — dropped with v3.1.
+- EN aligner confirmation run on the new narration, once it arrives
+  (`ALIGNERS.md` bake-off protocol, now a confirmation rather than a selection).

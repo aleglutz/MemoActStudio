@@ -1,9 +1,15 @@
-# MemoActs Reel Renderer — Technical Specification v3
+# MemoActs Reel Renderer — Technical Specification v3.1
 
 **For:** Claude Code
 **Project:** MemoActs 2026 · Phase 7 "How do wars end?" + Online Intensive curriculum
-**Date:** 2026-07-24 · supersedes v2, the v2.1 review patch, and the PoC-target addendum (both merged here; originals archived in `docs/archive/`)
+**Date:** 2026-07-28 · supersedes v3 (2026-07-24), which superseded v2, the v2.1 review patch, and the PoC-target addendum (originals archived in `docs/archive/`)
 **Language:** English (repo language; course instruction language is English)
+
+**Changelog v3 → v3.1 (roadmap correction, 2026-07-28):** three scope decisions by the project owner —
+
+1. **Subtitles are English-only, for an English script and English narration.** Translation into RU / DE / HY is **removed from this project's scope entirely** — it is a separate task performed outside this workflow with local DeepL + whisperX. Consequences: §2.4 "visuals render once, languages are passes" is withdrawn; §5.5 multilingual burn-in is out of scope; §5.1 alignment is EN-only; RU inflected number normalisation (§10) is closed as not-applicable; Armenian rendering and alignment leave the plan (§9.6, `HARDENING.md`). `GAPS.md` #1 is rescoped accordingly — `DrawText+`'s Latin-only font stops being a blocker and becomes the intended path.
+2. **`projects/sidur` is no longer the development test project.** It was a planning example, not a dev fixture. A new **English** script + narration recording will be supplied by the project owner; acceptance §6.2 retargets to it. Until it arrives, `projects/demo_en` remains the only working fixture.
+3. **Comfy Cloud is the students' environment, by decision and not by convenience.** Online participants cannot be made to depend on their own hardware — local installs risk system differences and conflicts that have nothing to do with the course. This makes Cloud the delivery target for everything student-facing, and turns the pack's Cloud-incompatibility (§3) into a live roadmap question rather than a P3 footnote — see §10.
 
 **Changelog v2 → v3 (per v2.1 patch + PoC addendum):** priority principle added — working PoC beats portability (§0); build order reversed: P1 Cloud PoC from stock nodes precedes the custom pack, PoC target decided as option (b) Comfy Cloud stock-node graph (§0, §3); prepared-inputs model for P1 alignment (§4); stable-ts confirmed as primary aligner behind an `Aligner` interface, bake-off narrowed to stable-ts vs whisperx on RU+EN, Armenian off the critical path (§5.1); text-normalisation pre-pass required before alignment (§5.1); `shot_lead_ms` control added (§5.2); acceptance criteria split into P1 and P2 sets, §6.8 amended — aligner speech model permitted, no GPU/diffusion checkpoints (§6); NC licences tolerable for demos/fallbacks only (§3); working-method principle added (§2.6); `GAPS.md` and `HARDENING.md` introduced (§0, §3).
 
@@ -43,7 +49,7 @@ Not a general automation tool. Not headless. The creator works in a GUI, sees th
 | Manual keyframes for zoom / Ken Burns | Motion presets per shot, selectable + tunable, previewable |
 | ~20 effects (grain / texture / frame / grade / shake / sharpen) | Six parameterised effect families with named presets |
 | Video texture layer over full timeline | Looping texture layer node |
-| Auto-subtitles (limited, error-prone, paid quota) | Known-text alignment + editable subtitle track, unlimited, multilingual |
+| Auto-subtitles (limited, error-prone, paid quota) | Known-text alignment + editable subtitle track, unlimited, **English only** (v3.1) |
 | Sound effects from built-in library | CC0 library and/or generated in ComfyUI |
 | Export MP4 H.264 1080×1920 30 fps 12 Mbps | Encode node with platform profiles |
 | Video clips on the timeline (trim, speed, reframe) | Video shot support: trim + 9:16 reframe |
@@ -57,7 +63,7 @@ Out of coverage deliberately: CapCut's trend-sound library, direct platform post
 1. **GUI for judgement, automation for mechanics.** Every creative decision is visible and reversible in the ComfyUI graph; every mechanical consequence (keyframe math, subtitle timing, format juggling) is computed.
 2. **The narration is the master clock — as a default, not a cage.** Shot boundaries are *proposed* from sentence alignment and then human-editable. The creator can split, merge, and nudge boundaries; the system recomputes downstream.
 3. **Mixed media is native.** A shot holds either a still (Ken Burns motion) or a video fragment (trim + reframe + speed). One timeline model for both. This covers the MBK capitulation-ceremony footage (1280×800 → 9:16) alongside archival stills. *(P2 — video fragments are not in the P1 PoC.)*
-4. **Visuals render once, languages are passes.** Subtitle burn-in per language over a single visual intermediate (EN + DE, HY, FR, RU).
+4. ~~**Visuals render once, languages are passes.**~~ **Withdrawn in v3.1.** Translation is out of project scope (handled separately with local DeepL + whisperX), so there is one language — English — and one burn-in pass. Keep the *shape* of the design honest anyway: nothing may hard-code English or fuse text into the visual intermediate in a way that would forbid a second pass, because re-adding languages must stay a scope decision rather than a rewrite.
 5. **Open-source end to end.** The Zuwendungsbescheid commits the project to open-source AI tools; every model and component in the workflow must be open-weight / open-source or replaceable by one. Non-commercially-licensed components (e.g. MMS weights, the ComfyUI-Whisper teaching node) are **tolerable for demonstration and fallback use only** — nothing on the critical path of any production function may depend on them. Every adopted component's licence is recorded in `SURVEY.md`.
 6. **The spec is not authoritative on verifiable facts.** v1 listed `aeneas` as the preferred aligner; the survey correctly established it as a dead end. Anything in this spec marked "verify" or "evaluate" is a hypothesis to test, not an instruction to follow. Surfacing a contradiction is a deliverable, not a delay.
 
@@ -116,6 +122,10 @@ Record each as: available / partially available / absent → and for absent, the
    - **Cloud:** connect the official **Comfy Cloud MCP** (`cloud.comfy.org/mcp`, OAuth from Claude Code; public beta) to build and run the P1 PoC and teaching graphs on Cloud GPUs — the same environment the intensive uses. Note beta caveats: generated assets may lack embedded workflow metadata; complex graphs may need retries.
 4. Keep `SURVEY.md` findings (existing nodes, Cloud coverage) in the repo root next to this spec.
 
+**Students run on Comfy Cloud — decided in v3.1, and it is a constraint, not a preference.** Online participants cannot be made to depend on their own hardware: system differences and local install conflicts are failure modes that have nothing to do with the course, and there is no support channel for sixteen unknown Windows machines. Everything student-facing therefore ships as a Cloud workflow.
+
+This has a consequence the roadmap must state plainly rather than discover later: **the `comfyui-memoacts` pack cannot be installed on Comfy Cloud**, so under the current plan the pack serves the video-series production (local, one operator) and **never reaches the students at all**. The students' capability ceiling is whatever stock Cloud nodes can do — which is the P1 feature set, essentially permanently. Registry publication (§9.8) is the only route by which that could change, and it is explicitly not relied upon. See §10 open items.
+
 **Deployment strategy (verified 2026-07-24, decided):** Comfy Cloud supports only a curated list of popular custom nodes — arbitrary packs such as `comfyui-memoacts` cannot be installed there. Hence:
 
 - **P1** runs on **Comfy Cloud, stock/Cloud-supported nodes only** (§0). Alignment runs outside the graph (§4).
@@ -171,8 +181,8 @@ We align *known text* to audio (forced alignment), which is precisely what produ
   # Span: {index: int, t_start: float, t_end: float, confidence: float, estimated: bool}
   ```
 
-- **Alignment runs only for the language of the narration.** Translated subtitle tracks (DE, FR, HY, RU) inherit shot boundaries from that single alignment — block-matched translations timed to the same shots (§5.5), not independently aligned audio. Narration languages in scope: **RU** (Sidur reference project) and **EN** (course). Armenian *alignment* is off the critical path (noted in `HARDENING.md`); Armenian *rendering* (font coverage, libass shaping) still must be verified (§5.5, backlog).
-- **Normalisation before alignment (engine-independent).** Digits, dates and abbreviations must be expanded to spoken form before the text is handed to the aligner — "1974" → «тысяча девятьсот семьдесят четвёртом», "18" → «восемнадцати». The normalised text is used **for alignment only**; the verbatim script is what reaches the screen and the `.srt`/`.ass` files. Russian requires case and number inflection, so a bare `num2words` call is insufficient — evaluate the approach and document it. Rationale: dates are the dominant error class in historical content and the Sidur script carries them in roughly every second sentence (1974, 1979, 1941, 1970-е); unexpanded digits are where alignment will drift, regardless of engine. This pre-pass matters in P1 too — it runs wherever `shots.json` is generated.
+- **One language: English (v3.1).** Narration and script are English; there is exactly one alignment run and one subtitle track. Translation into RU / DE / HY happens outside this project (local DeepL + whisperX) and imposes no requirement here — no block-matched translation files, no per-language passes, no shot-boundary inheritance to maintain. Armenian alignment and rendering leave the plan entirely.
+- **Normalisation before alignment (engine-independent).** Digits, dates and abbreviations must be expanded to spoken form before the text is handed to the aligner — "1974" → "nineteen seventy-four", "18" → "eighteen". The normalised text is used **for alignment only**; the verbatim script is what reaches the screen and the `.srt`/`.ass` files. Rationale: dates are the dominant error class in historical content, and unexpanded digits are where alignment drifts regardless of engine. **English makes this tractable** — `num2words` is sufficient, and the v3 open item about Russian case/number inflection is closed as not-applicable. Note that English years are read in pair form ("nineteen seventy-four", not "one thousand nine hundred seventy-four"), which `num2words` does not do by default — that is the one case worth handling explicitly. This pre-pass matters in P1 too: it runs wherever `shots.json` is generated.
 - Alignment failure on a shot → proportional fallback + `timing: estimated` flag, never a failed run. Mis-normalisation degrades the same way.
 - **Human-editable is a requirement, not a feature:** boundaries adjustable in the GUI (and in `shots.json` by hand); downstream nodes recompute on change.
 - Separately, prepare `teaching_subs.json`: a showcase of existing ComfyUI subtitling workflows (ASR-based) for the curriculum — participants should see both approaches and understand when known-text alignment beats transcription and vice versa.
@@ -207,9 +217,9 @@ The reference creator's "~20 effects that work" are six families: **grain** (9 o
 
 `.ass` generation from the shot table; burn-in via ffmpeg libass; `.srt` sidecars. Style fully configurable; neutral default (the reference creator's exact style: resolved as not needed). Safe-zone margins per platform, configurable, with a `--safe-zone-overlay` debug view; verify current platform guidance before fixing defaults.
 
-Multilingual: `script.<lang>.md` block-matched to source (validate counts, fail loudly); one visual render, N burn-in passes; all language tracks inherit the narration alignment's shot boundaries (§5.1) — no per-language alignment. Renders CapCut's 2-per-month quota irrelevant and makes the 5-language course output near-free.
+**Multilingual burn-in: out of scope (v3.1).** Translation is a separate task outside this workflow (local DeepL + whisperX). No `script.<lang>.md` block-matching, no N-pass burn-in. The unlimited-and-free property still holds against CapCut's 2-per-month quota — it just applies to one language.
 
-Font: needs EN/DE/FR/RU/HY coverage — backlog research item; test Armenian rendering specifically before the intensive.
+Font: **Latin/English coverage only.** This is the one requirement `DrawText+`'s bundled Share Tech Mono already satisfies, which is why `GAPS.md` #1 stops being a blocker. Armenian shaping and the EN/DE/FR/RU/HY coverage research leave the backlog.
 
 ### 5.6 Audio
 
@@ -241,7 +251,7 @@ Deliberately **not** required in P1: the six effect families, multilingual burn-
 
 ### 6.2 P2 — production pack
 
-Test project: `projects/sidur` — RU narration, ~18 shots, 30–40 mixed-format stills, 2.5 min; second pass: same project + one video fragment (KAPFILM excerpt) to exercise mixed media.
+Test project (**retargeted in v3.1**): a new **English** script + narration recording supplied by the project owner — awaited as of 2026-07-28. `projects/sidur` was a planning example, never a dev fixture, and is **not** used for development or acceptance; it stays in the repo as reference material only. Until the English project arrives, `projects/demo_en` (4 synthetic stills, 4 shots, 13.8 s) is the only working fixture — sufficient for pipeline mechanics, insufficient for acceptance. Second pass: the same English project + one video fragment (KAPFILM excerpt) to exercise mixed media.
 
 1. Opening `reel_stills.json` in ComfyUI, loading the Sidur assets, and running with **zero per-shot edits** produces a playable 1080×1920 MP4 matching narration duration ±0.2 s.
 2. Changing one shot's image and motion preset in the GUI and re-running re-renders **without touching any other shot's configuration**.
@@ -278,7 +288,7 @@ New in v3: RU digit/date normalisation quality (§5.1) — the dominant drift so
 3. **Image-to-sentence suggestion** (CLIP similarity) — suggestion only, never automatic.
 4. **Script extraction helper** for mixed-content source docs (post text + captions + script).
 5. **Cover-frame export** for the designer; optionally a generation path — *open question: Ideogram is proprietary, which cuts against the project's open-source commitment; prefer an open-weight image model or keep covers with the designer.*
-6. **Font coverage research** (EN/DE/FR/RU/HY) — Armenian rendering verified before the intensive.
+6. ~~**Font coverage research** (EN/DE/FR/RU/HY) — Armenian rendering verified before the intensive.~~ **Dropped in v3.1** — English only; Share Tech Mono covers it. Revive only if translation ever re-enters scope.
 7. Branch B teaching graphs (restoration / colourisation / img2vid) — governed by the ethics module; never in a published reel without a disclosed intervention statement.
 8. **Publish `comfyui-memoacts` to the ComfyUI Registry** (P3) — open-source commitment + the only route toward eventual Comfy Cloud support; after the pack stabilises, not before September.
 
@@ -296,5 +306,8 @@ New in v3: RU digit/date normalisation quality (§5.1) — the dominant drift so
 - [x] Comfy Cloud custom-node feasibility — resolved 2026-07-24: curated list only, arbitrary packs not installable. Deployment split per §3. Cloud-coverage survey per function: `SURVEY.md` (gating deliverable for P1 scope, §3).
 - [ ] SFX — resolved as dual-path (§5.6); procurement/generation evaluation before the intensive.
 - [ ] Safe-zone values — verify current Reels/TikTok/Shorts UI overlay guidance before fixing defaults. *(Context: platform UIs draw buttons/captions over the bottom and right edges of the video; subtitles must sit inside the uncovered region.)*
-- [ ] RU text normalisation approach (inflected number expansion, §5.1) — evaluate and document; a bare `num2words` call is insufficient.
+- [x] RU text normalisation (inflected number expansion) — **closed in v3.1 as not-applicable.** English only; `num2words` suffices, with year-pair reading ("nineteen seventy-four") as the one explicit case (§5.1).
 - [ ] KAPFILM footage — in scope via mixed workflow (§2.3, §5.2), P2; no separate pipeline decision needed.
+- [ ] **Who is P2 for? (opened in v3.1, blocking the P2 scope freeze.)** §3 now states that students are permanently on Cloud and the pack cannot be installed there. So `comfyui-memoacts` serves the video-series production only, and the students' ceiling stays at the P1 stock-node feature set. Either that split is accepted deliberately (the pack is a production tool; the course teaches the reduced Cloud workflow), or a third track is needed: growing student-facing capability *within* Cloud's stock nodes — which is a different and considerably more constrained engineering problem than writing the pack. Decide before P2 scope is frozen; the answer changes what `GAPS.md` is a backlog *for*.
+- [ ] English narration + script for the retargeted test project (§6.2) — awaited from the project owner; P2 acceptance cannot be evaluated until it exists.
+- [ ] **Does the September offline workshop still exist?** v3.1 moved *online* students to Cloud, which voided most of `HARDENING.md` (USB model distribution, participant install audit, museum-Wi-Fi contention). Those items were written for an in-person, local-machine delivery. If that workshop is still planned, they must be revived wholesale; if it is folded into the Cloud delivery, `HARDENING.md` shrinks to the facilitator machine plus the local-vs-Cloud parity log. Not urgent, but it decides whether P3 is a real phase.

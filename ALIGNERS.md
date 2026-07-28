@@ -1,6 +1,14 @@
-# ALIGNERS.md — §5.1 aligner evaluation (RU + EN)
+# ALIGNERS.md — §5.1 aligner evaluation (English only)
 
-Date: 2026-07-24. Status: **desk evaluation + recommendation for review; empirical bake-off on Sidur narration is the required next step before the choice is frozen.**
+Date: 2026-07-24, **rescoped 2026-07-28 (SPEC v3.1).** Status: **stable-ts recommended; bake-off retargeted and substantially de-risked.**
+
+> **v3.1 rescope.** The project is English-only — translation moved out of scope, and `projects/sidur` is no longer the dev fixture. This removes most of what made the aligner choice hard:
+> - **Russian is no longer a requirement.** RU boundary accuracy was the discriminator that justified keeping whisperx in the running; on English every candidate is at its strongest.
+> - **Armenian is gone**, so MMS_FA's 1100-language coverage — its main advantage — no longer buys anything. Its CC-BY-NC weights were always a licence problem (§2.5). It drops to a distant fallback.
+> - **RU inflected number expansion is gone** (SPEC §10, closed). English `num2words` suffices, modulo year-pair reading.
+> - **The bake-off material changes**: the Sidur RU narration is replaced by the forthcoming English script + narration (SPEC §6.2), not yet delivered.
+>
+> Net effect: **stable-ts is now very likely sufficient and the bake-off is a confirmation, not a selection.** Do not let it block implementation — the `Aligner` interface (§5.1) already makes the engine swappable.
 
 ## Problem restated
 
@@ -42,10 +50,14 @@ Right *idea* (known-text DTW alignment, no ASR), wrong decade: last release 2017
 
 ## Bake-off protocol (next step, before freezing)
 
-1. Material: Sidur RU narration (2.5 min, ~18 sentence boundaries) + one EN clip of similar length; hand-mark boundaries once (±1 frame) as reference.
-2. Run stable-ts `align()` (base + small models, CPU), whisperx, MMS_FA on identical input.
-3. Metrics: per-boundary absolute error (median/p95), digit/name-adjacent boundary errors specifically, wall-clock on CPU laptop, install steps counted on clean Windows venv.
-4. Accept if p95 boundary error ≤ 150 ms and CPU runtime ≤ audio duration; else escalate to next candidate.
+**Retargeted 2026-07-28** — English material, and now a confirmation run rather than a selection.
+
+1. Material: the forthcoming **English** narration + script (SPEC §6.2), awaited from the project owner; hand-mark boundaries once (±1 frame) as reference.
+2. Run stable-ts `align()` (base + small models, CPU). Add whisperx **only if stable-ts fails the threshold** — on English there is no longer a reason to pay for the sequence-matching layer up front. MMS_FA is dropped from the bake-off (its multilingual advantage is moot and its weights are NC).
+3. Metrics: per-boundary absolute error (median/p95), digit/date-adjacent boundary errors specifically, wall-clock on CPU.
+4. Accept if p95 boundary error ≤ 150 ms and CPU runtime ≤ audio duration; else escalate to whisperx.
+
+Note the environment shift (SPEC v3.1 §3): students run on Cloud, where alignment cannot run at all (no aligner node exists) — so this engine runs **only** on the facilitator's and the production machine, per the prepared-inputs model (§4). Participant install weight, which drove much of the original comparison, is no longer a criterion.
 
 ## Decision points for review
 
