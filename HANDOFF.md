@@ -78,11 +78,57 @@ and booked* before they can be provisioned. `GAPS.md` #2 (~11.5 GiB per 240-fram
 shot, scaling with source resolution) is the sizing input; no GPU is required by
 construction (SPEC §6.2.8).
 
+## P2 progress (started 2026-07-28)
+
+The core library now covers every must-have module's logic; only the ComfyUI
+node layer is missing.
+
+| Module | State |
+|---|---|
+| `memoacts_core/align.py`, `normalize.py`, `project.py`, `schedule.py` | pre-existing (P1 generator) |
+| `memoacts_core/render.py` | **new** — frame-streaming motion engine, GAPS #2 |
+| `memoacts_core/subs.py` | **new** — `.ass`/`.srt`, GAPS #3 resolved |
+| `tools/render_reel.py` | **new** — whole pipeline downstream of alignment, one pass |
+| `assets/fonts/` | **new** — Share Tech Mono + OFL, no longer depends on essentials |
+| V3 node wrappers | **not started** — blocked, see below |
+
+Measured on demo_en (415 frames, 13.833 s, drift +1 ms vs narration):
+
+- **0.98 GiB peak RAM** (python + ffmpeg) vs P1's ~11.5 GiB per 240-frame shot.
+  Chunking and the external concat step are both gone.
+- **25 s render, 61 ms/frame.** CPU-bound — this, not RAM, is what sizes the
+  rented machines.
+- **Subtitles free**: 23.0 s with libass vs 23.1 s without, against P1's
+  139 s vs 54 s (~2.6×). Cost is per cue now, not per frame.
+
+Two defects found and fixed while building, both live in P1 output:
+`normalize.py` read years as cardinals ("one thousand, nine hundred and
+seventy-four" for 1974) against a narrator saying "nineteen seventy-four"; and
+the resolution guard clamped the zoom *rate* but let a too-small source be
+enlarged silently (demo_en's 800×1000 → 1.92×), violating a non-negotiable.
+`render.py` now enforces `on_upscale = warn|error|allow`.
+
+**Blocked:** the `comfyui-custom-node-skills` plugin is installed as a
+marketplace but not enabled, so its 9 skills are not loaded. CLAUDE.md requires
+using them for node work rather than reconstructing the V3 API from memory.
+Enable it from an interactive `claude` terminal (`/plugin`) before starting the
+node layer; the skill files are readable at
+`~/.claude/plugins/marketplaces/comfyui-custom-node-skills/plugins/comfyui-custom-nodes/skills/`
+as a fallback.
+
 ## Next task
 
-**Full 9-chunk `demo_en` Cloud run** (P1_GRAPH verification step 5) — the credit
-measurement that feeds SPEC §6.1.4. This closes P1. **Then stop adding to P1**
-and start the pack: P2's September deadline no longer leaves room for P1 polish.
+Two open threads, in priority order:
+
+1. **The node layer** (`nodes_align/shot/subs/encode.py`) — once the plugin is
+   enabled. The core is ready to wrap; this is the remaining September must-have.
+2. **Full 9-chunk `demo_en` Cloud run** (P1_GRAPH verification step 5) — the
+   credit measurement that feeds SPEC §6.1.4, and the last open P1 item. Needs
+   the `GAPS.md` #4 digest rewrite on 8 graphs first. **Not yet authorised** —
+   costs credits, and the numbers from the single-chunk run were the agreed
+   checkpoint. Ask before submitting.
+
+Do not add further scope to P1 beyond (2): P2's September deadline has no slack.
 
 - The 4 images are **already uploaded**; digests are in the run log of the
   2026-07-28 session (re-upload is cheap and idempotent with `overwrite=true`).
