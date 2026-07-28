@@ -54,9 +54,10 @@ def load_source(path: Path) -> Image.Image:
 
 @dataclass
 class ShotRender:
-    """One shot: a still plus the per-frame crop rects computed for it."""
+    """One shot: a still, its per-frame crop rects, and an optional effect stack."""
     image: Path
     schedule: ShotSchedule
+    effects: "EffectStack | None" = None
 
 
 def _check_upscale(shot: ShotRender, out_w: int, policy: str) -> None:
@@ -81,8 +82,8 @@ def _check_upscale(shot: ShotRender, out_w: int, policy: str) -> None:
 
 
 def shot_frames(shot: ShotRender, out_w: int = OUT_W, out_h: int = OUT_H,
-                on_upscale: str = "warn") -> Iterator[Image.Image]:
-    """Yield the shot's frames one at a time, cropped and scaled to output size.
+                on_upscale: str = "warn", fps: int = 30) -> Iterator[Image.Image]:
+    """Yield the shot's frames one at a time, cropped, scaled and graded.
 
     The source stays open for the whole shot (one decode, not one per frame);
     each yielded frame is an independent image the caller is expected to drop
@@ -90,20 +91,47 @@ def shot_frames(shot: ShotRender, out_w: int = OUT_W, out_h: int = OUT_H,
 
     `on_upscale` is the SPEC §5.2 guard policy: "warn" (default), "error" to
     refuse the shot outright, or "allow" to enlarge knowingly and silently.
+
+    Shake is applied here rather than in the effect pipeline: it offsets the
+    crop window inside the source, so it costs nothing and cannot expose an
+    empty edge (see memoacts_core.effects).
     """
     if on_upscale not in ("warn", "error", "allow"):
         raise ValueError(f"on_upscale must be warn|error|allow, got {on_upscale!r}")
     _check_upscale(shot, out_w, on_upscale)
+
     src = load_source(shot.image)
+    src_w, src_h = src.size
     s = shot.schedule
-    for x, y, w, h in zip(s.xs, s.ys, s.ws, s.hs):
-        yield src.crop((x, y, x + w, y + h)).resize((out_w, out_h), RESAMPLE)
+    n = len(s.ws)
+
+    offsets = [(0, 0)] * n
+    pipeline = None
+    if shot.effects is not None:
+        from .effects import EffectPipeline, shake_offsets
+        if shot.effects.shake is not None:
+            offsets = shake_offsets(shot.effects.shake, n, fps)
+        pipeline = EffectPipeline(shot.effects, out_w, out_h)
+
+    try:
+        for i, (x, y, w, h) in enumerate(zip(s.xs, s.ys, s.ws, s.hs)):
+            dx, dy = offsets[i]
+            # Clamp into the source: at the edge the shake flattens rather than
+            # sliding past the image and producing a black border.
+            x = min(max(x + dx, 0), max(src_w - w, 0))
+            y = min(max(y + dy, 0), max(src_h - h, 0))
+            frame = src.crop((x, y, x + w, y + h)).resize((out_w, out_h), RESAMPLE)
+            yield frame if pipeline is None else pipeline.apply(frame, i)
+    finally:
+        if pipeline is not None:
+            pipeline.close()
 
 
 def reel_frames(shots: Iterable[ShotRender], out_w: int = OUT_W,
-                out_h: int = OUT_H, on_upscale: str = "warn") -> Iterator[Image.Image]:
+                out_h: int = OUT_H, on_upscale: str = "warn",
+                fps: int = 30) -> Iterator[Image.Image]:
     for shot in shots:
-        yield from shot_frames(shot, out_w, out_h, on_upscale)
+        yield from shot_frames(shot, out_w, out_h, on_upscale, fps)
 
 
 def _escape_filter_path(path: Path) -> str:
@@ -119,7 +147,8 @@ def _escape_filter_path(path: Path) -> str:
 
 def encode(frames: Iterable[Image.Image], out_path: Path, fps: int, *,
            narration: Path | None = None, ass: Path | None = None,
-           fontsdir: Path | None = None,
+           fontsdir: Path | None = None, tune: str | None = None,
+           max_mbps: float | None = 12.0,
            crf: int = 19, out_w: int = OUT_W, out_h: int = OUT_H) -> Path:
     """Stream frames into one ffmpeg process and write a finished MP4.
 
@@ -158,6 +187,19 @@ def encode(frames: Iterable[Image.Image], out_path: Path, fps: int, *,
         cmd += ["-vf", vf]
     cmd += ["-c:v", "libx264", "-crf", str(crf), "-pix_fmt", "yuv420p",
             "-preset", "medium"]
+    if tune:
+        # `-tune grain` exists precisely for this: film grain is high-frequency
+        # noise that H.264 cannot model, so at CRF 19 the encoder spends its
+        # whole budget preserving individual particles. Measured on demo_en, a
+        # grainy 13.8 s reel came out at 178 MB (~103 Mbps) against 1.9 MB
+        # ungraded — the tune keeps the grain reading right at a fraction of it.
+        cmd += ["-tune", tune]
+    if max_mbps:
+        # SPEC §5.7 fixes the delivery target at 12 Mbps. CRF alone is
+        # quality-targeted and has no ceiling, so cap it: without this a grain
+        # preset silently produces a file no platform will accept.
+        kbit = int(max_mbps * 1000)
+        cmd += ["-maxrate", f"{kbit}k", "-bufsize", f"{kbit * 2}k"]
     if narration is not None:
         cmd += ["-map", "0:v", "-map", "1:a", "-c:a", "aac", "-b:a", "192k"]
     cmd += ["-movflags", "+faststart", str(out_path)]
@@ -203,10 +245,17 @@ def encode(frames: Iterable[Image.Image], out_path: Path, fps: int, *,
 
 def render_reel(shots: Iterable[ShotRender], out_path: Path, fps: int, *,
                 narration: Path | None = None, ass: Path | None = None,
-                fontsdir: Path | None = None,
+                fontsdir: Path | None = None, max_mbps: float | None = 12.0,
                 crf: int = 19, out_w: int = OUT_W, out_h: int = OUT_H,
                 on_upscale: str = "warn") -> Path:
     """Whole reel, one pass, constant memory. The P1 concat step disappears."""
-    return encode(reel_frames(shots, out_w, out_h, on_upscale), out_path, fps,
-                  narration=narration, ass=ass, fontsdir=fontsdir, crf=crf,
+    shots = list(shots)
+    # Pick the x264 tune from the content rather than making the caller know
+    # about it: any shot carrying grain makes the whole reel grainy material.
+    tune = "grain" if any(
+        s.effects is not None and s.effects.grain is not None
+        and s.effects.grain.amount > 0 for s in shots) else None
+    return encode(reel_frames(shots, out_w, out_h, on_upscale, fps), out_path,
+                  fps, narration=narration, ass=ass, fontsdir=fontsdir,
+                  tune=tune, max_mbps=max_mbps, crf=crf,
                   out_w=out_w, out_h=out_h)

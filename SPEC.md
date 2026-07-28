@@ -66,7 +66,7 @@ Proposed priority for the September cut — **to be confirmed before implementat
 | `nodes_subs.py` | **Must** | libass burn-in; justified by #3 alone now that #1 is withdrawn |
 | `nodes_encode.py` | **Must** | Thin ffmpeg wrapper; a reel that cannot be exported is not a workflow |
 | `nodes_audio.py` | **Should** | Narration passthrough is small and already in `assemble_reel.py`; SFX can slip |
-| `nodes_layers.py` | **Could** | Six effect families is the largest single body of work in the pack and the most deferrable — a workshop can teach the pipeline without them. **First candidate to cut** |
+| `nodes_layers.py` | ~~Could~~ **Built 2026-07-28** | Six effect families, chainable per shot. Kept rather than cut, by decision. Two amendments came out of building it — see §5.4 (shake order) and §5.7 (bitrate) |
 | `nodes_video.py` | **Won't** | Video fragments; no workshop dependency, and the KAPFILM case belongs to production in Oct–Nov |
 
 ### The stretch goal — teach students to build their own tools
@@ -259,7 +259,17 @@ Compute per-frame crop rects in Python (float precision, eased), render via PIL/
 
 ### 5.4 Effect families (layer stack)
 
-Composite order: base → grade (lut3d) → grain (blend, looping clip) → texture (blend, looping video) → frame (alpha PNG) → shake (parametric). All optional, all previewable.
+Composite order: base → grade (lut3d) → grain (blend, looping clip) → texture (blend, looping video) → frame (alpha PNG) → ~~shake (parametric)~~. All optional, all previewable.
+
+**Amended 2026-07-28 on implementation — shake moves to the front, and is geometric.** Translating an already-composited frame would drag the frame overlay with it (a vignette has to stay nailed to the viewport) and expose empty edges. Shake instead offsets the *crop window inside the source*, which costs nothing, cannot produce an edge, and is what "camera shake" physically means. Implemented order:
+
+    crop(+shake) → resize → grade → grain → texture → frame → sharpen
+
+Sharpen runs last so it is not amplifying the grain added before it.
+
+**Measured cost (demo_en, 415 frames, `memoacts_core/effects.py`):** effects roughly triple to quadruple render time — 23 s clean, 71 s `archive_soft`, 104 s `newsreel`. Extrapolated to a 2.5-min reel that is ~4 min clean against ~17 min with a heavy preset, which is a **workshop scheduling fact**, not a footnote: at ~8 students per machine (§6.2.11) a heavy preset does not fit a rotation slot. The dominant costs are grain synthesis and unsharp mask; the parametric grade was reduced from ~131 ms to ~22 ms per frame by collapsing all five knobs — saturation included — into a single 3×3 matrix.
+
+**Presets are uncalibrated.** The spec asks for the reference creator's observed effects as named presets; her reels have not been measured, so the shipped values are plausible placeholders chosen on synthetic images (which exaggerate grain badly). Calibrating them is an open task.
 
 The reference creator's "~20 effects that work" are six families: **grain** (9 observed variants), **frame**, **texture**, **grade**, **shake**, **sharpen**. Implement families with parameters; ship her observed effects as named presets. No GPU, no diffusion anywhere in this branch.
 
@@ -286,6 +296,8 @@ CapCut's built-in SFX remain unusable outside CapCut either way — that constra
 ### 5.7 Encode
 
 Unchanged from v1: MP4, H.264, 1080×1920, 30 fps, 12 Mbps, yuv420p, AAC 192k stereo, `+faststart`; per-platform profiles in config. No interpolation needed — motion renders natively at 30 fps.
+
+**The 12 Mbps figure needs enforcing, not just stating (found 2026-07-28).** Quality-targeted CRF has no ceiling, and film grain is high-frequency noise H.264 cannot model — at CRF 19 a grainy 13.8 s demo reel came out at **178 MB, ~103 Mbps**, nearly nine times the target, against 1.9 MB ungraded. Two fixes, both in `memoacts_core/render.py`: x264 switches to `-tune grain` whenever any shot carries grain (it is built for exactly this), and `maxrate`/`bufsize` cap the stream at the §5.7 target. Result: 12.7 Mbps, 20.9 MB, grain still reading correctly. Without the cap a grain preset silently produces a file no platform will accept.
 
 ---
 

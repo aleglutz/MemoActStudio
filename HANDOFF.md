@@ -90,7 +90,8 @@ node layer is missing.
 | `memoacts_core/subs.py` | **new** — `.ass`/`.srt`, GAPS #3 resolved |
 | `tools/render_reel.py` | **new** — whole pipeline downstream of alignment, one pass |
 | `assets/fonts/` | **new** — Share Tech Mono + OFL, no longer depends on essentials |
-| `__init__.py` + `nodes_*.py` | **new** — six V3 nodes, smoke-tested headlessly |
+| `memoacts_core/effects.py` | **new** — six effect families, SPEC §5.4 |
+| `__init__.py` + `nodes_*.py` | **new** — 14 V3 nodes, smoke-tested headlessly |
 
 Measured on demo_en (415 frames, 13.833 s, drift +1 ms vs narration):
 
@@ -151,11 +152,14 @@ unattributable `ServiceError`. Both are August-intensive blockers, not P2 work.
 ## Next task
 
 1. **Merge the branch and load-test the pack.** Start the local server and
-   confirm the six nodes appear under the `memoacts` category — the one
-   unverified step in the September must-have set.
-2. **`nodes_layers.py`, the six effect families.** The designated first cut from
-   the September scope (SPEC §0); everything else in the must-have set now
-   exists, so this is the decision point on whether to build or drop it.
+   confirm all 14 nodes appear under `memoacts` and `memoacts/effects` — the
+   one unverified step in the September set, which is otherwise complete.
+2. **Calibrate the effect presets** against the reference creator's actual
+   reels. The shipped values are placeholders chosen on synthetic images, which
+   exaggerate grain badly (SPEC §5.4).
+3. **Decide the workshop's effect budget.** Effects triple to quadruple render
+   time; a heavy preset puts a 2.5-min reel at ~17 min, which does not fit a
+   rotation slot at ~8 students per machine (SPEC §6.2.11).
 
 Also open, unchanged: the seminar-scale Cloud concurrency test and a facilitator
 recovery procedure (both August blockers, see P1 above), and the English script

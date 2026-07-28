@@ -7,6 +7,7 @@ only to work around the tensor-batch limit (`GAPS.md` #2).
 """
 from __future__ import annotations
 
+import copy
 import warnings
 from pathlib import Path
 
@@ -65,6 +66,7 @@ class MemoActsRenderReel(io.ComfyNode):
         if narration is None:
             raise ValueError(f"no narration audio in {project}")
 
+        stacks = shots.get("effects") or {}
         renders: list[ShotRender] = []
         for s in doc["shots"]:
             img = project / "images" / s["image"]
@@ -72,10 +74,15 @@ class MemoActsRenderReel(io.ComfyNode):
                 raise ValueError(f"shot {s['id']}: missing image {img}")
             with PILImage.open(img) as im:
                 src_w, src_h = im.size
+            # Each shot gets its own copy: the pipeline holds decoder state for
+            # a texture clip, so a shared stack would interleave two shots'
+            # positions in the same loop.
+            stack = stacks.get(s["id"])
             renders.append(ShotRender(
                 image=img,
                 schedule=compute(src_w, src_h, s["n_frames"],
                                  Motion(**s["motion"]), out_w=out_w),
+                effects=copy.deepcopy(stack) if stack is not None else None,
             ))
 
         out_dir = Path(folder_paths.get_output_directory())

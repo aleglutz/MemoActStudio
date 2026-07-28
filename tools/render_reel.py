@@ -29,6 +29,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from PIL import Image  # noqa: E402
 
 from memoacts_core import subs  # noqa: E402
+from memoacts_core.effects import PRESETS, preset  # noqa: E402
 from memoacts_core.render import ShotRender, render_reel  # noqa: E402
 from memoacts_core.schedule import Motion, compute  # noqa: E402
 
@@ -47,6 +48,8 @@ def main() -> int:
                     choices=["warn", "error", "allow"],
                     help="what to do when a source cannot fill the output "
                          "(SPEC §5.2 resolution guard)")
+    ap.add_argument("--effects", default="none", choices=sorted(PRESETS),
+                    help="effect preset applied to every shot (SPEC §5.4)")
     args = ap.parse_args()
 
     proj = args.project
@@ -76,7 +79,10 @@ def main() -> int:
             src_w, src_h = im.size
         sched = compute(src_w, src_h, s["n_frames"], Motion(**s["motion"]),
                         out_w=out_w)
-        shots.append(ShotRender(image=img, schedule=sched))
+        # A fresh stack per shot: the pipeline holds decoder state (texture
+        # clip position), so sharing one across shots would interleave them.
+        fx = preset(args.effects) if args.effects != "none" else None
+        shots.append(ShotRender(image=img, schedule=sched, effects=fx))
 
     out_path = args.out or proj / "out" / "reel.mp4"
     out_path.parent.mkdir(parents=True, exist_ok=True)

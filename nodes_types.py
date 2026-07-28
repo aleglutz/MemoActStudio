@@ -17,3 +17,8 @@ Shots = io.Custom("MEMOACTS_SHOTS")
 
 #: Generated subtitle track: {"ass": str, "srt": str, "cues": int}
 Subs = io.Custom("MEMOACTS_SUBS")
+
+#: A `memoacts_core.effects.EffectStack`. Kept out of the shot table's `doc`
+#: because `doc` stays plain JSON (docs/SHOTS_SCHEMA.md) — effect stacks travel
+#: alongside it, in the payload's `effects` map keyed by shot id.
+Effects = io.Custom("MEMOACTS_EFFECTS")
