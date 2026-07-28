@@ -1,0 +1,11 @@
+# comfyui-memoacts runtime dependencies.
+#
+# torch, numpy and Pillow come with ComfyUI and are deliberately not pinned
+# here -- see docs/WORKSHOP_MACHINE_SETUP.md, where reinstalling torch is
+# called out as something that can break the ComfyUI install itself.
+#
+# ffmpeg is an external binary, NOT a pip package. It must be on PATH and
+# built with libass, or subtitle burn-in fails at render time rather than at
+# install time. The setup doc has the verification command.
+stable-ts>=2.17
+num2words>=0.5.13
