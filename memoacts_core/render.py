@@ -141,12 +141,20 @@ def encode(frames: Iterable[Image.Image], out_path: Path, fps: int, *,
     if narration is not None:
         cmd += ["-i", str(narration)]
     if ass is not None:
-        # fontsdir lets libass find a font shipped with the project instead of
-        # one installed system-wide — which matters for the September rented
-        # machines, where nothing should depend on a manual font install.
+        # Point libass at the font shipped with the project rather than a
+        # system install, so a fresh machine renders identical captions with no
+        # provisioning step. Pass fontsdir explicitly to override.
+        if fontsdir is None:
+            from .subs import FONTS_DIR
+            fontsdir = FONTS_DIR
         vf = f"subtitles='{_escape_filter_path(ass)}'"
-        if fontsdir is not None:
+        if fontsdir.is_dir():
             vf += f":fontsdir='{_escape_filter_path(fontsdir)}'"
+        else:
+            warnings.warn(
+                f"fonts directory {fontsdir} not found; libass will fall back "
+                f"to a system font and captions may not match the intended style",
+                stacklevel=2)
         cmd += ["-vf", vf]
     cmd += ["-c:v", "libx264", "-crf", str(crf), "-pix_fmt", "yuv420p",
             "-preset", "medium"]

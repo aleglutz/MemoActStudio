@@ -19,6 +19,12 @@ from pathlib import Path
 
 PLAY_W, PLAY_H = 1080, 1920
 
+#: Fonts shipped with the project. Burn-in resolves against this rather than a
+#: system font install, so a fresh machine renders identical captions with no
+#: provisioning step (HARDENING.md). Share Tech Mono is SIL OFL 1.1 — the
+#: licence travels with it in assets/fonts/OFL.txt, as the OFL requires.
+FONTS_DIR = Path(__file__).resolve().parent.parent / "assets" / "fonts"
+
 
 @dataclass
 class SubStyle:

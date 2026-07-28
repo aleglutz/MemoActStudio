@@ -83,4 +83,12 @@ Checked 2026-07-28 against the per-pack Cloud subset pages (`comfy.org/cloud/sup
 | ComfyUI_essentials, KJNodes, ComfyUI-WhisperX | TBV | check before any adoption beyond preview use |
 | Stable Audio Open weights | Stability AI Community License | ⚠ verify against Zuwendungsbescheid open-source terms |
 
+### Assets vendored into the pack (P2)
+
+| Asset | License | Status |
+|---|---|---|
+| Share Tech Mono v1.003 (`assets/fonts/ShareTechMono-Regular.ttf`) | **SIL OFL 1.1** | **verified 2026-07-28** — read from the font's own name table, not assumed. © 2012 Carrois Type Design, Ralph du Carrois, Reserved Font Name "Share". `assets/fonts/OFL.txt` carries the licence as the OFL requires; its copyright line matches the font's embedded string exactly. Fully open — no conflict with the grant. **Reserved Font Name: a modified copy may not keep the name "Share".** |
+
+Copied in from `ComfyUI_essentials/fonts/` so P2 no longer depends on a hand-cloned pack it otherwise does not need; burn-in resolves it via `render.encode(fontsdir=...)`, defaulting to `assets/fonts/`.
+
 §8 pitfall check (GPU/model creep via adopted nodes): VHS, essentials, ProPost, core compositing — none pulls models or requires GPU. The only model-bearing adoption is SFX generation, which is optional and Cloud-routable by design.
