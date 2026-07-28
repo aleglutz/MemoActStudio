@@ -35,6 +35,67 @@ chosen that image for that shot. The P2 GUI should surface `max_zoom` per shot
 *at selection time* (SPEC §5.2 wants a live preview anyway), so the warning
 becomes a choice rather than a report.
 
+## Cloud reliability — 2026-07-28, full-set run FAILED (P1_GRAPH step 5)
+
+**6 of 8 chunks died. This is the most consequential finding of the day, and it
+is about the platform, not the graph.**
+
+The remaining 8 `demo_en` chunks were submitted as one batch (`submit_batch`,
+379 frames). Result:
+
+| Chunk | Frames | Queue | Exec | Outcome |
+|---|---|---|---|---|
+| shot_02_c2 | 11 | 48.5 s | **6.52 s** | ✅ completed |
+| shot_03_c1 | 15 | 198 s | **7.69 s** | ✅ completed |
+| shot_03_c0 | 60 | 207 s | 34.41 s | ❌ ServiceError |
+| shot_04_c1 | 53 | 240 s | 39.42 s | ❌ ServiceError |
+| shot_01_c0 | 60 | 58.8 s | 42.06 s | ❌ ServiceError |
+| shot_04_c0 | 60 | 100 s | 49.34 s | ❌ ServiceError |
+| shot_02_c0 | 60 | 148 s | 49.37 s | ❌ ServiceError |
+| shot_02_c1 | 60 | 1.5 s | 49.39 s | ❌ ServiceError |
+
+Every failure is identical and **not attributable to the graph**:
+`/api/jobs/{id}` → `execution_error: {exception_type: "ServiceError",
+exception_message: "RIP to the server your workflow was running on.",
+node_id: "", node_type: "", traceback: []}`, and `execution_status` is `null` —
+the worker died before reporting a single node. No OOM attribution, no node
+error. The same graph shape succeeded at 11, 15 and 36 frames.
+
+**Not memory.** The obvious hypothesis fails: `shot_03_c0` is 60 frames of the
+*800×1000* source, whose crop intermediates total ~400 MB — nowhere near a
+limit. Failure tracks execution *duration*, not source resolution: every job
+that ran ≥34 s died, both that ran ≤8 s survived.
+
+**⚠ The experiment is confounded, and the confound is mine.** Versus this
+morning's successful single 36-frame run, two variables changed at once: chunk
+size *and* concurrency (8 jobs submitted together, queue waits of 1.5–240 s show
+heavy contention). The data cannot separate "long jobs die" from "jobs die under
+concurrent load". The clean next test is resubmitting the failed chunks **one at
+a time**.
+
+**Cost of the failure.** Failed jobs still burn GPU: 264 s of execution produced
+**nothing**. With the two successes (14.2 s), the batch spent **278 s to deliver
+26 frames**. The projection had been ~215 s for 379 frames. Cumulative for the
+day: ~299 s of execution, **62 of 415 frames** actually rendered.
+
+**Consequence for the August intensive — this is the real damage.** Part 1 puts
+**30 students on Cloud** (SPEC §0). Eight concurrent jobs from one account
+produced a 75 % failure rate. A seminar where students submit at the same time
+is precisely this load pattern, at four times the scale. Before any Cloud
+teaching session:
+- establish whether the failure is duration-driven, concurrency-driven, or both;
+- if duration: cap the teaching exercise well under the observed cliff (≤36
+  frames survived; ≥34 s of execution did not) — which means very short reels;
+- if concurrency: student submissions must be staggered, and a seminar plan that
+  assumes simultaneous rendering is not viable;
+- either way, the facilitator needs a recovery story, because students *will*
+  hit this and the error message names no cause they can act on.
+
+**What did hold up:** the cost model. Per-frame execution across all successful
+runs is consistent — 0.593 s (11 fr), 0.513 s (15 fr), 0.542 s (36 fr). The
+~0.54 s/frame figure stands. It is reliability, not the budget estimate, that
+failed.
+
 ## Cloud validation run — 2026-07-28 (P1_GRAPH verification step 4)
 
 First real Cloud execution of the frozen chain. `shot_01_c1` (36 frames), submitted
