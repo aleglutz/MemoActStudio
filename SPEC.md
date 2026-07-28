@@ -23,9 +23,28 @@
 
 | Phase | Target | Environment | Purpose |
 |---|---|---|---|
-| **P1 — now** | Cloud PoC from stock nodes | Comfy Cloud | Teaching artifact for the running online intensive; establishes what stock nodes actually cover |
-| **P2 — after P1** | `comfyui-memoacts` pack | Local ComfyUI | Fills the gaps P1 exposed; production quality for the video series |
-| **P3 — Sept+** | Hardening, offline install, Registry publication | Local / distributed | Offline workshop, portability |
+| **P1 — now** | Cloud PoC from stock nodes | Comfy Cloud | Teaching artifact for the August online intensive; establishes what stock nodes actually cover |
+| **P2 — after P1** | `comfyui-memoacts` pack | Local ComfyUI | Fills the gaps P1 exposed; production quality for the video series **and** the September workshop |
+| **P3 — Sept+** | Hardening, workshop provisioning, Registry publication | Two rented machines | September offline workshop, portability |
+
+### Curriculum delivery — the two audiences (added v3.1, 2026-07-28)
+
+The course has two parts with **different environments, different sizes, and different depth**. This is the structural fact that drives deployment (§3) and hardening (`HARDENING.md`):
+
+| | **Part 1 — August online intensive** | **Part 2 — September offline workshop** |
+|---|---|---|
+| Students | **30** | **16** (a subset of the same 30) |
+| Format | 8 lessons | Hands-on workshop |
+| Depth | Overview / orientation — principles and open-source content tooling, Comfy-in-the-Cloud among them | **Practical / production** |
+| Environment | **Comfy Cloud** | **Local ComfyUI on two rented machines** |
+| Hardware risk | None — no dependence on personal machines, which is exactly why Cloud was chosen | Low and *controlled* — two machines the project provisions, not 16 unknown personal ones |
+
+Two consequences worth stating explicitly, because both were open questions until now:
+
+1. **The pack is not production-only.** §3's tension — students permanently capped at stock Cloud nodes — **is resolved**: `comfyui-memoacts` reaches students in September, on the rented machines. The Cloud ceiling binds Part 1 only, and Part 1 is deliberately an overview, so a reduced feature set is appropriate there rather than a compromise.
+2. **The September workshop is a real phase, and its provisioning problem is small.** Sixteen unknown personal machines would have been the hard version; two project-controlled machines is a setup task, done once and cloned. `HARDENING.md` is rewritten around this — the USB/museum-Wi-Fi/unknown-hardware items were solving a problem that no longer exists.
+
+**Ratio to keep in view:** 16 students on 2 machines is ~8 per machine, so the workshop runs in rotation. That is a scheduling constraint, not a technical one — but it means a single render must not monopolise a machine for long, which makes render *latency* (not just correctness) a workshop requirement. `GAPS.md` #3's ~2.6× text-rendering cost is the first place that bites.
 
 **The gaps are discovered empirically, not predicted.** Build P1 first, record every point where a stock node forces a compromise in **`GAPS.md`** as it is hit, and let that list define the pack's scope in P2 — we stop guessing which functions are worth writing.
 
@@ -122,9 +141,11 @@ Record each as: available / partially available / absent → and for absent, the
    - **Cloud:** connect the official **Comfy Cloud MCP** (`cloud.comfy.org/mcp`, OAuth from Claude Code; public beta) to build and run the P1 PoC and teaching graphs on Cloud GPUs — the same environment the intensive uses. Note beta caveats: generated assets may lack embedded workflow metadata; complex graphs may need retries.
 4. Keep `SURVEY.md` findings (existing nodes, Cloud coverage) in the repo root next to this spec.
 
-**Students run on Comfy Cloud — decided in v3.1, and it is a constraint, not a preference.** Online participants cannot be made to depend on their own hardware: system differences and local install conflicts are failure modes that have nothing to do with the course, and there is no support channel for sixteen unknown Windows machines. Everything student-facing therefore ships as a Cloud workflow.
+**Part 1 (August, 30 students) runs on Comfy Cloud — a constraint, not a preference.** Online participants cannot be made to depend on their own hardware: system differences and local install conflicts are failure modes that have nothing to do with the course, and there is no support channel for thirty unknown Windows machines. Everything in the online intensive therefore ships as a Cloud workflow, and its capability ceiling is whatever stock Cloud nodes provide — the P1 feature set. Since Part 1 is an overview (§0), that ceiling is appropriate to the teaching goal rather than a compromise forced on it.
 
-This has a consequence the roadmap must state plainly rather than discover later: **the `comfyui-memoacts` pack cannot be installed on Comfy Cloud**, so under the current plan the pack serves the video-series production (local, one operator) and **never reaches the students at all**. The students' capability ceiling is whatever stock Cloud nodes can do — which is the P1 feature set, essentially permanently. Registry publication (§9.8) is the only route by which that could change, and it is explicitly not relied upon. See §10 open items.
+**Part 2 (September, 16 students) runs local on two rented machines** — which is where `comfyui-memoacts` reaches students. The pack cannot be installed on Comfy Cloud (curated list only), but it does not need to be: the practical, production-oriented half of the curriculum is precisely the half that runs locally. This resolves what v3.1 initially recorded as an open architectural tension. Registry publication (§9.8) remains a P3 open-source commitment, not a delivery dependency.
+
+**Provisioning follows from this and is small:** two machines, project-controlled, imaged once and cloned. Their specification is a real deliverable with a real input — the per-shot RAM measurement in `GAPS.md` #2 (~11.5 GiB for a 240-frame shot at source resolution) is what sizes the rental. Note that `GAPS.md` #5 established RAM is unmeasurable on Cloud; for the rented machines it is measurable and load-bearing, so the local figure regains its importance.
 
 **Deployment strategy (verified 2026-07-24, decided):** Comfy Cloud supports only a curated list of popular custom nodes — arbitrary packs such as `comfyui-memoacts` cannot be installed there. Hence:
 
@@ -308,6 +329,8 @@ New in v3: RU digit/date normalisation quality (§5.1) — the dominant drift so
 - [ ] Safe-zone values — verify current Reels/TikTok/Shorts UI overlay guidance before fixing defaults. *(Context: platform UIs draw buttons/captions over the bottom and right edges of the video; subtitles must sit inside the uncovered region.)*
 - [x] RU text normalisation (inflected number expansion) — **closed in v3.1 as not-applicable.** English only; `num2words` suffices, with year-pair reading ("nineteen seventy-four") as the one explicit case (§5.1).
 - [ ] KAPFILM footage — in scope via mixed workflow (§2.3, §5.2), P2; no separate pipeline decision needed.
-- [ ] **Who is P2 for? (opened in v3.1, blocking the P2 scope freeze.)** §3 now states that students are permanently on Cloud and the pack cannot be installed there. So `comfyui-memoacts` serves the video-series production only, and the students' ceiling stays at the P1 stock-node feature set. Either that split is accepted deliberately (the pack is a production tool; the course teaches the reduced Cloud workflow), or a third track is needed: growing student-facing capability *within* Cloud's stock nodes — which is a different and considerably more constrained engineering problem than writing the pack. Decide before P2 scope is frozen; the answer changes what `GAPS.md` is a backlog *for*.
+- [x] **Who is P2 for?** — **resolved 2026-07-28.** The curriculum has two parts (§0): August online (30 students, Cloud, overview) and September offline (16 students, local on two rented machines, practical). The pack reaches students in Part 2, so it is **not** production-only and no third "grow capability within stock Cloud nodes" track is needed. `GAPS.md` remains the P2 backlog for the pack; the Cloud ceiling binds Part 1 only, where an overview-level feature set is appropriate.
+- [x] **Does the September offline workshop still exist?** — **resolved 2026-07-28: yes**, and the provisioning problem is far smaller than assumed. Not sixteen unknown personal machines but **two rented, project-controlled machines**. `HARDENING.md` rewritten accordingly; the USB-distribution and unknown-hardware-audit items are retired as solving a non-problem, replaced by a two-machine provisioning checklist.
 - [ ] English narration + script for the retargeted test project (§6.2) — awaited from the project owner; P2 acceptance cannot be evaluated until it exists.
-- [ ] **Does the September offline workshop still exist?** v3.1 moved *online* students to Cloud, which voided most of `HARDENING.md` (USB model distribution, participant install audit, museum-Wi-Fi contention). Those items were written for an in-person, local-machine delivery. If that workshop is still planned, they must be revived wholesale; if it is folded into the Cloud delivery, `HARDENING.md` shrinks to the facilitator machine plus the local-vs-Cloud parity log. Not urgent, but it decides whether P3 is a real phase.
+- [ ] **Does the September workshop use the pack, or stock local ComfyUI?** Newly relevant: "16 students try local ComfyUI" could mean either. It sets P2's deadline. If the workshop teaches the pack, P2 must be workshop-ready by September — roughly six weeks, with P1 not yet finished — and gains an acceptance criterion it does not currently have (usable by a workshop participant, not just by the production operator, §6.2.9 covers only the latter). If it teaches stock local ComfyUI (local-vs-Cloud contrast, no custom nodes), P2 keeps its natural October–November timeline alongside the video series. **Decide before committing P2 scope.**
+- [ ] **Rented-machine specification** — a September deliverable with a hard lead time (the machines must be chosen and booked). Input exists: `GAPS.md` #2's ~11.5 GiB per 240-frame shot at source resolution, which scales with *source* image resolution rather than output. Derive RAM/CPU/disk from the intended workshop project size before booking, and note that per §6.2.8 no GPU is required by construction — a GPU is opportunistic, not a rental requirement.

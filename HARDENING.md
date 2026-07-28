@@ -2,15 +2,28 @@
 
 Per SPEC.md §0: these never block an implementation decision now.
 
-> **Heavily reduced 2026-07-28 (SPEC v3.1 §3).** Most of this file existed because participants were assumed to run ComfyUI on their own machines. They do not — **online students run on Comfy Cloud**, precisely to avoid depending on personal hardware. Participant install surface, USB model distribution and museum-Wi-Fi contention are therefore no longer project concerns. What remains applies to the *facilitator's* and the *production* machine only.
+> **Rewritten 2026-07-28 (SPEC v3.1 §0).** This file assumed participants would run ComfyUI on their own machines. They will not. The curriculum has two parts:
 >
-> This does **not** cover the September in-person offline workshop, if one still happens on local machines — that is a different delivery with different constraints, and the struck items below should be revived wholesale if it is confirmed. Flagged as an open question in SPEC §10.
+> - **August online, 30 students → Comfy Cloud.** No local install at all, so participant install surface is not a project concern for Part 1.
+> - **September offline, 16 students → local ComfyUI on TWO RENTED MACHINES.** Local install *is* a concern for Part 2 — but for two project-controlled machines, provisioned once and cloned, not for sixteen unknown personal ones.
+>
+> That distinction retires most of the original content. USB model distribution, museum-Wi-Fi download contention and a dependency audit against unknown hardware were all solving the sixteen-personal-machines problem, which no longer exists. What replaces them is an ordinary provisioning checklist.
+>
+> **Lead time warning:** the machines must be *specified and booked* before they can be provisioned. That is the earliest hard deadline in this file — see SPEC §10.
 
-## Aligner / models — facilitator + production machine only
+## Workshop provisioning — two rented machines (September, P3)
 
-- [ ] `nodes_align.py` accepts an explicit local model path (no forced auto-download at runtime). *(Still wanted: reproducibility, not portability.)*
-- [ ] Bake-off question, informational only: does Whisper `base` (~145 MB) suffice, or is `small` (~484 MB) needed? We measure timing accuracy, not transcription quality. Lower stakes now — one machine, not sixteen.
-- [x] ~~Documented offline install: model directory copied from USB; 16 participants must not download simultaneously over museum Wi-Fi.~~ **Dropped** — students are on Cloud and never install the aligner.
+- [ ] **Specify the machines before booking.** Input: `GAPS.md` #2 — ~11.5 GiB RAM for a 240-frame shot, scaling with *source* image resolution, not output. Size RAM from the intended workshop project, then add headroom for the chunking ceiling being relaxed. Per SPEC §6.2.8 no GPU is required by construction; treat one as opportunistic, never as a rental requirement. Disk: ComfyUI + embedded Python + Whisper model + project media.
+- [ ] **Provision once, clone.** Build machine A completely, verify a full reel render end to end, then image it onto machine B. Do not hand-install twice — divergence between the two machines is the failure mode that costs workshop time.
+- [ ] **Rotation reality: ~8 students per machine.** Renders must not monopolise a machine. Measure a realistic workshop-sized render on the actual hardware and, if it is too slow to share, cut scope (shorter exercise project, fewer frames) rather than discovering it live. `GAPS.md` #3's ~2.6× text cost is the first thing to look at.
+- [ ] **Shared-machine hygiene:** where project files live, how a student's work is kept separate from the next student's, and how the machine is reset between rotations.
+
+## Aligner / models — facilitator, production, and the two rented machines
+
+- [ ] `nodes_align.py` accepts an explicit local model path (no forced auto-download at runtime). *(Reproducibility, and it makes pre-seeding the rented machines trivial.)*
+- [ ] Pre-seed the Whisper model into the machine image so no download happens during the workshop. This is the *useful* remnant of the old USB item — same goal, but solved once at provisioning instead of sixteen times on the day.
+- [ ] Bake-off question, informational only: does Whisper `base` (~145 MB) suffice, or is `small` (~484 MB) needed? We measure timing accuracy, not transcription quality. Low stakes now — the model ships inside the machine image.
+- [x] ~~Documented offline install: model directory copied from USB; 16 participants must not download simultaneously over museum Wi-Fi.~~ **Retired** — two provisioned machines, not sixteen personal ones. Superseded by the pre-seeding item above.
 - [x] ~~Armenian narration alignment.~~ **Dropped** — Armenian left project scope entirely (v3.1).
 
 ## Environment parity
@@ -21,4 +34,6 @@ Per SPEC.md §0: these never block an implementation decision now.
 
 ## Install surface
 
-- [x] ~~Dependency audit for participant machines (unknown hardware, offline).~~ **Dropped for students** (Cloud). Retained only as a facilitator-machine concern; the ComfyUI-Easy-Install embedded-Python path is documented in `CLAUDE.md`.
+- [x] ~~Dependency audit for participant machines (unknown hardware, offline).~~ **Retired** — there is no unknown hardware. Replaced by the provisioning checklist above.
+- [ ] Reproducible install procedure for the two rented machines: count and script the steps on a clean Windows box, documenting the ComfyUI-Easy-Install embedded-Python path (`CLAUDE.md`). This is what gets executed on machine A before imaging.
+- [ ] Pin what is currently hand-added and unrecorded anywhere: `ComfyUI_essentials` (cloned into `custom_nodes`, heavy requirements deliberately not installed), `stable-ts`, `num2words`. Today these exist only on the dev machine by hand — they must be in a written install procedure before September, or the rented machines will not match the environment everything was verified against.

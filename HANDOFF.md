@@ -41,19 +41,32 @@ SHA-256 digest, so exported graphs are **not submittable unchanged**) and **#5**
   hardware. This voided most of `HARDENING.md` (USB model distribution,
   participant install audit) and raised a live architectural question, below.
 
-## Open question blocking the P2 scope freeze
+## Curriculum structure (clarified 2026-07-28) — closed two open questions
 
-`comfyui-memoacts` **cannot be installed on Comfy Cloud**. With students now
-permanently on Cloud, the pack under the current plan serves the video-series
-production only and **never reaches the students** — their capability ceiling
-stays at the P1 stock-node feature set, essentially permanently. Either that
-split is accepted deliberately, or a third track is needed (growing
-student-facing capability *within* stock nodes). Recorded as SPEC §10; **asked of
-the project owner, not yet answered.** It changes what `GAPS.md` is a backlog
-*for*, so do not freeze P2 scope before it is settled.
+| | **Part 1 — August online** | **Part 2 — September offline** |
+|---|---|---|
+| Students | 30 | 16 (subset of the same 30) |
+| Format | 8 lessons, overview | Hands-on, practical/production |
+| Environment | **Comfy Cloud** | **Local ComfyUI, two rented machines** |
 
-Second, lower-priority open item: does the **September offline workshop** still
-exist? If yes, the struck `HARDENING.md` items must be revived wholesale.
+- **"Who is P2 for?" — resolved.** The pack reaches students in September on the
+  rented machines, so it is not production-only and no "grow capability within
+  stock Cloud nodes" track is needed. The Cloud ceiling binds Part 1 only, where
+  an overview-level feature set is appropriate rather than a compromise.
+- **"Does the September workshop exist?" — resolved: yes**, and much smaller than
+  feared: two project-controlled machines, provisioned once and cloned, not
+  sixteen unknown personal ones. `HARDENING.md` rewritten around that.
+
+**Still open, and it sets P2's deadline:** does September teach **the pack**, or
+**stock local ComfyUI**? If the pack, P2 must be workshop-ready in ~6 weeks with
+P1 unfinished, and needs an acceptance criterion it lacks today (usable by a
+workshop participant, not just the production operator). If stock, P2 keeps its
+October–November timeline. Asked, not yet answered — SPEC §10.
+
+**Earliest hard deadline in the project:** the rented machines must be *specified
+and booked* before they can be provisioned. `GAPS.md` #2 (~11.5 GiB per 240-frame
+shot, scaling with source resolution) is the sizing input; no GPU is required by
+construction (SPEC §6.2.8).
 
 ## Next task
 

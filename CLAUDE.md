@@ -17,7 +17,7 @@ Not P1: the custom node pack, six effect families, video fragments, per-shot GUI
 **Scope corrections, SPEC v3.1 (2026-07-28) — read §changelog before planning:**
 - **English only.** Translation (RU/DE/HY) is out of project scope — handled separately with local DeepL + whisperX. No multilingual burn-in, no Armenian, no RU normalisation.
 - **`projects/sidur` is not a dev fixture.** A new English script + narration is awaited from the project owner; until then `projects/demo_en` is the only working fixture.
-- **Students run on Comfy Cloud, permanently** — they cannot be made to depend on personal hardware. Consequence to keep in view: `comfyui-memoacts` cannot be installed on Cloud, so under the current plan the pack never reaches students. Unresolved, SPEC §10.
+- **Two audiences, two environments** (SPEC §0): August online intensive — 30 students, 8 lessons, **Comfy Cloud**, overview-level; September offline workshop — 16 of those students, **local ComfyUI on two rented machines**, practical/production. The pack cannot run on Cloud but does not need to: it reaches students in September. Open: whether September teaches the pack or stock local ComfyUI — that sets P2's deadline (SPEC §10).
 
 ## Priority principle
 
