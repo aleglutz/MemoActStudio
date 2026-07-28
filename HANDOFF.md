@@ -49,14 +49,32 @@ Added 2026-07-28 (Cloud prep, done without Cloud access):
 3. Then the Sidur 18-shot facilitator run (needs real Sidur narration for the
    RU alignment validation — no RU TTS voice on this machine).
 
-**Blocker (still open, and it needs a human):** Comfy Cloud MCP
-(`https://cloud.comfy.org/mcp`, HTTP transport) is in the local config but
-**not authenticated**. OAuth cannot be completed from a non-interactive
-session — it must be done from an interactive `claude` terminal: `/mcp` → pick
-`comfy-cloud` → browser OAuth; a session restart may be needed before the
-`mcp__comfy-cloud__*` tools appear. Fallback if MCP stays flaky: build the
-graph by hand in the Cloud UI per `docs/PARTICIPANT_GRAPH_RECIPE.md` (all
-inputs for that are already exported — see `--export-all` above).
+First moves in the fresh session, so nothing is re-derived:
+
+- Graphs are already built and byte-verified — do **not** rebuild them.
+  `projects/demo_en/cloud_graphs/` (gitignored): 9 chunk graphs +
+  `manifest.json` listing the 4 images to upload and per-chunk text/frames.
+- Upload the 4 images so `LoadImage` resolves them by the exact filenames in
+  the manifest (`01_big.png`, `02_wide.png`, `03_small.png`, `04_tall.png`);
+  the graphs reference bare filenames.
+- Submit `shot_01_c1.json` alone (36 frames). Check: 36 frames out, not 1
+  (a 1-frame result = the GAPS #3 batch-collapse, i.e. Cloud runs DrawText+
+  outside list domain) and motion is present (a static segment = list-map
+  broadcast did not transfer → P1_GRAPH fallback 1, coarse-step motion).
+- Record GPU-seconds and peak RAM for that chunk before submitting the rest.
+
+**Blocker RESOLVED 2026-07-28:** Comfy Cloud MCP
+(`https://cloud.comfy.org/mcp`, HTTP) is authenticated —
+`claude mcp get comfy-cloud` reports **✔ Connected**. Scope is *local*, private
+to the MemoActStudio project (the worktree inherits it); it is a CLI-added
+server, so it appears in Claude Code's `/mcp` panel, **not** in claude.ai
+connector settings — that is where it "goes missing".
+
+The session that authenticated it still had no `mcp__comfy-cloud__*` tools: the
+tool registry is built at startup. **Start a fresh session to get the tools.**
+If `mcp__comfy-cloud__*` still does not appear, fall back to the Cloud UI per
+`docs/PARTICIPANT_GRAPH_RECIPE.md` — every input for that is already exported
+(`projects/demo_en/cloud_graphs/`, see `--export-all` above).
 
 ## Local environment notes
 
