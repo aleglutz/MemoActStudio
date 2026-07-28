@@ -116,19 +116,32 @@ node layer; the skill files are readable at
 `~/.claude/plugins/marketplaces/comfyui-custom-node-skills/plugins/comfyui-custom-nodes/skills/`
 as a fallback.
 
+## P1 is CLOSED (2026-07-28)
+
+Closed by decision without completing the full Cloud reel. Status against the
+five acceptance criteria — two met only in qualified form — is in SPEC §6.1.
+Short version: the mechanism is proven on Cloud and the cost is measured, but a
+**per-job execution time limit** was found (`GAPS.md`), the full-set run failed
+6/8, and finishing it would re-confirm known behaviour while spending credits.
+The local P2 renderer makes the same reel in 25 s for free.
+
+Corrected on close so the artifacts are runnable: `--max-chunk` 60 → 30,
+`demo_en` shot table + cloud graphs regenerated (16 chunks, worst case 16.3 s
+estimated), facilitator recipe warned about both the time limit and the hashed
+upload filenames.
+
+**Carried forward, not dropped:** a seminar-scale concurrency test before any
+Cloud teaching session, and a facilitator recovery procedure for the
+unattributable `ServiceError`. Both are August-intensive blockers, not P2 work.
+
 ## Next task
 
-Two open threads, in priority order:
+**The node layer** (`nodes_align/shot/subs/encode.py`) — the remaining September
+must-have, and now the only active thread. The core is ready to wrap.
 
-1. **The node layer** (`nodes_align/shot/subs/encode.py`) — once the plugin is
-   enabled. The core is ready to wrap; this is the remaining September must-have.
-2. **Full 9-chunk `demo_en` Cloud run** (P1_GRAPH verification step 5) — the
-   credit measurement that feeds SPEC §6.1.4, and the last open P1 item. Needs
-   the `GAPS.md` #4 digest rewrite on 8 graphs first. **Not yet authorised** —
-   costs credits, and the numbers from the single-chunk run were the agreed
-   checkpoint. Ask before submitting.
-
-Do not add further scope to P1 beyond (2): P2's September deadline has no slack.
+**Blocked** on the `comfyui-custom-node-skills` plugin being enabled (see above).
+Node-independent work is already done: renderer, subtitles, vendored font,
+end-to-end CLI, machine provisioning doc.
 
 - The 4 images are **already uploaded**; digests are in the run log of the
   2026-07-28 session (re-upload is cheap and idempotent with `overwrite=true`).

@@ -301,6 +301,29 @@ Unchanged from v1: MP4, H.264, 1080×1920, 30 fps, 12 Mbps, yuv420p, AAC 192k st
 
 Deliberately **not** required in P1: the six effect families, multilingual burn-in, video fragments, resolution guard, per-shot GUI editing. These are P2.
 
+### P1 closed 2026-07-28 — status against the five criteria
+
+Closed by decision, with two criteria met in a qualified form. Recording that
+honestly rather than ticking all five, because the qualifications are what P2
+and the August seminar have to act on.
+
+| # | Status | Evidence / caveat |
+|---|---|---|
+| 1 | **Qualified** | The chain runs on Cloud and produces correctly-timed vertical MP4 segments — validated per chunk, not as one participant-driven whole-reel run. The full 415-frame Cloud reel was **deliberately not completed**: it would re-confirm a mechanism already proven while burning credits, and the local P2 renderer produces the same reel in 25 s for free. |
+| 2 | **Met** | Images change on sentence boundaries; 415 frames / 13.833 s against 13.832 s of narration (+1 ms). Audio is muxed outside the graph and passes through untouched. |
+| 3 | **Met** | Motion confirmed on Cloud (36/36 unique frames, zoom visible); EN subtitle track burnt in via `DrawText+`. |
+| 4 | **Qualified — and the answer is not the one expected** | Per-frame cost is measured and stable: **0.345–0.542 s/frame** by source resolution. But the binding constraint at cohort scale turned out to be **reliability, not budget** — see `GAPS.md`: a per-job execution time limit, and a 75 % failure rate under eight concurrent jobs. A cohort budget computed from the per-frame rate is only meaningful once the failure rate at seminar-scale concurrency is known, and **that load test has not been run**. |
+| 5 | **Met** | `GAPS.md` carries #1–#5 plus the time-limit finding and the resolution-guard defect, each recorded as it was hit. |
+
+**Artifacts corrected on close:** `--max-chunk` default 60 → 30 (60-frame chunks
+exceed the Cloud time limit), `projects/demo_en` shot table and cloud graphs
+regenerated (16 chunks, worst-case 16.3 s estimated execution, all under the
+observed-safe mark), facilitator recipe updated.
+
+**Open, carried into P2/P3, not silently dropped:** the seminar-scale
+concurrency test, and a facilitator recovery procedure for the unattributable
+`ServiceError`.
+
 ### 6.2 P2 — production pack
 
 Test project (**retargeted in v3.1**): a new **English** script + narration recording supplied by the project owner — awaited as of 2026-07-28. `projects/sidur` was a planning example, never a dev fixture, and is **not** used for development or acceptance; it stays in the repo as reference material only. Until the English project arrives, `projects/demo_en` (4 synthetic stills, 4 shots, 13.8 s) is the only working fixture — sufficient for pipeline mechanics, insufficient for acceptance. Second pass: the same English project + one video fragment (KAPFILM excerpt) to exercise mixed media.

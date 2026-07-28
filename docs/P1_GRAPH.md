@@ -77,12 +77,21 @@ One global per-frame table (frame → image index + crop rect) driving a single 
    **✅ DONE 2026-07-24** on `projects/demo_en` (4 shots, TTS narration, one deliberately under-resolved image): generator → 9 chunked segments (`tools/run_p1_local.py`, 139 s) → concat+mux (`tools/assemble_reel.py`) → **415 frames, 13.833 s vs narration 13.831 s**; verbatim digits on screen; `[CLAMPED]`/`[DIGITS]`/confidence flags all exercised. One fix recorded: no `-shortest` in the mux (drops the final frame when audio is ms-shorter than video). RU alignment validation still pending real Sidur narration (no RU TTS voice on this machine).
 4. Cloud: same graph, one validation run → measure GPU-seconds → credit budget ×cohort vs Sachkosten (§6.1.4).
    **Pre-flight ✅ 2026-07-28:** all 8 node classes of the frozen chain exist in the Cloud per-pack subsets (`SURVEY.md §2.1`) — no substitution needed. Ready-to-load graphs for every `demo_en` chunk: `python tools/run_p1_local.py --project projects/demo_en --export-all <dir>` (offline, no server). Order on the day: **one chunk first** (`shot_01_c1`, 36 frames — the cheapest that still exercises list-map + crop + text + encode), read peak RAM/GPU-s, only then the remaining 8.
-5. Cloud: full 9-chunk `demo_en` run → credit measurement for SPEC §6.1.4.
-   **Blocked on the `GAPS.md` #4 digest rewrite** — exported graphs reference bare
-   filenames and Cloud stores uploads under their SHA-256.
+5. ~~Cloud: full 9-chunk `demo_en` run → credit measurement.~~
+   **CLOSED WITHOUT COMPLETION, 2026-07-28, by decision.** Attempted; 6 of 8
+   chunks died. Root cause found and recorded (`GAPS.md`): a per-job execution
+   time limit, with concurrency causing it by inflating duration. The per-frame
+   cost the step existed to obtain was measured anyway (0.345–0.542 s/frame), and
+   finishing the reel would re-confirm a proven mechanism while spending credits
+   — the local P2 renderer produces the same 415-frame reel in 25 s for free.
+   Chunk default corrected 60 → 30 and the `demo_en` graphs re-exported (16
+   chunks, worst case 16.3 s) so the artifacts left behind are actually runnable.
 6. ~~Cloud: Sidur 18-shot facilitator run.~~ **Retargeted (SPEC v3.1):** Sidur is
    no longer a dev fixture. This step becomes the facilitator run on the new
    **English** project, awaited from the project owner.
+
+**P1 is closed.** Status against SPEC §6.1's five acceptance criteria — including
+the two that are met only in qualified form — is recorded in SPEC §6.1.
 6. Every stock-node compromise hit → `GAPS.md` at the moment it's hit.
 
 ## Fallbacks if the crux fails (in order)

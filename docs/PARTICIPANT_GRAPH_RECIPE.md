@@ -11,7 +11,7 @@ step 4 and duplicate.
 Run the generator, then upload to Cloud as input assets:
 
 ```
-python tools/generate_shots.py --project projects/<name> --lang en --max-chunk 60
+python tools/generate_shots.py --project projects/<name> --lang en --max-chunk 30
 python tools/run_p1_local.py --project projects/<name> --export-all cloud_graphs
 ```
 
@@ -36,6 +36,14 @@ confirmed present on Cloud (`SURVEY.md §2.1`).
 | 12 | **🔧 Draw Text** (`DrawText+`) | shot text (English — the only language, SPEC v3.1), size 44, white, shadow 2/2, align center/bottom, offset_y −420; `img_composite` ← 11. **Must sit here, before batching** (GAPS #3) |
 | 13 | **🔧 Image List To Batch** (`ImageListToBatch+`) | image ← 12 |
 | 14 | **Video Combine** (VHS) | frame_rate 30, format `video/h264-mp4`, pix_fmt `yuv420p`, crf 19, filename_prefix `reel/shot_NN_cK`, no audio |
+
+> **⚠ Keep chunks small — Cloud kills long jobs.** A job whose execution passes
+> roughly 21–44 s is terminated with "RIP to the server your workflow was
+> running on", which names no cause and looks like a platform outage
+> (`GAPS.md`, 2026-07-28). 30 frames per chunk keeps execution near 16 s even on
+> a large source. **Do not raise it to 60** — that lands at 44–49 s and dies.
+> Contention makes this worse, so if several people render at once, expect
+> failures even at safe sizes and stagger the submissions.
 
 > **⚠ Your uploaded filename will change.** Comfy Cloud stores every upload under
 > a long hexadecimal (SHA-256) name — upload `01_big.png` and it becomes something
