@@ -90,7 +90,7 @@ node layer is missing.
 | `memoacts_core/subs.py` | **new** — `.ass`/`.srt`, GAPS #3 resolved |
 | `tools/render_reel.py` | **new** — whole pipeline downstream of alignment, one pass |
 | `assets/fonts/` | **new** — Share Tech Mono + OFL, no longer depends on essentials |
-| V3 node wrappers | **not started** — blocked, see below |
+| `__init__.py` + `nodes_*.py` | **new** — six V3 nodes, smoke-tested headlessly |
 
 Measured on demo_en (415 frames, 13.833 s, drift +1 ms vs narration):
 
@@ -108,13 +108,27 @@ the resolution guard clamped the zoom *rate* but let a too-small source be
 enlarged silently (demo_en's 800×1000 → 1.92×), violating a non-negotiable.
 `render.py` now enforces `on_upscale = warn|error|allow`.
 
-**Blocked:** the `comfyui-custom-node-skills` plugin is installed as a
-marketplace but not enabled, so its 9 skills are not loaded. CLAUDE.md requires
-using them for node work rather than reconstructing the V3 API from memory.
-Enable it from an interactive `claude` terminal (`/plugin`) before starting the
-node layer; the skill files are readable at
-`~/.claude/plugins/marketplaces/comfyui-custom-node-skills/plugins/comfyui-custom-nodes/skills/`
-as a fallback.
+### Node layer
+
+Six V3 nodes, written against the skill reference at
+`~/.claude/plugins/marketplaces/comfyui-custom-node-skills/plugins/comfyui-custom-nodes/skills/`.
+Read those files directly: enabling the plugin does **not** load its skills into
+a session that was already running — same registry-at-startup behaviour as the
+MCP tools.
+
+    Align Shots ─→ Set Motion ─→ Subtitles ─→ Render Reel
+                        └──────→ Shot Report
+
+Verified headlessly against a `comfy_api` stub: all six register with unique ids
+and correct socket types, the full graph runs on `demo_en`, a motion override
+touches only the targeted shot, and the render matches the CLI path exactly
+(415 frames / 13.833 s / +1 ms drift). Errors are legible `ValueError`s naming
+the problem — acceptance criterion §6.2.12.
+
+**⚠ Not verified: that ComfyUI actually registers the pack.** The headless test
+proves the nodes execute and wire together, not that they load. ComfyUI loads
+`custom_nodes/MemoActStudio` — the *main* checkout — while this work sits on a
+branch in a worktree, so nothing registers until it is merged.
 
 ## P1 is CLOSED (2026-07-28)
 
@@ -136,12 +150,16 @@ unattributable `ServiceError`. Both are August-intensive blockers, not P2 work.
 
 ## Next task
 
-**The node layer** (`nodes_align/shot/subs/encode.py`) — the remaining September
-must-have, and now the only active thread. The core is ready to wrap.
+1. **Merge the branch and load-test the pack.** Start the local server and
+   confirm the six nodes appear under the `memoacts` category — the one
+   unverified step in the September must-have set.
+2. **`nodes_layers.py`, the six effect families.** The designated first cut from
+   the September scope (SPEC §0); everything else in the must-have set now
+   exists, so this is the decision point on whether to build or drop it.
 
-**Blocked** on the `comfyui-custom-node-skills` plugin being enabled (see above).
-Node-independent work is already done: renderer, subtitles, vendored font,
-end-to-end CLI, machine provisioning doc.
+Also open, unchanged: the seminar-scale Cloud concurrency test and a facilitator
+recovery procedure (both August blockers, see P1 above), and the English script
++ narration for the retargeted test project (§6.2).
 
 - The 4 images are **already uploaded**; digests are in the run log of the
   2026-07-28 session (re-upload is cheap and idempotent with `overwrite=true`).
