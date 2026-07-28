@@ -126,10 +126,21 @@ touches only the targeted shot, and the render matches the CLI path exactly
 (415 frames / 13.833 s / +1 ms drift). Errors are legible `ValueError`s naming
 the problem — acceptance criterion §6.2.12.
 
-**⚠ Not verified: that ComfyUI actually registers the pack.** The headless test
-proves the nodes execute and wire together, not that they load. ComfyUI loads
-`custom_nodes/MemoActStudio` — the *main* checkout — while this work sits on a
-branch in a worktree, so nothing registers until it is merged.
+**✅ Verified in ComfyUI itself, 2026-07-28.** Branch merged to `main`
+(fast-forward), server started, pack imported in 0.4 s with no error — the other
+import failures in the log (`comfy_kitchen`, `comfy_angle`, `brushnet`,
+transformers/diffusers) are pre-existing and belong to other packs.
+
+- `/object_info`: **all 14 nodes registered**, correct categories
+  (`memoacts`, `memoacts/effects`), correct socket types and optional inputs.
+- A full graph executed through `/prompt` in **42 s**: align (real stable-ts,
+  conf 0.75–0.97) → set motion → effect preset → grade override → apply to
+  shot 1 only → subtitles → shot report → render.
+- Output `servertest_00001.mp4`: 415 frames, 13.833 s, 1080×1920, AAC,
+  4.75 Mbps. Shot 1 desaturated and grained, shot 2 untouched — per-shot
+  "edit by exception" confirmed end to end on the real server.
+
+The local ComfyUI server was left **running** on 127.0.0.1:8188.
 
 ## P1 is CLOSED (2026-07-28)
 
@@ -151,13 +162,14 @@ unattributable `ServiceError`. Both are August-intensive blockers, not P2 work.
 
 ## Next task
 
-1. **Merge the branch and load-test the pack.** Start the local server and
-   confirm all 14 nodes appear under `memoacts` and `memoacts/effects` — the
-   one unverified step in the September set, which is otherwise complete.
-2. **Calibrate the effect presets** against the reference creator's actual
+1. **First run on the real English project** — script + narration awaited from
+   the project owner (expected 2026-07-29). This is the first evaluation of
+   SPEC §6.2 criteria 1–9, which `demo_en` cannot exercise: four synthetic
+   stills and 13.8 s prove mechanics, not acceptance.
+3. **Calibrate the effect presets** against the reference creator's actual
    reels. The shipped values are placeholders chosen on synthetic images, which
    exaggerate grain badly (SPEC §5.4).
-3. **Decide the workshop's effect budget.** Effects triple to quadruple render
+4. **Decide the workshop's effect budget.** Effects triple to quadruple render
    time; a heavy preset puts a 2.5-min reel at ~17 min, which does not fit a
    rotation slot at ~8 students per machine (SPEC §6.2.11).
 
