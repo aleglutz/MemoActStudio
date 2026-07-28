@@ -17,7 +17,9 @@ Not P1: the custom node pack, six effect families, video fragments, per-shot GUI
 **Scope corrections, SPEC v3.1 (2026-07-28) — read §changelog before planning:**
 - **English only.** Translation (RU/DE/HY) is out of project scope — handled separately with local DeepL + whisperX. No multilingual burn-in, no Armenian, no RU normalisation.
 - **`projects/sidur` is not a dev fixture.** A new English script + narration is awaited from the project owner; until then `projects/demo_en` is the only working fixture.
-- **Two audiences, two environments** (SPEC §0): August online intensive — 30 students, 8 lessons, **Comfy Cloud**, overview-level; September offline workshop — 16 of those students, **local ComfyUI on two rented machines**, practical/production. The pack cannot run on Cloud but does not need to: it reaches students in September. Open: whether September teaches the pack or stock local ComfyUI — that sets P2's deadline (SPEC §10).
+- **Two audiences, two environments** (SPEC §0): August online intensive — 30 students, 8 lessons, **Comfy Cloud**, overview-level; September offline workshop — 16 of those students, **local ComfyUI on two rented machines**, practical/production.
+- **The September workshop teaches `comfyui-memoacts` itself.** So **P2 has a hard September deadline** — P1 and P2 both have weeks, not months. P1 must be *finished, not polished*: there is no longer slack in P2 to absorb P1 overrun. Module priority for the September cut is in SPEC §0; `nodes_layers.py` (six effect families) is the designated first cut.
+- Stretch goal — teaching students to build their own tools from the pack as a worked example — is a **golden achievement, never a requirement**. Its only actionable consequence now: write the pack legibly from the first commit, since that is cheap early and expensive to retrofit. No separate teaching version, no tutorial content in scope.
 
 ## Priority principle
 

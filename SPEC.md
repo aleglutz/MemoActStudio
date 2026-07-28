@@ -24,8 +24,8 @@
 | Phase | Target | Environment | Purpose |
 |---|---|---|---|
 | **P1 — now** | Cloud PoC from stock nodes | Comfy Cloud | Teaching artifact for the August online intensive; establishes what stock nodes actually cover |
-| **P2 — after P1** | `comfyui-memoacts` pack | Local ComfyUI | Fills the gaps P1 exposed; production quality for the video series **and** the September workshop |
-| **P3 — Sept+** | Hardening, workshop provisioning, Registry publication | Two rented machines | September offline workshop, portability |
+| **P2 — Aug–Sept, hard deadline** | `comfyui-memoacts` pack | Local ComfyUI | **The September workshop teaches this pack** — it must be functional by then; production quality for the video series follows in Oct–Nov |
+| **P3 — Sept+** | Hardening, workshop provisioning, Registry publication | Two rented machines | Workshop delivery, portability |
 
 ### Curriculum delivery — the two audiences (added v3.1, 2026-07-28)
 
@@ -37,6 +37,7 @@ The course has two parts with **different environments, different sizes, and dif
 | Format | 8 lessons | Hands-on workshop |
 | Depth | Overview / orientation — principles and open-source content tooling, Comfy-in-the-Cloud among them | **Practical / production** |
 | Environment | **Comfy Cloud** | **Local ComfyUI on two rented machines** |
+| Subject matter | Stock Cloud nodes (the P1 graph) | **`comfyui-memoacts` — the pack itself** |
 | Hardware risk | None — no dependence on personal machines, which is exactly why Cloud was chosen | Low and *controlled* — two machines the project provisions, not 16 unknown personal ones |
 
 Two consequences worth stating explicitly, because both were open questions until now:
@@ -46,9 +47,39 @@ Two consequences worth stating explicitly, because both were open questions unti
 
 **Ratio to keep in view:** 16 students on 2 machines is ~8 per machine, so the workshop runs in rotation. That is a scheduling constraint, not a technical one — but it means a single render must not monopolise a machine for long, which makes render *latency* (not just correctness) a workshop requirement. `GAPS.md` #3's ~2.6× text-rendering cost is the first place that bites.
 
+### September pack scope — what "functional" has to mean (added 2026-07-28)
+
+**Primary goal, non-negotiable: a functional pack by September.** Everything below serves that and nothing competes with it.
+
+The schedule is ~6 weeks with P1 unfinished, so scope must be decided by subtraction, not aspiration. Two things make this far less alarming than the raw dates suggest:
+
+1. **Much of `memoacts_core` already exists**, in script form, built during P1 and deliberately designed as its seed (`docs/P1_GRAPH.md`): `tools/generate_shots.py` already does alignment, digit normalisation, the shot table, per-frame crop maths and the resolution guard; `tools/run_p1_local.py` holds the shot-assembly chain; `tools/assemble_reel.py` does concat and narration mux. The September job is substantially **wrapping proven logic in V3 nodes**, not discovering it.
+2. **P1's compromises already point at their own replacements.** `GAPS.md` #2 dictates the frame-streaming motion engine, #3 dictates libass burn-in. These are not open design questions.
+
+Proposed priority for the September cut — **to be confirmed before implementation starts**:
+
+| Module | September | Rationale |
+|---|---|---|
+| `memoacts_core/` | **Must** | Everything else is a thin wrapper over it; largely exists already |
+| `nodes_align.py` | **Must** | The shot table is the workflow's spine; logic exists in `generate_shots.py` |
+| `nodes_shot.py` | **Must** | Motion + per-shot assembly — the actual CapCut replacement, and the frame-streaming rewrite (#2) lives here |
+| `nodes_subs.py` | **Must** | libass burn-in; justified by #3 alone now that #1 is withdrawn |
+| `nodes_encode.py` | **Must** | Thin ffmpeg wrapper; a reel that cannot be exported is not a workflow |
+| `nodes_audio.py` | **Should** | Narration passthrough is small and already in `assemble_reel.py`; SFX can slip |
+| `nodes_layers.py` | **Could** | Six effect families is the largest single body of work in the pack and the most deferrable — a workshop can teach the pipeline without them. **First candidate to cut** |
+| `nodes_video.py` | **Won't** | Video fragments; no workshop dependency, and the KAPFILM case belongs to production in Oct–Nov |
+
+### The stretch goal — teach students to build their own tools
+
+Explicitly a **golden achievement, not a requirement**: using the pack as a worked example of how to build production tooling. It must never be allowed to compete with shipping a functional pack.
+
+But it has one consequence worth acting on *now*, because it is nearly free at the start and expensive to retrofit: if the pack may later be read as a teaching example, then **code legibility is a product property, not internal hygiene** — clear module boundaries, honest naming, comments that explain *why*. Adopt the habit from the first commit; do not adopt the deliverable. Concretely: no separate "teaching version", no tutorial content in scope, no API contorted for pedagogy. If September arrives and the pack is functional and readable, the stretch goal is available at low cost; if it is functional and ugly, nothing is lost that matters.
+
 **The gaps are discovered empirically, not predicted.** Build P1 first, record every point where a stock node forces a compromise in **`GAPS.md`** as it is hit, and let that list define the pack's scope in P2 — we stop guessing which functions are worth writing.
 
-Milestone reality: the online intensive is running **now** (July–August); the video series goes into production **October–November**. P1 has weeks, P2 has months. Scope P1 accordingly — it is allowed to be crude.
+Milestone reality (**corrected 2026-07-28 — the v3 version of this paragraph was wrong and load-bearing**): the online intensive runs **now** (July–August); the **September offline workshop teaches the pack itself**; the video series goes into production **October–November**.
+
+~~P1 has weeks, P2 has months.~~ **P1 has weeks and P2 has weeks.** The pack is no longer gated by the video series in October — it is gated by a workshop in September, which is roughly **six weeks out with P1 still unfinished**. Scope both accordingly: P1 is allowed to be crude and must now also be allowed to be *finished rather than polished*, because P2 no longer has slack to absorb P1 overrun.
 
 **Iterate locally, validate on Cloud.** Cloud runs consume credits per GPU-second; a 2.5-minute render iterated dozens of times is a real cost. Develop graph logic against a local ComfyUI using the same stock nodes; use Cloud runs for validation and the participant-facing version. Note any behaviour that differs between the two in `HARDENING.md`.
 
@@ -284,6 +315,14 @@ Test project (**retargeted in v3.1**): a new **English** script + narration reco
 8. The Branch A graph runs on a plain local ComfyUI install with **no GPU-class or diffusion checkpoints**. The aligner's speech model is permitted — **no size ceiling**; select whatever the bake-off shows to be accurate enough, preferring the smaller model only where accuracy is equal. Presence of a GPU is neither required nor harmful.
 9. A course participant who has completed the intro seminars can, following a one-page guide, produce a reel from prepared assets in one session.
 
+**September workshop criteria (added v3.1 — the pack is taught there, so these gate the September delivery specifically):**
+
+10. The pack **installs** on a freshly provisioned rented machine from the written procedure in `HARDENING.md`, with no hand-steps and no internet dependency during the workshop itself.
+11. A workshop participant — not the author, not the production operator — completes a full reel on a shared machine **within a rotation slot** (~8 students per machine). This is a *latency* criterion as much as a usability one; measure it on the actual hardware.
+12. The pack fails legibly. A student who wires something wrong sees an error that names the problem, not a Python traceback from three layers down. In a workshop with two machines and sixteen people, an unclear failure costs the room's time, not one person's.
+
+Criteria 1–8 remain the production standard for Oct–Nov and are **not** all required by September — see the module priority table in §0.
+
 **Benchmark:** reference creator spends ~10 h per 2.5-min reel. Collecting and verifying images and deciding image-to-sentence fit remain human — that is why the GUI exists. Keyframing, effect application, subtitle generation/correction and re-export cycles are what the workflow absorbs.
 
 ---
@@ -332,5 +371,6 @@ New in v3: RU digit/date normalisation quality (§5.1) — the dominant drift so
 - [x] **Who is P2 for?** — **resolved 2026-07-28.** The curriculum has two parts (§0): August online (30 students, Cloud, overview) and September offline (16 students, local on two rented machines, practical). The pack reaches students in Part 2, so it is **not** production-only and no third "grow capability within stock Cloud nodes" track is needed. `GAPS.md` remains the P2 backlog for the pack; the Cloud ceiling binds Part 1 only, where an overview-level feature set is appropriate.
 - [x] **Does the September offline workshop still exist?** — **resolved 2026-07-28: yes**, and the provisioning problem is far smaller than assumed. Not sixteen unknown personal machines but **two rented, project-controlled machines**. `HARDENING.md` rewritten accordingly; the USB-distribution and unknown-hardware-audit items are retired as solving a non-problem, replaced by a two-machine provisioning checklist.
 - [ ] English narration + script for the retargeted test project (§6.2) — awaited from the project owner; P2 acceptance cannot be evaluated until it exists.
-- [ ] **Does the September workshop use the pack, or stock local ComfyUI?** Newly relevant: "16 students try local ComfyUI" could mean either. It sets P2's deadline. If the workshop teaches the pack, P2 must be workshop-ready by September — roughly six weeks, with P1 not yet finished — and gains an acceptance criterion it does not currently have (usable by a workshop participant, not just by the production operator, §6.2.9 covers only the latter). If it teaches stock local ComfyUI (local-vs-Cloud contrast, no custom nodes), P2 keeps its natural October–November timeline alongside the video series. **Decide before committing P2 scope.**
+- [x] **Does the September workshop use the pack, or stock local ComfyUI?** — **resolved 2026-07-28: the pack.** P2 therefore has a hard September deadline (§0 milestone reality, corrected). New acceptance criteria §6.2.10–12 cover workshop installability, rotation-slot latency and legible failure. Stretch goal — teaching students to build their own tooling from the pack as an example — is explicitly a *golden achievement*, never a requirement (§0).
+- [ ] **Confirm the September module cut** (§0 priority table) before implementation starts. Proposed: `memoacts_core` + align/shot/subs/encode as must-have, audio as should, **`nodes_layers.py` (six effect families) as the first thing to cut**, video fragments out. The effect families are the largest body of work in the pack and the most deferrable — but they are also the most *visible* part of a CapCut replacement, so cutting them is a teaching decision as much as an engineering one.
 - [ ] **Rented-machine specification** — a September deliverable with a hard lead time (the machines must be chosen and booked). Input exists: `GAPS.md` #2's ~11.5 GiB per 240-frame shot at source resolution, which scales with *source* image resolution rather than output. Derive RAM/CPU/disk from the intended workshop project size before booking, and note that per §6.2.8 no GPU is required by construction — a GPU is opportunistic, not a rental requirement.

@@ -57,11 +57,21 @@ SHA-256 digest, so exported graphs are **not submittable unchanged**) and **#5**
   feared: two project-controlled machines, provisioned once and cloned, not
   sixteen unknown personal ones. `HARDENING.md` rewritten around that.
 
-**Still open, and it sets P2's deadline:** does September teach **the pack**, or
-**stock local ComfyUI**? If the pack, P2 must be workshop-ready in ~6 weeks with
-P1 unfinished, and needs an acceptance criterion it lacks today (usable by a
-workshop participant, not just the production operator). If stock, P2 keeps its
-October–November timeline. Asked, not yet answered — SPEC §10.
+- **"Does September teach the pack?" — resolved 2026-07-28: YES.** P2 therefore
+  has a **hard September deadline** (~6 weeks, P1 unfinished). SPEC §0's
+  "P1 has weeks, P2 has months" was corrected — both have weeks. Practical
+  consequence for the next sessions: **finish P1, do not polish it.** New
+  acceptance criteria §6.2.10–12 (workshop installability, rotation-slot
+  latency, legible failure). Stretch goal (students build their own tooling
+  from the pack as an example) is a *golden achievement, never a requirement* —
+  its only cost now is writing the pack legibly from the first commit.
+- **Not as alarming as the dates look:** much of `memoacts_core` already exists
+  in script form and was deliberately built as its seed —
+  `tools/generate_shots.py` (alignment, normalisation, shot table, crop maths,
+  resolution guard), `tools/run_p1_local.py` (shot-assembly chain),
+  `tools/assemble_reel.py` (concat + mux). September is substantially *wrapping
+  proven logic in V3 nodes*. And `GAPS.md` #2/#3 already dictate the two
+  rewrites (frame-streaming motion engine, libass burn-in) — not open questions.
 
 **Earliest hard deadline in the project:** the rented machines must be *specified
 and booked* before they can be provisioned. `GAPS.md` #2 (~11.5 GiB per 240-frame
@@ -71,7 +81,8 @@ construction (SPEC §6.2.8).
 ## Next task
 
 **Full 9-chunk `demo_en` Cloud run** (P1_GRAPH verification step 5) — the credit
-measurement that feeds SPEC §6.1.4.
+measurement that feeds SPEC §6.1.4. This closes P1. **Then stop adding to P1**
+and start the pack: P2's September deadline no longer leaves room for P1 polish.
 
 - The 4 images are **already uploaded**; digests are in the run log of the
   2026-07-28 session (re-upload is cheap and idempotent with `overwrite=true`).
