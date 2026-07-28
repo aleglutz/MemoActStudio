@@ -12,11 +12,17 @@ Run the generator, then upload to Cloud as input assets:
 
 ```
 python tools/generate_shots.py --project projects/<name> --lang en --max-chunk 60
+python tools/run_p1_local.py --project projects/<name> --export-all cloud_graphs
 ```
 
 - all `images/*` used by shots
 - `generated/report.txt` open in a text editor (you'll paste from `generated/crops/`)
 - narration is NOT uploaded — audio is muxed after download (step 6)
+
+`cloud_graphs/` holds one API-format graph per chunk plus `manifest.json`
+(images to upload, per-chunk text and frame count). The export needs no
+ComfyUI server — run it before travelling. Every node class in those graphs is
+confirmed present on Cloud (`SURVEY.md §2.1`).
 
 ## 1. One shot-chunk group (build once, then duplicate)
 
@@ -52,9 +58,11 @@ alternates, e.g. `zoom_in` vs `pan_lr` variants). Everything else is frozen.
 
 ## 5. Credit discipline
 
-One full run, note GPU-seconds from the Cloud dashboard, multiply by cohort
-size, check against Sachkosten **before** sharing with participants
-(SPEC §6.1.4). Iterate locally, validate on Cloud.
+**One chunk first**, never the whole set — it proves list-map execution and
+node availability on Cloud for the price of the shortest segment. Then one full
+run; note GPU-seconds from the Cloud dashboard, multiply by cohort size, check
+against Sachkosten **before** sharing with participants (SPEC §6.1.4). Iterate
+locally, validate on Cloud.
 
 ## 6. Assembly (facilitator machine)
 

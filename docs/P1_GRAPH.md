@@ -69,6 +69,7 @@ One global per-frame table (frame → image index + crop rect) driving a single 
 3. Local: full multi-shot chain + external assembly, sync check.
    **✅ DONE 2026-07-24** on `projects/demo_en` (4 shots, TTS narration, one deliberately under-resolved image): generator → 9 chunked segments (`tools/run_p1_local.py`, 139 s) → concat+mux (`tools/assemble_reel.py`) → **415 frames, 13.833 s vs narration 13.831 s**; verbatim digits on screen; `[CLAMPED]`/`[DIGITS]`/confidence flags all exercised. One fix recorded: no `-shortest` in the mux (drops the final frame when audio is ms-shorter than video). RU alignment validation still pending real Sidur narration (no RU TTS voice on this machine).
 4. Cloud: same graph, one validation run → measure GPU-seconds → credit budget ×cohort vs Sachkosten (§6.1.4).
+   **Pre-flight ✅ 2026-07-28:** all 8 node classes of the frozen chain exist in the Cloud per-pack subsets (`SURVEY.md §2.1`) — no substitution needed. Ready-to-load graphs for every `demo_en` chunk: `python tools/run_p1_local.py --project projects/demo_en --export-all <dir>` (offline, no server). Order on the day: **one chunk first** (`shot_01_c1`, 36 frames — the cheapest that still exercises list-map + crop + text + encode), read peak RAM/GPU-s, only then the remaining 8.
 5. Cloud: Sidur 18-shot facilitator run.
 6. Every stock-node compromise hit → `GAPS.md` at the moment it's hit.
 

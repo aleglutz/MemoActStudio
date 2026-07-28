@@ -1,6 +1,7 @@
 __pycache__/
 *.pyc
 projects/*/generated/
+projects/*/cloud_graphs/
 projects/*/reel_p1.mp4
 projects/demo_en/narration.wav
 projects/demo_en/images/

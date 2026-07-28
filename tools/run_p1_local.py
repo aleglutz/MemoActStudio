@@ -90,12 +90,40 @@ def main() -> int:
     ap.add_argument("--comfy-root", type=Path, default=Path(
         r"C:\Users\Aleg\beehAIve\ComfyUI-Easy-Install\ComfyUI-Easy-Install\ComfyUI"))
     ap.add_argument("--export-workflow", type=Path, default=None)
+    ap.add_argument("--export-all", type=Path, default=None,
+                    help="write every chunk graph (API format) to this dir and exit — "
+                         "no server needed; use for the Cloud run")
     args = ap.parse_args()
 
     gen = args.project / "generated"
     doc = json.loads((gen / "shots.json").read_text(encoding="utf-8"))
     fps = doc["fps"]
     run_tag = f"memoacts_{args.project.name}"
+
+    def chunk_graphs():
+        for s in doc["shots"]:
+            for stem in s["crops"]:
+                csvs = {k: (gen / "crops" / f"{stem}.{k}.csv").read_text("ascii")
+                        for k in ("w", "h", "x", "y")}
+                yield stem, s, build_chunk_workflow(s["image"], csvs, s["text"],
+                                                    f"{run_tag}/{stem}", fps)
+
+    if args.export_all:
+        args.export_all.mkdir(parents=True, exist_ok=True)
+        manifest = []
+        for stem, s, wf in chunk_graphs():
+            (args.export_all / f"{stem}.json").write_text(json.dumps(wf, indent=2))
+            manifest.append({"chunk": stem, "image": s["image"], "text": s["text"],
+                             "frames": len((gen / "crops" / f"{stem}.x.csv")
+                                           .read_text("ascii").split(",")),
+                             "filename_prefix": f"{run_tag}/{stem}"})
+        (args.export_all / "manifest.json").write_text(
+            json.dumps({"project": args.project.name, "fps": fps,
+                        "images": sorted({m["image"] for m in manifest}),
+                        "chunks": manifest}, indent=2, ensure_ascii=False),
+            encoding="utf-8")
+        print(f"exported {len(manifest)} chunk graphs to {args.export_all}")
+        return 0
 
     # stage images into ComfyUI input
     for s in doc["shots"]:
@@ -108,17 +136,12 @@ def main() -> int:
 
     t0 = time.time()
     n_jobs = 0
-    for s in doc["shots"]:
-        for stem in s["crops"]:
-            csvs = {k: (gen / "crops" / f"{stem}.{k}.csv").read_text("ascii")
-                    for k in ("w", "h", "x", "y")}
-            wf = build_chunk_workflow(s["image"], csvs, s["text"],
-                                      f"{run_tag}/{stem}", fps)
-            if args.export_workflow and n_jobs == 0:
-                args.export_workflow.write_text(json.dumps(wf, indent=2))
-            submit_and_wait(args.host, wf)
-            n_jobs += 1
-            print(f"  rendered {stem}")
+    for stem, _s, wf in chunk_graphs():
+        if args.export_workflow and n_jobs == 0:
+            args.export_workflow.write_text(json.dumps(wf, indent=2))
+        submit_and_wait(args.host, wf)
+        n_jobs += 1
+        print(f"  rendered {stem}")
     render_s = time.time() - t0
     print(f"{n_jobs} segments in {render_s:.1f}s")
 

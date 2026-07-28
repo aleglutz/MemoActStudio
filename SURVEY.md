@@ -42,12 +42,29 @@ Verdict per SPEC §3 gating question:
 |---|---|---|---|---|
 | 1 | Video / image-sequence I/O | **available** | VHS: `VHS_LoadImages(Path)`, `VHS_LoadVideo(Path/FFmpeg)`, `VHS_VideoCombine`; core `RepeatImageBatch`, `ImageBatch` | — |
 | 2 | Audio ingest + mux | **available** | core `LoadAudio`; `VHS_LoadAudio(Upload)`; `VHS_VideoCombine` optional audio input; AudioTools `Trim Audio`/`Gain`/`Mix`/`Show Audio Info` | — |
-| 3 | Image transforms for Ken Burns | **partial → workaround CONFIRMED** | Static-parameter crop/resize only: essentials `ImageCrop+`/`ImageResize+`, WAS `Image Crop Location`/`Image Resize`. **No animated pan/zoom node anywhere on the list** | **Verified locally 2026-07-24:** `StringSplitDataList → CastToInt` data lists map-execute `ImageCrop+` (single image broadcasts, no RepeatImageBatch) → `ImageResize+` → `ImageListToBatch+` → `VHS_VideoCombine`. 240-frame eased zoom in 48 s. Caveat: ~11.5 GiB RAM per 240-frame shot (source-res intermediates) → chunk to ≤60 frames on Cloud. Cloud re-validation pending (mechanism is core engine behaviour, expected to transfer) |
+| 3 | Image transforms for Ken Burns | **partial → workaround CONFIRMED** | Static-parameter crop/resize only: essentials `ImageCrop+`/`ImageResize+`, WAS `Image Crop Location`/`Image Resize`. **No animated pan/zoom node anywhere on the list** | **Verified locally 2026-07-24:** `StringSplitDataList → CastToInt` data lists map-execute `ImageCrop+` (single image broadcasts, no RepeatImageBatch) → `ImageResize+` → `ImageListToBatch+` → `VHS_VideoCombine`. 240-frame eased zoom in 48 s. Caveat: ~11.5 GiB RAM per 240-frame shot (source-res intermediates) → chunk to ≤60 frames on Cloud. Cloud **node availability confirmed 2026-07-28** (see pre-flight below); execution semantics still to re-validate on Cloud |
 | 4 | Text / subtitle overlay | **partial — EN only (verified)** | essentials `DrawText+` (bitmap text). No `.ass`/libass path anywhere (expected). **Tested 2026-07-24: the pack's single font (Share Tech Mono) is Latin-only — RU and HY render as tofu.** No font-install path on Cloud | EN track via `DrawText+` (as approved). RU/HY: subtitle strips pre-rendered outside the graph (PIL + Noto fonts) as per-shot transparent PNGs → core `ImageCompositeMasked`. → `GAPS.md` #1 |
 | 5 | Compositing / blend modes | **partial** | WAS `Image Blending Mode` / `Image Blend (by Mask)` (LayerStyle subset has **none**) | Not needed for P1 (effects are P2); WAS suffices for a demo blend |
 | 6 | LUT application | **partial** | essentials `ImageApplyLUT+` exists, but needs `.cube` files in `models/luts` — whether Cloud accepts user files there is unverified | P1 skips grade (not required §6.1). Alternative to test later: `radiance` grading nodes (74 on Cloud, unexamined) |
 | 7 | Encode control | **partial** | `VHS_VideoCombine`: `frame_rate`, `crf`, `pix_fmt=yuv420p`, h264/mp4 formats, audio mux | crf instead of 12 Mbps bitrate profile — fine for P1; platform-profile encode stays P2 (`nodes_encode.py`) |
 | 8 | Speech / alignment | **absent** (as predicted) | No forced-alignment node exists. AudioTools has `Speech-to-Text + SRT (Whisper)` — ASR only, the error class we reject for production | Prepared-inputs model per SPEC §4: `stable-ts` runs outside the graph → `shots.json` (+ crop CSVs) uploaded as input assets. AudioTools Whisper is a bonus: the ASR-vs-alignment teaching contrast can be shown **on Cloud** |
+
+### 2.1 Pre-flight: node-level Cloud availability of the frozen P1 chain
+
+Checked 2026-07-28 against the per-pack Cloud subset pages (`comfy.org/cloud/supported-nodes/<pack>`), because §2's key discovery is that Cloud carries *subsets*. Every node class emitted by `tools/run_p1_local.py::build_chunk_workflow` (identical to `docs/example_shot_chunk_api.json`):
+
+| Node class (API) | Pack | Cloud |
+|---|---|---|
+| `LoadImage` | core | ✅ |
+| `Basic data handling: StringSplitDataList` ("split (to data list)") | basic_data_handling (258 of 309 nodes on Cloud) | ✅ |
+| `Basic data handling: CastToInt` ("to INT") | basic_data_handling | ✅ |
+| `ImageCrop+` | ComfyUI_essentials (62 nodes on Cloud) | ✅ |
+| `ImageResize+` | ComfyUI_essentials | ✅ |
+| `DrawText+` | ComfyUI_essentials | ✅ (EN only — GAPS #1) |
+| `ImageListToBatch+` | ComfyUI_essentials | ✅ |
+| `VHS_VideoCombine` | VideoHelperSuite | ✅ |
+
+**No node substitution is needed for the Cloud run.** What this does *not* prove, and what the validation run (verification step 4) still has to establish: (a) that Cloud's executor applies the same list-map broadcast semantics, (b) that a ≤60-frame chunk fits Cloud RAM (unknown, GAPS #2), (c) GPU-seconds per chunk. The fallbacks in P1_GRAPH.md remain live until (a) is observed.
 
 **Net P1 verdict:** a stock-node reel graph is feasible — I/O, audio, encode, text are there. The single genuine risk is #3 (per-frame motion). It is a testable hypothesis, not a blocker: verify list-map crop locally (same stock nodes) before any Cloud credits are spent; if it fails, that is the first and defining `GAPS.md` entry and the strongest possible argument for the P2 pack.
 
