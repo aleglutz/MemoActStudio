@@ -17,7 +17,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from memoacts_core.align import StableTsAligner, proportional_spans
 from memoacts_core.normalize import normalize_block
-from memoacts_core.project import (apply_shot_lead, list_images, parse_script,
+from memoacts_core.project import (apply_shot_lead, list_images,
+                                   parse_script_shots, resolve_shot_images,
                                    write_outputs)
 from memoacts_core.schedule import Motion, compute, default_motion, frames_for
 
@@ -47,15 +48,25 @@ def main() -> int:
         narration = next(iter(proj.glob("narration.*")), None)
         if narration is None:
             print("no narration.* in", proj); return 1
-    blocks = parse_script(proj / "script.md")
+    script_shots = parse_script_shots(proj / "script.md")
+    blocks = [s.text for s in script_shots]
     images = list_images(proj / "images")
-    if not blocks:
-        print("script.md has no blocks"); return 1
+    if not script_shots:
+        print("script.md has no shots"); return 1
     if not images:
         print("images/ is empty"); return 1
-    if len(images) < len(blocks):
-        print(f"note: {len(blocks)} shots but {len(images)} images — cycling images")
-    imgs = [images[i % len(images)] for i in range(len(blocks))]
+
+    imgs, warnings = resolve_shot_images(script_shots, images)
+    for w in warnings:
+        print(f"warning: {w}")
+    named = sum(1 for s in script_shots if s.assets)
+    silent = [s.label or f"shot {i}" for i, s in enumerate(script_shots, 1) if s.silent]
+    print(f"{len(script_shots)} shots — {named} with a storyboard image, "
+          f"{len(script_shots) - named} cycled from images/")
+    if silent:
+        # Silent shots get their duration from the pause between neighbours; if
+        # the narrator did not pause, they collapse to a single frame.
+        print(f"silent shots (no narration): {', '.join(silent)}")
 
     normed, flags = [], []
     for b in blocks:

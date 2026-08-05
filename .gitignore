@@ -1,7 +1,15 @@
 __pycache__/
 *.pyc
+
+# Project media is never versioned — a single archival video is larger than the
+# entire codebase. Scripts and generated tables stay in git; the assets they
+# point at live on disk and travel by other means.
+projects/*/images/
+projects/*/video/
+projects/*/sources/
+projects/*/composites/
+projects/*/narration.*
+projects/*/out/
 projects/*/generated/
 projects/*/cloud_graphs/
 projects/*/reel_p1.mp4
-projects/demo_en/narration.wav
-projects/demo_en/images/

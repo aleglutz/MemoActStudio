@@ -16,7 +16,8 @@ from comfy_api.latest import io
 from .memoacts_core import SCHEMA_VERSION
 from .memoacts_core.align import StableTsAligner, proportional_spans
 from .memoacts_core.normalize import normalize_block
-from .memoacts_core.project import apply_shot_lead, list_images, parse_script
+from .memoacts_core.project import (apply_shot_lead, list_images,
+                                    parse_script_shots, resolve_shot_images)
 from .memoacts_core.schedule import default_motion, frames_for
 from .nodes_types import Shots
 
@@ -96,9 +97,10 @@ class MemoActsAlignShots(io.ComfyNode):
         script = project / "script.md"
         if not script.exists():
             raise ValueError(f"no script.md in {project}")
-        blocks = parse_script(script)
-        if not blocks:
-            raise ValueError(f"{script} has no blank-line-separated blocks")
+        script_shots = parse_script_shots(script)
+        blocks = [s.text for s in script_shots]
+        if not script_shots:
+            raise ValueError(f"{script} has no shots")
 
         narration = _find_narration(project)
         if narration is None:
@@ -107,12 +109,19 @@ class MemoActsAlignShots(io.ComfyNode):
         images = list_images(project / "images")
         if not images:
             raise ValueError(f"no images in {project / 'images'}")
-        if len(images) < len(blocks):
-            # Cycling is the documented behaviour, not a failure — but say so,
-            # because a student who dropped in too few images should know.
-            print(f"[MemoActs] {len(blocks)} shots but {len(images)} images — "
-                  f"cycling images")
-        imgs = [images[i % len(images)] for i in range(len(blocks))]
+
+        imgs, warns = resolve_shot_images(script_shots, images)
+        for w in warns:
+            print(f"[MemoActs] warning: {w}")
+        named = sum(1 for s in script_shots if s.assets)
+        print(f"[MemoActs] {len(script_shots)} shots — {named} with a "
+              f"storyboard image, {len(script_shots) - named} cycled")
+        silent = [s.label or str(i)
+                  for i, s in enumerate(script_shots, 1) if s.silent]
+        if silent:
+            # Duration comes from the pause between neighbours; no pause means
+            # the shot collapses to one frame.
+            print(f"[MemoActs] silent shots (no narration): {', '.join(silent)}")
 
         normed, had_digits = [], []
         for b in blocks:

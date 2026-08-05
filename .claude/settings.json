@@ -1,0 +1,5 @@
+{
+  "enabledPlugins": {
+    "comfyui-custom-nodes@comfyui-custom-node-skills": true
+  }
+}

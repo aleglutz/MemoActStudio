@@ -211,7 +211,18 @@ projects/<name>/
   shots.json         # emitted by alignment, re-ingestible after hand edits
 ```
 
-`script.md`: one shot per blank-line-separated block (unchanged from v1). A `mapping.csv` batch path from v1 remains supported in `memoacts_core` for power use, but the reference flow is GUI selection.
+`script.md` supports **two layouts** (extended 2026-08-05 for `projects/legends_of_surrender`, whose script is a storyboard):
+
+1. **Plain** (v1, unchanged): one shot per blank-line-separated block.
+2. **Storyboard**: shot headings `### S00`, `### S01`, … open each shot. Plain lines are its narration; lines starting with `>` are directions and are **not spoken**. Anything before the first shot heading is a document title and is dropped.
+
+The layout is detected from the file — a script containing shot headings uses the second, everything else keeps v1 behaviour exactly.
+
+Both layouts read `[[asset.jpg]]` references and **strip them from the narration**, so a filename written into the text can never be spoken or burnt into a subtitle. A referenced file becomes that shot's still; a shot naming nothing falls back to cycling `images/` alphabetically, preserving the zero-input default of §5.2. A named file that is missing is a warning and a fallback, never a failed run — storyboards are written before assets are gathered.
+
+**Silent shots** (a heading with directions but no narration — `legends_of_surrender` S15 is one) are kept, not dropped: they hold screen time without a line. Alignment gives them the pause between their neighbours, which is exactly right when the narrator pauses there — and collapses them to a single frame when they do not, which is worth checking in the shot report.
+
+A `mapping.csv` batch path from v1 remains supported in `memoacts_core` for power use, but the reference flow is GUI selection.
 
 ---
 
