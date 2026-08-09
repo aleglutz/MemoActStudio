@@ -1,0 +1,132 @@
+{
+  "source": "kokoro bm_fable, scratch",
+  "sample_rate": 24000,
+  "shots": [
+    {
+      "id": 1,
+      "t_start": 0.0,
+      "t_end": 6.123,
+      "cue_s": 0.0,
+      "text": "A calendar can be a foreign policy instrument. In Europe, one date proves it every year."
+    },
+    {
+      "id": 2,
+      "t_start": 8.0,
+      "t_end": 12.736,
+      "cue_s": 8.0,
+      "text": "The eighth and the ninth of May. Two dates for the end of the same war."
+    },
+    {
+      "id": 3,
+      "t_start": 16.0,
+      "t_end": 20.8,
+      "cue_s": 16.0,
+      "text": "How did one night in Berlin-Karlshorst produce two Victory Days?"
+    },
+    {
+      "id": 4,
+      "t_start": 21.0,
+      "t_end": 32.691,
+      "cue_s": 21.0,
+      "text": "Reims, France. The seventh of May. Colonel General Jodl signs the unconditional surrender of the Wehrmacht. The guns are to fall silent at 23:01 on the eighth."
+    },
+    {
+      "id": 5,
+      "t_start": 33.0,
+      "t_end": 43.368,
+      "cue_s": 33.0,
+      "text": "But Jodl is a staff officer with no real power of command. And the British remember how the First World War ended \u2014 when German generals walked away from defeat."
+    },
+    {
+      "id": 6,
+      "t_start": 46.0,
+      "t_end": 52.037,
+      "cue_s": 46.0,
+      "text": "So the Reims protocol demands a second signature. From the men who actually give orders."
+    },
+    {
+      "id": 7,
+      "t_start": 53.0,
+      "t_end": 60.509,
+      "cue_s": 53.0,
+      "text": "The place is fixed: Soviet High Command headquarters in Berlin-Karlshorst. The eighth of May, afternoon."
+    },
+    {
+      "id": 8,
+      "t_start": 60.808,
+      "t_end": 69.0,
+      "cue_s": 61.0,
+      "text": "But to secure an immediate ceasefire, President Truman and Prime Minister Churchill announce the surrender before the ratification has happened."
+    },
+    {
+      "id": 9,
+      "t_start": 69.0,
+      "t_end": 73.672,
+      "cue_s": 69.0,
+      "text": "While London and Washington begin celebrating, Karlshorst stalls."
+    },
+    {
+      "id": 10,
+      "t_start": 74.0,
+      "t_end": 79.845,
+      "cue_s": 74.0,
+      "text": "The Russian translation arrives incomplete. Wording is argued over by radio."
+    },
+    {
+      "id": 11,
+      "t_start": 80.0,
+      "t_end": 85.739,
+      "cue_s": 80.0,
+      "text": "The German High Command signs at about a quarter to one in the morning. The next day."
+    },
+    {
+      "id": 12,
+      "t_start": 88.0,
+      "t_end": 92.459,
+      "cue_s": 88.0,
+      "text": "In the West the war had already been declared over. On the eighth."
+    },
+    {
+      "id": 13,
+      "t_start": 95.0,
+      "t_end": 106.477,
+      "cue_s": 95.0,
+      "text": "In Moscow the announcement came only after Karlshorst. May ninth \u2014 the date the Soviet Union took as the victory over fascism in Europe and the end of the Great Patriotic War."
+    },
+    {
+      "id": 14,
+      "t_start": 109.0,
+      "t_end": 118.344,
+      "cue_s": 109.0,
+      "text": "It is still commemorated that way in Russia and across the post-Soviet space, including Armenia. But that tradition has not held everywhere."
+    },
+    {
+      "id": 15,
+      "t_start": 119.0,
+      "t_end": 126.616,
+      "cue_s": 119.0,
+      "text": "Latvia, Estonia and Lithuania dropped the ninth from the state calendar as soon as they regained independence."
+    },
+    {
+      "id": 16,
+      "t_start": 127.0,
+      "t_end": 135.939,
+      "cue_s": 127.0,
+      "text": "Poland moved its commemoration to the eighth in 2015. Ukraine did the same in 2023, and gave the ninth to Europe Day."
+    },
+    {
+      "id": 17,
+      "t_start": 137.0,
+      "t_end": 144.936,
+      "cue_s": 137.0,
+      "text": "Thus the delay in Karlshorst contributed to today's disputes and opened a way to choose the date without rewriting history."
+    },
+    {
+      "id": 18,
+      "t_start": 145.0,
+      "t_end": 148.669,
+      "cue_s": 145.0,
+      "text": "Does that make remembering harder \u2014 or freer?"
+    }
+  ]
+}

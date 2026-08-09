@@ -44,6 +44,36 @@ Gold-standard phone-level alignment; `russian_mfa` + EN models exist. But: conda
 
 Right *idea* (known-text DTW alignment, no ASR), wrong decade: last release 2017, tested through Python 3.5, C extension + eSpeak external dependency (Windows/py3.11 install is the known nightmare), sentence-level granularity coarser than neural aligners, AGPL-3.0, unmaintained.
 
+## First empirical numbers — 2026-08-10, synthetic material
+
+The bake-off has still not run on human narration, but a scratch track built
+with Kokoro TTS gave the first accuracy measurement this project has ever had,
+because every segment boundary was known exactly by construction.
+
+Material: `projects/legends_of_surrender`, 18 blocks, 319 words, 149 s, English,
+stable-ts `small`. Each line was synthesised separately and placed on the
+script's own cue grid, so the true speech onset is known to the sample.
+
+| | |
+|---|---|
+| median boundary error | **69 ms** |
+| p95 | **136 ms** |
+| max | 172 ms |
+| threshold (§bake-off) | p95 ≤ 150 ms → **PASS** |
+
+**Read this as an optimistic bound, not a validation.** Synthetic speech is
+cleaner than a human read: even pacing, no breaths, no false starts, no room
+tone. The human narration will be harder, and the number that matters is the
+one measured on it.
+
+Two measurement notes worth keeping, since both would silently distort a repeat:
+
+- Compare against **speech onset**, not the segment file start. Kokoro emits
+  ~45 ms of lead-in silence per segment; measuring from file start inflated
+  every error by that much and turned a PASS into a FAIL on the first attempt.
+- Undo the deliberate `shot_lead_ms` before comparing. The pipeline pulls every
+  boundary 100 ms early by design (SPEC §5.2); that is a feature, not error.
+
 ## Recommendation
 
 **stable-ts primary; whisperx as benchmark in the bake-off; MMS_FA as no-new-deps fallback and the future Armenian path.** Proportional fallback + `timing: estimated` (spec §5.1) wraps whichever engine loses confidence, so the choice is not load-bearing for robustness — only for accuracy and install weight, where stable-ts wins on both for RU/EN.

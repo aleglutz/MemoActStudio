@@ -1,0 +1,24 @@
+{
+  "1": {
+    "class_type": "KokoroSpeaker",
+    "inputs": {
+      "speaker_name": "bm_george"
+    }
+  },
+  "2": {
+    "class_type": "KokoroGenerator",
+    "inputs": {
+      "text": "A calendar can be a foreign policy instrument. In Europe, one date proves it every year.",
+      "speaker": ["1", 0],
+      "speed": 1.0,
+      "lang": "English (British)"
+    }
+  },
+  "3": {
+    "class_type": "SaveAudio",
+    "inputs": {
+      "audio": ["2", 0],
+      "filename_prefix": "tts/kokoro"
+    }
+  }
+}
