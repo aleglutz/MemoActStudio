@@ -100,7 +100,8 @@ def main() -> int:
                          duration=duration, lead_ms=args.lead_ms, blocks=blocks,
                          norm_blocks=normed, digit_flags=flags, spans=spans,
                          images=imgs, motions=motions, schedules=schedules,
-                         n_frames=n_frames, max_chunk=args.max_chunk)
+                         n_frames=n_frames, max_chunk=args.max_chunk,
+                         cues=[sh.cue for sh in script_shots])
     print("wrote", path)
     print((out / "report.txt").read_text(encoding="utf-8"))
     return 0

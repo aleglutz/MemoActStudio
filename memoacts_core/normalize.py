@@ -39,6 +39,9 @@ _DECADE_RE = re.compile(r"\b(\d{4})s\b")
 #: "0.45", "23.45" — a decimal or clock reading. The point is not spoken.
 _DOTTED_RE = re.compile(r"\b(\d+)\.(\d+)\b")
 
+#: "23:01" — an unambiguous clock reading; the colon is never spoken.
+_COLON_TIME_RE = re.compile(r"\b(\d{1,2}):(\d{2})\b")
+
 # A 4-digit number in this range is read as a year. Chosen for the material:
 # 20th-century history, where bare quantities of this magnitude are rare and
 # dates are constant. The failure mode is mild — "1500 people" would become
@@ -83,6 +86,23 @@ def normalize_block(text: str, lang: str) -> tuple[str, bool]:
     if n2w_lang == "en":
         # Order matters: each pass consumes a pattern the plain-number pass
         # below would otherwise mangle.
+
+        # "23:01" -> "twenty-three oh one". Unlike the dotted form this is
+        # unambiguously a clock, so it needs no guessing — but English reads a
+        # minute below ten as "oh one", not "one", and the colon is silent.
+        def colon_time(m: re.Match) -> str:
+            try:
+                hh, mm = int(m.group(1)), int(m.group(2))
+                if mm == 0:
+                    tail = "o'clock" if hh <= 12 else "hundred"
+                elif mm < 10:
+                    tail = f"oh {card(mm)}"
+                else:
+                    tail = card(mm)
+                return f"{card(hh)} {tail}"
+            except Exception:
+                return m.group()
+        out = _COLON_TIME_RE.sub(colon_time, out)
 
         # "1950s" -> "nineteen fifties". Without this the trailing s survives
         # the year expansion and yields "nineteen fiftys".

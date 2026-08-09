@@ -19,17 +19,49 @@ _SHOT_HEADING_RE = re.compile(r"^#{1,6}\s*S\s*(\d+)\b", re.IGNORECASE)
 #: An asset reference inside the storyboard: "[[Reims-Signing.jpg]]".
 _ASSET_REF_RE = re.compile(r"\[\[([^\]]+)\]\]")
 
+#: A cue timecode opening a block: "**0:21** — ", "1:02:33 -", "0:08".
+_CUE_RE = re.compile(
+    r"^\s*\*{0,2}(?:(\d{1,2}):)?(\d{1,2}):(\d{2})\*{0,2}\s*(?:[—–-]+\s*)?")
+
+#: Markdown emphasis. It is markup for the eye, never speech, and would
+#: otherwise be aligned and burnt into the subtitle as literal asterisks.
+_EMPHASIS_RE = re.compile(r"\*{1,3}(?=\S)(.+?)(?<=\S)\*{1,3}", re.S)
+
 
 @dataclass
 class ScriptShot:
-    """One shot as written: what is spoken, and what the storyboard asks for."""
+    """One shot as written: what is spoken, and what the script asks for."""
     text: str = ""                                  # verbatim narration
     label: str = ""                                 # "S14", "" in plain mode
     assets: list[str] = field(default_factory=list)  # [[refs]], in order
+    cue: float | None = None                        # timecode written in the script
 
     @property
     def silent(self) -> bool:
         return not self.text.strip()
+
+
+def _take_cue(text: str) -> tuple[str, float | None]:
+    """Split a leading timecode off a block.
+
+    A VO script often opens each block with the time the line is meant to land
+    (``**0:21** — Reims, France.``). That is the author's intent, not speech:
+    left in place it would be aligned *and* burnt into the subtitle. It is
+    lifted out here and kept as `cue`, which `write_outputs` reports against the
+    aligned start so a drifting alignment shows up as a number rather than as a
+    surprise in the render.
+    """
+    m = _CUE_RE.match(text)
+    if not m:
+        return text, None
+    h, mnt, sec = m.group(1), m.group(2), m.group(3)
+    seconds = (int(h) * 3600 if h else 0) + int(mnt) * 60 + int(sec)
+    return text[m.end():], float(seconds)
+
+
+def _clean(text: str) -> str:
+    """Narration as it should be spoken and shown: no markup, tidy spacing."""
+    return " ".join(_EMPHASIS_RE.sub(r"\1", text).split())
 
 
 def _harvest(line: str, shot: ScriptShot) -> str:
@@ -72,7 +104,7 @@ def parse_script_shots(path: Path) -> list[ScriptShot]:
 
         def close() -> None:
             if current is not None:
-                current.text = " ".join(" ".join(buf).split())
+                current.text, current.cue = _take_cue(_clean(" ".join(buf)))
                 shots.append(current)
 
         for ln in lines:
@@ -104,7 +136,7 @@ def parse_script_shots(path: Path) -> list[ScriptShot]:
                 if not s or s.startswith("#") or s.startswith(">"):
                     continue
                 kept.append(body)
-            shot.text = " ".join(" ".join(kept).split())
+            shot.text, shot.cue = _take_cue(_clean(" ".join(kept)))
             if shot.text or shot.assets:
                 shots.append(shot)
 
@@ -176,18 +208,21 @@ def write_outputs(out_dir: Path, *, lang: str, fps: int, narration: str,
                   norm_blocks: list[str], digit_flags: list[bool],
                   spans: list[Span], images: list[Path], motions: list[Motion],
                   schedules: list[ShotSchedule], n_frames: list[int],
-                  max_chunk: int) -> Path:
+                  max_chunk: int,
+                  cues: list[float | None] | None = None) -> Path:
     out_dir.mkdir(parents=True, exist_ok=True)
     crops = out_dir / "crops"
     crops.mkdir(exist_ok=True)
 
+    cues = cues or [None] * len(blocks)
     shots = []
     report = [f"MemoActs shot report — schema {SCHEMA_VERSION}",
               f"narration: {narration}  duration: {duration:.2f}s  fps: {fps}  "
               f"lang: {lang}  shot_lead: {lead_ms}ms",
               f"total frames: {sum(n_frames)}", ""]
-    for i, (text, norm, span, img, mot, sched, nf) in enumerate(
-            zip(blocks, norm_blocks, spans, images, motions, schedules, n_frames), 1):
+    for i, (text, norm, span, img, mot, sched, nf, cue) in enumerate(
+            zip(blocks, norm_blocks, spans, images, motions, schedules,
+                n_frames, cues), 1):
         stem = f"shot_{i:02d}"
         chunk_files = []
         for ci, chunk in enumerate(sched.chunks(max_chunk)):
@@ -205,15 +240,23 @@ def write_outputs(out_dir: Path, *, lang: str, fps: int, narration: str,
             "image": img.name,
             "motion": {"preset": mot.preset, "rate": mot.rate, "anchor": mot.anchor},
             "clamped": sched.clamped, "max_zoom": round(sched.max_zoom, 2),
+            "cue_s": cue,
+            "cue_drift_s": None if cue is None else round(span.t_start - cue, 2),
             "crops": chunk_files,
         })
+        # A cue is what the author expected; the span is what the narrator did.
+        # A large gap means the alignment slipped or the read diverged from the
+        # script — either way it is far cheaper to see here than in the render.
+        drift = None if cue is None else span.t_start - cue
         flags = "".join([
             " [ESTIMATED]" if span.estimated else "",
             " [DIGITS]" if digit_flags[i - 1] else "",
             " [CLAMPED]" if sched.clamped else "",
+            "" if drift is None or abs(drift) < 2.0 else f" [DRIFT {drift:+.1f}s]",
         ])
+        cue_txt = "" if cue is None else f"  cue {int(cue)//60}:{int(cue)%60:02d}"
         report.append(
-            f"shot {i:02d}  {span.t_start:7.2f}–{span.t_end:7.2f}s "
+            f"shot {i:02d}{cue_txt}  {span.t_start:7.2f}–{span.t_end:7.2f}s "
             f"({span.t_end - span.t_start:5.2f}s, {nf} fr)  conf {span.confidence:.2f}  "
             f"{img.name}  {mot.preset}@{mot.rate:.2f}  max_zoom {sched.max_zoom:.2f}x{flags}")
         report.append(f"         {text[:100]}")
