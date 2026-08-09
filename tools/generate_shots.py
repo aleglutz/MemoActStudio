@@ -21,6 +21,7 @@ from memoacts_core.project import (apply_shot_lead, list_images,
                                    parse_script_shots, resolve_shot_images,
                                    write_outputs)
 from memoacts_core.schedule import Motion, compute, default_motion, frames_for
+from memoacts_core.shotlist import apply_shot_list, read_shot_list
 
 
 def main() -> int:
@@ -57,8 +58,28 @@ def main() -> int:
         print("images/ is empty"); return 1
 
     imgs, warnings = resolve_shot_images(script_shots, images)
+
+    # shots.csv wins over the script's own [[refs]] and over cycling: it is the
+    # edit decision, made after both.
+    edits = read_shot_list(proj / "shots.csv")
+    picks, edit_warnings = apply_shot_list(script_shots, edits, proj)
+    warnings += edit_warnings
+    footage = [f"shot {i}" for i, p in enumerate(picks, 1) if p.is_video]
+    if footage:
+        print(f"error: {len(footage)} shot(s) reference footage "
+              f"({', '.join(footage)}), which this pipeline cannot render yet — "
+              f"video fragments are SPEC §0 'Won't' for September and the "
+              f"cutting model is still undecided. Use a still for now.")
+        return 1
+    for i, p in enumerate(picks):
+        if p.media is not None:
+            imgs[i] = p.media
+
     for w in warnings:
         print(f"warning: {w}")
+    from_csv = sum(1 for p in picks if p.media is not None)
+    if from_csv:
+        print(f"shots.csv: {from_csv} shot(s) placed by the shot list")
     named = sum(1 for s in script_shots if s.assets)
     silent = [s.label or f"shot {i}" for i, s in enumerate(script_shots, 1) if s.silent]
     print(f"{len(script_shots)} shots — {named} with a storyboard image, "
@@ -92,6 +113,15 @@ def main() -> int:
         with Image.open(img) as im:
             src_w, src_h = im.size
         mot = default_motion(i)
+        pick = picks[i]
+        if pick.motion:
+            mot = Motion(preset=pick.motion,
+                         rate=pick.rate if pick.rate is not None else mot.rate,
+                         anchor=pick.anchor or mot.anchor)
+        elif pick.rate is not None or pick.anchor:
+            mot = Motion(preset=mot.preset,
+                         rate=pick.rate if pick.rate is not None else mot.rate,
+                         anchor=pick.anchor or mot.anchor)
         motions.append(mot)
         schedules.append(compute(src_w, src_h, nf, mot))
 

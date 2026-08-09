@@ -222,6 +222,15 @@ Both layouts read `[[asset.jpg]]` references and **strip them from the narration
 
 **Silent shots** (a heading with directions but no narration — `legends_of_surrender` S15 is one) are kept, not dropped: they hold screen time without a line. Alignment gives them the pause between their neighbours, which is exactly right when the narrator pauses there — and collapses them to a single frame when they do not, which is worth checking in the shot report.
 
+**Edit decisions live in `shots.csv`, not in the script (added 2026-08-05).** The script is what the narrator reads — clean voice-over and nothing else. Which still goes with which line, where an archival fragment starts, what motion and what look are edit decisions, and they change far more often than the words do. Separating them means re-timing the edit never risks touching the text that reaches the screen.
+
+    shot,media,in,motion,rate,anchor,effects,notes
+    0:21,Reims-Signing.jpg,,pan_lr,0.05,top,archive_soft,
+
+`shot` addresses a shot by **number** or by the **cue timecode** written in the script; cues are the safer handle, since inserting a line renumbers everything after it while a cue still points where it was written. Every other column is optional and a blank means "keep the default", so the table is as short as the number of decisions actually made. Missing shots, unknown cues and absent files warn and fall back — a shot list is written while the script is still moving.
+
+Precedence: `shots.csv` beats the script's own `[[refs]]`, which beat alphabetical cycling.
+
 A `mapping.csv` batch path from v1 remains supported in `memoacts_core` for power use, but the reference flow is GUI selection.
 
 ---
