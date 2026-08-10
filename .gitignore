@@ -14,19 +14,17 @@ projects/*/generated/
 projects/*/cloud_graphs/
 projects/*/reel_p1.mp4
 
-# Reference material and editor workspaces gathered per project. Not versioned
-# for the same reason as the media: it is large, it is not source, and some of
-# it arrives with names longer than Windows will index.
+# Reference material gathered per project. Not versioned for the same reason as
+# the media: it is large, it is not source, and some of it arrives with names
+# longer than Windows will index.
 projects/*/refs/
-projects/*/.freecut-workspace.json
 
-# FreeCut plants an entire workspace wherever it is pointed — media copies,
-# thumbnails, waveform caches, its own README and a nested projects/ tree.
-# None of it is MemoActs source, and it churns on every edit.
+# The FreeCut workspace lives outside the repo (docs/EDITING.md). These rules
+# are a guard in case the app is ever re-pointed at a project folder again.
+projects/*/.freecut-workspace.json
 projects/*/media/
 projects/*/projects/
 projects/*/index.json
-projects/legends_of_surrender/README.md
 
 # LibreOffice lock files, left behind while a .csv is open
 .~lock.*#
