@@ -13,3 +13,9 @@ projects/*/out/
 projects/*/generated/
 projects/*/cloud_graphs/
 projects/*/reel_p1.mp4
+
+# Reference material and editor workspaces gathered per project. Not versioned
+# for the same reason as the media: it is large, it is not source, and some of
+# it arrives with names longer than Windows will index.
+projects/*/refs/
+projects/*/.freecut-workspace.json
