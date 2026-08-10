@@ -168,7 +168,7 @@ def apply_shot_list(shots: list[ScriptShot], edits: list[ShotEdit],
             # composites/ holds stacked frames built outside the renderer (the
             # two- and three-band device). To a shot they are ordinary stills,
             # so they resolve the same way as anything in images/.
-            for folder in ("images", "composites", "video"):
+            for folder in ("images", "composites", "maps", "video"):
                 cand = project / folder / edit.media
                 if cand.exists():
                     found = cand
@@ -176,7 +176,7 @@ def apply_shot_list(shots: list[ScriptShot], edits: list[ShotEdit],
             if found is None:
                 warnings.append(
                     f"shots.csv: shot {edit.key} names {edit.media!r}, "
-                    f"which is in none of images/, composites/, video/")
+                    f"which is in none of images/, composites/, maps/, video/")
             else:
                 target.media = found
                 target.media_in = edit.media_in

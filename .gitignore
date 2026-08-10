@@ -11,6 +11,7 @@ projects/*/composites/
 projects/*/narration.*
 projects/*/out/
 projects/*/generated/
+projects/*/maps/
 projects/*/cloud_graphs/
 projects/*/reel_p1.mp4
 

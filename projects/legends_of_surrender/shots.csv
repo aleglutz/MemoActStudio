@@ -13,7 +13,7 @@ shot,media,in,motion,rate,anchor,effects,notes
 1:28,S07_two-band_bw.png,,static,,,,"two-band b/w: the West's version of events"
 1:35,Moscow.jpg,,pan_rl,0,,,the Moscow announcement
 1:49,StalinCropped1943.jpg,,pan_lr,0,,,"Soviet framing of the victory. WARNING: 960x1280, enlarged x1.50"
-1:59,Wehrmacht_in_Karlshorst.jpg,,pan_rl,0,,,NO ASSET for the Baltic states — placeholder
-2:07,GIoS_Wehrmacht_Signed_En.jpg,,zoom_out,0.06,,,NO ASSET for Poland/Ukraine — placeholder, 33% headroom
+1:59,map_baltics.png,,zoom_in,0.05,,,"map: Latvia, Estonia, Lithuania in flag colours"
+2:07,map_poland_ukraine.png,,zoom_out,0.05,,,map: Poland and Ukraine in flag colours
 2:17,Karlshorst_Signing.jpg,,pan_rl,0,,,"""the delay in Karlshorst"" — reprise of shot 3"
 2:25,S18_three-cities_bw.png,,static,,,,"three-band b/w: London / Berlin / Moscow — closing question"
