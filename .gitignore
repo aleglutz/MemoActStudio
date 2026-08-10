@@ -19,3 +19,14 @@ projects/*/reel_p1.mp4
 # it arrives with names longer than Windows will index.
 projects/*/refs/
 projects/*/.freecut-workspace.json
+
+# FreeCut plants an entire workspace wherever it is pointed — media copies,
+# thumbnails, waveform caches, its own README and a nested projects/ tree.
+# None of it is MemoActs source, and it churns on every edit.
+projects/*/media/
+projects/*/projects/
+projects/*/index.json
+projects/legends_of_surrender/README.md
+
+# LibreOffice lock files, left behind while a .csv is open
+.~lock.*#
