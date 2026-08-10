@@ -1,0 +1,44 @@
+{
+  "_comment": "MemoActs 3-Band 9:16. Bands 636+6+636+6+636 = 1920 at width 1080. Crop values shown are shot S14; change them by dragging the frame on each DragCrop node. last_width/last_height MUST equal the source size or DragCrop resets the crop to the full image.",
+
+  "ld1": {"class_type": "LoadImage", "inputs": {"image": "GIoS_Wehrmacht_Signed_Ru.jpg"}},
+  "cr1": {"class_type": "OlmDragCrop", "inputs": {
+    "drawing_version": "api", "image": ["ld1", 0],
+    "crop_left": 0, "crop_top": 161, "crop_right": 0, "crop_bottom": 0,
+    "crop_width": 1860, "crop_height": 1095,
+    "last_width": 1860, "last_height": 2560}},
+  "sc1": {"class_type": "ImageScale", "inputs": {
+    "image": ["cr1", 0], "upscale_method": "lanczos",
+    "width": 1080, "height": 636, "crop": "disabled"}},
+
+  "ld2": {"class_type": "LoadImage", "inputs": {"image": "Wehrmacht_in_Karlshorst.jpg"}},
+  "cr2": {"class_type": "OlmDragCrop", "inputs": {
+    "drawing_version": "api", "image": ["ld2", 0],
+    "crop_left": 0, "crop_top": 73, "crop_right": 0, "crop_bottom": 0,
+    "crop_width": 2560, "crop_height": 1508,
+    "last_width": 2560, "last_height": 1716}},
+  "sc2": {"class_type": "ImageScale", "inputs": {
+    "image": ["cr2", 0], "upscale_method": "lanczos",
+    "width": 1080, "height": 636, "crop": "disabled"}},
+
+  "ld3": {"class_type": "LoadImage", "inputs": {"image": "GIoS_Wehrmacht_Signed_En.jpg"}},
+  "cr3": {"class_type": "OlmDragCrop", "inputs": {
+    "drawing_version": "api", "image": ["ld3", 0],
+    "crop_left": 0, "crop_top": 850, "crop_right": 0, "crop_bottom": 0,
+    "crop_width": 1722, "crop_height": 1014,
+    "last_width": 1722, "last_height": 2560}},
+  "sc3": {"class_type": "ImageScale", "inputs": {
+    "image": ["cr3", 0], "upscale_method": "lanczos",
+    "width": 1080, "height": 636, "crop": "disabled"}},
+
+  "seam": {"class_type": "EmptyImage", "inputs": {
+    "width": 1080, "height": 6, "batch_size": 1, "color": 0}},
+
+  "cat": {"class_type": "ImageConcatMulti", "inputs": {
+    "inputcount": 5, "direction": "down", "match_image_size": false,
+    "image_1": ["sc1", 0], "image_2": ["seam", 0], "image_3": ["sc2", 0],
+    "image_4": ["seam", 0], "image_5": ["sc3", 0]}},
+
+  "save": {"class_type": "SaveImage", "inputs": {
+    "images": ["cat", 0], "filename_prefix": "threeband/shot"}}
+}

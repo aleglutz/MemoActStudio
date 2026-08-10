@@ -1,0 +1,33 @@
+{
+  "_comment": "MemoActs 2-Band 9:16. Bands 957+6+957 = 1920 at width 1080. Crop values are shot S01/S02 centred (c=0.5); change them by dragging the frame on each DragCrop node. last_width/last_height MUST equal the source size or DragCrop resets the crop to the full image. NOTE: composites/S01-02_two-band.png was built 956+956 with a 2 px black bar at the bottom — this workflow uses the correct 957+957 and will not match it row for row.",
+
+  "ld1": {"class_type": "LoadImage", "inputs": {"image": "Reims-Signing.jpg"}},
+  "cr1": {"class_type": "OlmDragCrop", "inputs": {
+    "drawing_version": "api", "image": ["ld1", 0],
+    "crop_left": 146, "crop_top": 0, "crop_right": 0, "crop_bottom": 0,
+    "crop_width": 2268, "crop_height": 2010,
+    "last_width": 2560, "last_height": 2010}},
+  "sc1": {"class_type": "ImageScale", "inputs": {
+    "image": ["cr1", 0], "upscale_method": "lanczos",
+    "width": 1080, "height": 957, "crop": "disabled"}},
+
+  "ld2": {"class_type": "LoadImage", "inputs": {"image": "Karlshorst_Signing.jpg"}},
+  "cr2": {"class_type": "OlmDragCrop", "inputs": {
+    "drawing_version": "api", "image": ["ld2", 0],
+    "crop_left": 208, "crop_top": 0, "crop_right": 0, "crop_bottom": 0,
+    "crop_width": 1584, "crop_height": 1404,
+    "last_width": 2000, "last_height": 1404}},
+  "sc2": {"class_type": "ImageScale", "inputs": {
+    "image": ["cr2", 0], "upscale_method": "lanczos",
+    "width": 1080, "height": 957, "crop": "disabled"}},
+
+  "seam": {"class_type": "EmptyImage", "inputs": {
+    "width": 1080, "height": 6, "batch_size": 1, "color": 0}},
+
+  "cat": {"class_type": "ImageConcatMulti", "inputs": {
+    "inputcount": 3, "direction": "down", "match_image_size": false,
+    "image_1": ["sc1", 0], "image_2": ["seam", 0], "image_3": ["sc2", 0]}},
+
+  "save": {"class_type": "SaveImage", "inputs": {
+    "images": ["cat", 0], "filename_prefix": "threeband/twoband"}}
+}
