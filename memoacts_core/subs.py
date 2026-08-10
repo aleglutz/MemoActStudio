@@ -48,18 +48,29 @@ class SubStyle:
     margin_v: int = 420
     bold: bool = False
 
+    #: Plate behind the text. White captions over a pale document are
+    #: unreadable without one — the archival stills in this material run from
+    #: near-black to bare paper, and no outline colour survives both.
+    #: 0 disables it and restores the plain outline style.
+    plate_opacity: float = 0.55
+    plate_colour: str = "#000000"
+    plate_pad: float = 10.0        # how far the box extends past the text
 
-def _ass_colour(hex_rgb: str) -> str:
+
+def _ass_colour(hex_rgb: str, opacity: float = 1.0) -> str:
     """#RRGGBB -> &HAABBGGRR.
 
     ASS stores colours alpha-first and byte-reversed, so the intuitive
-    conversion produces red where you wanted blue. Alpha 00 is fully opaque.
+    conversion produces red where you wanted blue. Alpha runs backwards too:
+    00 is fully opaque and FF fully transparent, so an `opacity` of 1 maps to
+    00. Both traps cost an hour each if rediscovered.
     """
     h = hex_rgb.lstrip("#")
     if len(h) != 6:
         raise ValueError(f"expected #RRGGBB, got {hex_rgb!r}")
     r, g, b = h[0:2], h[2:4], h[4:6]
-    return f"&H00{b}{g}{r}".upper()
+    alpha = max(0, min(255, round(255 * (1.0 - opacity))))
+    return f"&H{alpha:02X}{b}{g}{r}".upper()
 
 
 def _ass_time(t: float) -> str:
@@ -98,6 +109,8 @@ class Cue:
 def build_ass(cues: list[Cue], style: SubStyle | None = None,
               play_w: int = PLAY_W, play_h: int = PLAY_H) -> str:
     st = style or SubStyle()
+    boxed = st.plate_opacity > 0.0
+    plate_col = _ass_colour(st.plate_colour, st.plate_opacity)
     header = [
         "[Script Info]",
         "ScriptType: v4.00+",
@@ -113,11 +126,18 @@ def build_ass(cues: list[Cue], style: SubStyle | None = None,
         "OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, "
         "ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, "
         "Alignment, MarginL, MarginR, MarginV, Encoding",
-        # Alignment 2 = bottom centre. BorderStyle 1 = outline + drop shadow.
+        # Alignment 2 = bottom centre.
+        # BorderStyle 1 = outline + drop shadow; 3 = opaque box, where the
+        # Outline field becomes the box's padding rather than a stroke width.
+        # Renderers disagree about which colour fills that box — VSFilter uses
+        # OutlineColour, some builds reach for BackColour — so both are set to
+        # the plate colour and the question stops mattering.
         f"Style: Default,{st.font},{st.size},{_ass_colour(st.primary)},"
-        f"{_ass_colour(st.primary)},{_ass_colour(st.outline)},"
-        f"{_ass_colour(st.shadow)},{int(st.bold)},0,0,0,100,100,0,0,1,"
-        f"{st.outline_width},{st.shadow_depth},2,"
+        f"{_ass_colour(st.primary)},{plate_col if boxed else _ass_colour(st.outline)},"
+        f"{plate_col if boxed else _ass_colour(st.shadow)},{int(st.bold)},0,0,0,"
+        f"100,100,0,0,{3 if boxed else 1},"
+        f"{st.plate_pad if boxed else st.outline_width},"
+        f"{0.0 if boxed else st.shadow_depth},2,"
         f"{st.margin_l},{st.margin_r},{st.margin_v},1",
         "",
         "[Events]",

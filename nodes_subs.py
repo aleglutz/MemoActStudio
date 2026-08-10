@@ -39,19 +39,36 @@ class MemoActsSubtitles(io.ComfyNode):
                 ),
                 io.Float.Input("shadow", default=2.0, min=0.0, max=10.0, step=0.5),
                 io.Float.Input("outline", default=0.0, min=0.0, max=10.0, step=0.5),
+                io.Float.Input(
+                    "plate_opacity", default=0.55, min=0.0, max=1.0, step=0.05,
+                    tooltip="Opacity of the box drawn behind the caption. "
+                            "Archival stills run from near-black to bare paper, "
+                            "and no single text colour stays readable over both; "
+                            "the plate makes the caption independent of the "
+                            "image under it. 0 disables it and falls back to "
+                            "the outline/shadow style.",
+                ),
+                io.Color.Input("plate_color", default="#000000"),
+                io.Float.Input(
+                    "plate_pad", default=10.0, min=0.0, max=40.0, step=1.0,
+                    tooltip="How far the plate extends past the text.",
+                ),
                 io.String.Input("stem", default="subtitles"),
             ],
             outputs=[Subs.Output("SUBS")],
         )
 
     @classmethod
-    def execute(cls, shots, size, color, margin_v, shadow, outline, stem):
+    def execute(cls, shots, size, color, margin_v, shadow, outline,
+                plate_opacity, plate_color, plate_pad, stem):
         doc = shots["doc"]
         out_dir = Path(shots["project_dir"]) / "out"
 
         style = core_subs.SubStyle(
             size=size, primary=color, margin_v=margin_v,
             shadow_depth=shadow, outline_width=outline,
+            plate_opacity=plate_opacity, plate_colour=plate_color,
+            plate_pad=plate_pad,
         )
         cues = core_subs.cues_from_shots(doc["shots"])
         ass, srt = core_subs.write_tracks(out_dir, cues, stem=stem, style=style)

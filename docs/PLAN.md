@@ -14,15 +14,30 @@ Effort is in working days on this machine, and assumes nothing else is running.
 
 ## A. Subtitles — legibility (≈1 day total)
 
-### A1. Semi-transparent plate — hours
+### A1. Semi-transparent plate — DONE
 
-The `.ass` style currently uses `BorderStyle: 1` (outline + shadow), which is
-why white text over a pale document is unreadable. ASS has `BorderStyle: 3`, an
-opaque box drawn from `BackColour` — and ASS colours carry an alpha byte, so
-`&H60000000` gives a 62 %-opaque black plate behind the line. One style-line
-change plus a `SubStyle` field.
+`BorderStyle: 3` (opaque box) instead of `1` (outline + shadow), filled with an
+alpha-carrying colour. `SubStyle.plate_opacity` (default **0.55**),
+`plate_colour`, `plate_pad`; exposed on `MemoActsSubtitles` and as
+`render_reel.py --plate`. `plate_opacity=0` restores the old style exactly.
 
-Do this first: it is the smallest change with the largest visible effect.
+Three things worth remembering, all of which cost time to find:
+
+- ASS alpha runs **backwards** — `00` is opaque, `FF` transparent. `_ass_colour`
+  now takes an opacity in the human direction and inverts it.
+- Under `BorderStyle: 3` the `Outline` field stops being a stroke width and
+  becomes the **box's padding**; `plate_pad` feeds it.
+- Renderers disagree about whether the box is filled from `OutlineColour` or
+  `BackColour`, so both are set to the plate colour.
+
+Calibrated against the reel's worst frame — shot 10, the signed instrument,
+whose caption band averages **236/255**. At 0.55 the caption is legible there
+and the plate stays unobtrusive over the dark shots (shot 6 averages 25).
+
+One cosmetic artefact remains: the box is drawn **per line**, so a two-line
+caption gets two boxes of different widths and reads as ragged. **A2 removes it**
+by making a caption one line — which is why it is worth doing next rather than
+chasing a full-width band here.
 
 ### A2. One line, larger — ≈1 day, and it is not a styling change
 
@@ -131,7 +146,7 @@ re-recorded.
 
 ## Recommended order
 
-1. **A1** — subtitle plate. Hours, and the reel becomes watchable.
+1. ~~**A1** — subtitle plate.~~ Done.
 2. **A2** — word-timed segmentation, bigger single-line captions.
 3. **B** — multiple shots per block. Editing control, and dynamics for free.
 4. **C2** — oversized composites so stacked frames can move.

@@ -45,6 +45,9 @@ def main() -> int:
     ap.add_argument("--no-subs", action="store_true",
                     help="render without burning in the subtitle track")
     ap.add_argument("--crf", type=int, default=19)
+    ap.add_argument("--plate", type=float, default=0.55,
+                    help="opacity of the box behind the caption; 0 falls back "
+                         "to the plain outline style (default: 0.55)")
     ap.add_argument("--on-upscale", default="warn",
                     choices=["warn", "error", "allow"],
                     help="what to do when a source cannot fill the output "
@@ -91,7 +94,9 @@ def main() -> int:
     ass = None
     if not args.no_subs:
         cues = subs.cues_from_shots(doc["shots"])
-        ass, srt = subs.write_tracks(out_path.parent, cues, stem=out_path.stem)
+        style = subs.SubStyle(plate_opacity=args.plate)
+        ass, srt = subs.write_tracks(out_path.parent, cues, stem=out_path.stem,
+                                     style=style)
         print(f"subtitles: {len(cues)} cues -> {ass.name}, {srt.name}")
 
     total = sum(len(s.schedule.ws) for s in shots)
