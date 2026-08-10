@@ -1,0 +1,24 @@
+{
+  "_comment": "Archival still upscale. 4x_foolhardy_Remacri chosen by comparison on the reel's worst source (768x514 Tempelhof) — see docs/UPSCALE.md. The model is 4x; ImageScaleBy brings it back to the size actually needed, so the network runs at its trained factor and the reduction is a clean lanczos. Replace scale_by to suit: 0.25 returns the original size, 0.93 gives the 3.72x this reel needs.",
+
+  "load": {
+    "class_type": "LoadImage",
+    "inputs": {"image": "Wehrmacht-at-Tempelhof-Shagin-MBK.jpg"}
+  },
+  "model": {
+    "class_type": "UpscaleModelLoader",
+    "inputs": {"model_name": "4x_foolhardy_Remacri.safetensors"}
+  },
+  "upscale": {
+    "class_type": "ImageUpscaleWithModel",
+    "inputs": {"upscale_model": ["model", 0], "image": ["load", 0]}
+  },
+  "resize": {
+    "class_type": "ImageScaleBy",
+    "inputs": {"image": ["upscale", 0], "upscale_method": "lanczos", "scale_by": 0.93}
+  },
+  "save": {
+    "class_type": "SaveImage",
+    "inputs": {"images": ["resize", 0], "filename_prefix": "upscale/archival"}
+  }
+}
