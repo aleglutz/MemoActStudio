@@ -1,15 +1,19 @@
-# shots.json + crop CSV — prepared-inputs contract, schema 1.0
+# shots.json + crop CSV — prepared-inputs contract, schema 1.1
 
 **Frozen 2026-07-24.** This is the interface handed to participants (SPEC §4).
 Additive changes bump the minor version; anything that breaks an existing
 graph or reader bumps the major version and is announced. `schema_version`
 is always present.
 
+**1.1 (2026-08-10)** adds the optional per-shot `words` array. Purely additive:
+a 1.0 reader ignores it, and a 1.0 file still loads — the subtitle builder
+falls back to one caption per block when it is absent.
+
 ## shots.json
 
 ```json
 {
-  "schema_version": "1.0",
+  "schema_version": "1.1",
   "fps": 30, "width": 1080, "height": 1920,
   "lang": "ru",
   "narration": "narration.mp3",
@@ -35,6 +39,7 @@ Per shot:
 | `motion` | obj | `{preset, rate, anchor}`; presets: `static, zoom_in, zoom_out, pan_lr, pan_rl, pan_ud, pan_du` |
 | `clamped` | bool | resolution guard reduced `rate` so the crop never drops below output width (no silent upscaling) |
 | `max_zoom` | float | how far this source *could* zoom (source-window-width / 1080) |
+| `words` | [obj] | *1.1, optional.* `{text, t_start, t_end}` per word, **verbatim script text** with aligner timings. Lets a block be cut into single-line captions at real word boundaries (`memoacts_core.caption`). Absent on 1.0 files and when `estimated`; in a block flagged `had_digits` the word *placement* is approximate, because normalisation changes the token count — block boundaries stay exact. |
 | `crops` | [str] | crop-file stems, one per chunk (`shot_03`, or `shot_03_c0`, `shot_03_c1`, … when chunked to `--max-chunk` frames) |
 
 ## Crop CSVs (`crops/<stem>.{w,h,x,y}.csv`)

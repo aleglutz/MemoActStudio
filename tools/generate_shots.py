@@ -102,7 +102,9 @@ def main() -> int:
     else:
         print(f"aligning {len(blocks)} blocks against {narration.name} "
               f"({duration:.1f}s, model={args.model}, lang={args.lang})…")
-        spans = aligner.align(narration, normed, args.lang)
+        # normed is what the model listens for; blocks is what reaches the
+        # screen. Both are needed — see StableTsAligner.align.
+        spans = aligner.align(narration, normed, args.lang, blocks)
     spans = apply_shot_lead(spans, args.lead_ms)
 
     n_frames = frames_for([(s.t_start, s.t_end) for s in spans], args.fps)

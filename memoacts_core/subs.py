@@ -17,6 +17,9 @@ import re
 from dataclasses import dataclass
 from pathlib import Path
 
+from . import caption
+from .align import Word
+
 PLAY_W, PLAY_H = 1080, 1920
 
 #: Fonts shipped with the project. Burn-in resolves against this rather than a
@@ -24,6 +27,10 @@ PLAY_W, PLAY_H = 1080, 1920
 #: provisioning step (HARDENING.md). Share Tech Mono is SIL OFL 1.1 — the
 #: licence travels with it in assets/fonts/OFL.txt, as the OFL requires.
 FONTS_DIR = Path(__file__).resolve().parent.parent / "assets" / "fonts"
+
+#: The file behind SubStyle.font, needed because measuring a line (to keep it
+#: to one line) has to open the same font libass will burn in.
+_FONT_FILE = "ShareTechMono-Regular.ttf"
 
 
 @dataclass
@@ -37,7 +44,11 @@ class SubStyle:
     researched platform guidance.
     """
     font: str = "Share Tech Mono"
-    size: int = 44
+    #: 56, up from P1's 44. Affordable only because a caption is now one short
+    #: line rather than a whole narration block: at 56 the usable width holds
+    #: ~31 characters, which would have been unusable when a cue had to carry
+    #: 175 of them.
+    size: int = 56
     primary: str = "#FFFFFF"
     outline: str = "#000000"
     shadow: str = "#000000"
@@ -160,13 +171,53 @@ def build_srt(cues: list[Cue]) -> str:
     return "\n".join(out)
 
 
-def cues_from_shots(shots: list[dict]) -> list[Cue]:
+def cues_from_shots(shots: list[dict], style: SubStyle | None = None,
+                    play_w: int = PLAY_W, *, segment: bool = True,
+                    min_duration: float = 1.0) -> list[Cue]:
     """Build cues from shots.json entries.
 
     Reads `text` — the verbatim script — and never `text_normalized`.
+
+    With schema >= 1.1 each shot carries word timings, and a block is cut into
+    captions that fit on one line (see memoacts_core.caption for why one line is
+    a correctness requirement and not a preference). Without them — an older
+    shots.json, or `segment=False` — this falls back to one cue per block, which
+    is what P1 did.
     """
-    return [Cue(t_start=s["t_start"], t_end=s["t_end"], text=s["text"])
-            for s in shots]
+    st = style or SubStyle()
+    if not segment:
+        return [Cue(s["t_start"], s["t_end"], s["text"]) for s in shots]
+
+    font_path = FONTS_DIR / _FONT_FILE
+    width = caption.usable_width(play_w, st.margin_l, st.margin_r,
+                                 st.plate_pad if st.plate_opacity > 0 else 0.0)
+    cues: list[Cue] = []
+    for s in shots:
+        raw = s.get("words") or []
+        if not raw:
+            cues.append(Cue(s["t_start"], s["t_end"], s["text"]))
+            continue
+        words = [Word(w["text"], w["t_start"], w["t_end"]) for w in raw]
+        for c in caption.segment(words, size=st.size, max_width=width,
+                                 font_path=font_path,
+                                 min_duration=min_duration):
+            cues.append(Cue(c.t_start, c.t_end, c.text))
+    return cues
+
+
+def check_wrap(cues: list[Cue], style: SubStyle | None = None,
+               play_w: int = PLAY_W) -> list[Cue]:
+    """Return the cues that will not fit on one line.
+
+    Any non-empty result means overlapping plates and a dark bar through the
+    text, so callers should surface it rather than ship it.
+    """
+    st = style or SubStyle()
+    width = caption.usable_width(play_w, st.margin_l, st.margin_r,
+                                 st.plate_pad if st.plate_opacity > 0 else 0.0)
+    font_path = FONTS_DIR / _FONT_FILE
+    return [c for c in cues
+            if caption.text_width(c.text, st.size, font_path) > width]
 
 
 def write_tracks(out_dir: Path, cues: list[Cue], *, stem: str = "subtitles",

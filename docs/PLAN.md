@@ -39,7 +39,26 @@ caption gets two boxes of different widths and reads as ragged. **A2 removes it*
 by making a caption one line — which is why it is worth doing next rather than
 chasing a full-width band here.
 
-### A2. One line, larger — ≈1 day, and it is not a styling change
+### A2. One line, larger — DONE
+
+Font 44 → **56**, and each block is cut into captions that fit on one line at
+the aligner's word timings. 18 blocks became 79 captions, median 1.9 s.
+
+**One line is a correctness requirement, not a preference.** The plate is drawn
+per line, so stacked lines stack their plates, and where two semi-transparent
+plates overlap the alpha composites twice: measured L=60 against L=116 for a
+single plate, a 20 px bar exactly `2 × plate_pad` tall, straight through the
+text. So the fix for "no wall of text" and the fix for the dark bar are one fix.
+
+Guaranteed rather than tuned: `memoacts_core.caption` measures with the same
+font file libass burns in and packs to a pixel budget, so nothing wraps at any
+size (checked at 50/56/62/68). `subs.check_wrap()` reports any caption that
+would, and `render_reel.py` prints it as a defect.
+
+Sentences are cut first, then over-long ones split evenly. Greedy packing alone
+produced `May. Two dates for the end of` — one caption carrying two thoughts.
+
+### ~~A2 as originally planned~~ — the reasoning, kept
 
 The request is "no more than two lines, ideally one, bigger". That cannot be
 done by setting a font size. The longest block in this script is **32 words /
@@ -147,7 +166,7 @@ re-recorded.
 ## Recommended order
 
 1. ~~**A1** — subtitle plate.~~ Done.
-2. **A2** — word-timed segmentation, bigger single-line captions.
+2. ~~**A2** — word-timed segmentation, bigger single-line captions.~~ Done.
 3. **B** — multiple shots per block. Editing control, and dynamics for free.
 4. **C2** — oversized composites so stacked frames can move.
 5. **C1** — animated maps.

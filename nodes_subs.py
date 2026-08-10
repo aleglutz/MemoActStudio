@@ -7,6 +7,7 @@ P1's ~2.6× per-frame cost.
 """
 from __future__ import annotations
 
+import logging
 from pathlib import Path
 
 from comfy_api.latest import io
@@ -29,7 +30,7 @@ class MemoActsSubtitles(io.ComfyNode):
             ),
             inputs=[
                 Shots.Input("shots"),
-                io.Int.Input("size", default=44, min=8, max=200),
+                io.Int.Input("size", default=56, min=8, max=200),
                 io.Color.Input("color", default="#FFFFFF"),
                 io.Int.Input(
                     "margin_v", default=420, min=0, max=1800,
@@ -53,6 +54,20 @@ class MemoActsSubtitles(io.ComfyNode):
                     "plate_pad", default=10.0, min=0.0, max=40.0, step=1.0,
                     tooltip="How far the plate extends past the text.",
                 ),
+                io.Boolean.Input(
+                    "segment", default=True,
+                    tooltip="Cut each narration block into captions that fit "
+                            "on one line, at the aligner's word timings. Off "
+                            "gives one caption per block, as P1 did — long "
+                            "blocks then wrap, and wrapped lines stack their "
+                            "plates into a dark bar through the text.",
+                ),
+                io.Float.Input(
+                    "min_duration", default=1.0, min=0.0, max=5.0, step=0.1,
+                    tooltip="Shortest a caption may stay up, in seconds. Only "
+                            "spends silence that follows it; never overlaps "
+                            "the next caption.",
+                ),
                 io.String.Input("stem", default="subtitles"),
             ],
             outputs=[Subs.Output("SUBS")],
@@ -60,7 +75,8 @@ class MemoActsSubtitles(io.ComfyNode):
 
     @classmethod
     def execute(cls, shots, size, color, margin_v, shadow, outline,
-                plate_opacity, plate_color, plate_pad, stem):
+                plate_opacity, plate_color, plate_pad, segment, min_duration,
+                stem):
         doc = shots["doc"]
         out_dir = Path(shots["project_dir"]) / "out"
 
@@ -70,6 +86,14 @@ class MemoActsSubtitles(io.ComfyNode):
             plate_opacity=plate_opacity, plate_colour=plate_color,
             plate_pad=plate_pad,
         )
-        cues = core_subs.cues_from_shots(doc["shots"])
+        play_w = doc.get("width", core_subs.PLAY_W)
+        cues = core_subs.cues_from_shots(doc["shots"], style, play_w,
+                                         segment=segment,
+                                         min_duration=min_duration)
         ass, srt = core_subs.write_tracks(out_dir, cues, stem=stem, style=style)
-        return io.NodeOutput({"ass": str(ass), "srt": str(srt), "cues": len(cues)})
+        wrapped = core_subs.check_wrap(cues, style, play_w)
+        for c in wrapped:
+            logging.warning("MemoActsSubtitles: caption wraps, its plate will "
+                            "overlap the next line: %r", c.text)
+        return io.NodeOutput({"ass": str(ass), "srt": str(srt),
+                              "cues": len(cues), "wrapped": len(wrapped)})

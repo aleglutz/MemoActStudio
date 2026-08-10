@@ -45,6 +45,12 @@ def main() -> int:
     ap.add_argument("--no-subs", action="store_true",
                     help="render without burning in the subtitle track")
     ap.add_argument("--crf", type=int, default=19)
+    ap.add_argument("--sub-size", type=int, default=56,
+                    help="caption font size in output pixels (default: 56)")
+    ap.add_argument("--no-segment", action="store_true",
+                    help="one caption per narration block, as P1 did, instead "
+                         "of cutting blocks into single-line captions at word "
+                         "timings")
     ap.add_argument("--plate", type=float, default=0.55,
                     help="opacity of the box behind the caption; 0 falls back "
                          "to the plain outline style (default: 0.55)")
@@ -93,11 +99,17 @@ def main() -> int:
 
     ass = None
     if not args.no_subs:
-        cues = subs.cues_from_shots(doc["shots"])
-        style = subs.SubStyle(plate_opacity=args.plate)
+        style = subs.SubStyle(plate_opacity=args.plate, size=args.sub_size)
+        cues = subs.cues_from_shots(doc["shots"], style, out_w,
+                                    segment=not args.no_segment)
         ass, srt = subs.write_tracks(out_path.parent, cues, stem=out_path.stem,
                                      style=style)
-        print(f"subtitles: {len(cues)} cues -> {ass.name}, {srt.name}")
+        # A wrapped caption stacks two plates and puts a dark bar through the
+        # text, so this is a defect report, not a style note.
+        for c in subs.check_wrap(cues, style, out_w):
+            print(f"  WRAPS (plates will overlap): {c.text!r}")
+        print(f"subtitles: {len(cues)} cues from {len(doc['shots'])} blocks "
+              f"-> {ass.name}, {srt.name}")
 
     total = sum(len(s.schedule.ws) for s in shots)
     print(f"rendering {len(shots)} shots, {total} frames "

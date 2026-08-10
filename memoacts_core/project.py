@@ -5,7 +5,7 @@ from __future__ import annotations
 
 import json
 import re
-from dataclasses import asdict, dataclass, field
+from dataclasses import dataclass, field, replace
 from pathlib import Path
 
 from . import SCHEMA_VERSION
@@ -220,9 +220,15 @@ def resolve_media(project: Path, shot: dict) -> Path:
 
 def apply_shot_lead(spans: list[Span], lead_ms: int) -> list[Span]:
     """Cuts lead speech onset (SPEC §5.2): every boundary except t=0 moves
-    earlier by lead; spans stay contiguous."""
+    earlier by lead; spans stay contiguous.
+
+    Word timings are deliberately *not* moved. A shot boundary is an editorial
+    cut placed a little ahead of the voice; a word time is when the word was
+    actually spoken, and captions hang off those. Shifting both would drag the
+    captions off the narration by exactly the lead.
+    """
     lead = lead_ms / 1000
-    out = [Span(**asdict(s)) for s in spans]
+    out = [replace(s, words=list(s.words)) for s in spans]
     for i in range(1, len(out)):
         b = max(out[i].t_start - lead, out[i - 1].t_start + 0.1)
         out[i - 1].t_end = b
@@ -271,6 +277,12 @@ def write_outputs(out_dir: Path, *, lang: str, fps: int, narration: str,
             "clamped": sched.clamped, "max_zoom": round(sched.max_zoom, 2),
             "cue_s": cue,
             "cue_drift_s": None if cue is None else round(span.t_start - cue, 2),
+            # Word timings, kept so captions can be cut inside a block at real
+            # word boundaries (memoacts_core.caption). Optional: a shots.json
+            # written before schema 1.1 simply has none, and the subtitle
+            # builder falls back to one cue per block.
+            "words": [{"text": w.text, "t_start": round(w.t_start, 3),
+                       "t_end": round(w.t_end, 3)} for w in span.words],
             "crops": chunk_files,
         })
         # A cue is what the author expected; the span is what the narrator did.
