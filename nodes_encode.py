@@ -14,6 +14,7 @@ from pathlib import Path
 from comfy_api.latest import io, ui
 
 from .memoacts_core.render import ShotRender, render_reel
+from .memoacts_core.project import resolve_media
 from .memoacts_core.schedule import Motion, compute
 from .nodes_types import Shots, Subs
 
@@ -69,9 +70,9 @@ class MemoActsRenderReel(io.ComfyNode):
         stacks = shots.get("effects") or {}
         renders: list[ShotRender] = []
         for s in doc["shots"]:
-            img = project / "images" / s["image"]
+            img = resolve_media(project, s)
             if not img.exists():
-                raise ValueError(f"shot {s['id']}: missing image {img}")
+                raise ValueError(f"shot {s['id']}: missing media {img}")
             with PILImage.open(img) as im:
                 src_w, src_h = im.size
             # Each shot gets its own copy: the pipeline holds decoder state for

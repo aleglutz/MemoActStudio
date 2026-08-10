@@ -191,6 +191,33 @@ def resolve_shot_images(shots: list[ScriptShot], images: list[Path]
     return picked, warnings
 
 
+#: Folders a shot's media may live in, in search order. Stills sit in images/,
+#: stacked frames in composites/, drawn plates in maps/, footage in video/.
+MEDIA_DIRS = ("images", "composites", "maps", "video")
+
+
+def resolve_media(project: Path, shot: dict) -> Path:
+    """Where a shot's media actually is.
+
+    `shots.json` records `image_path` (project-relative) precisely so this does
+    not have to be guessed. Older tables carry only the bare `image` name, so
+    the folders are searched as a fallback — without which a composite or a map
+    resolves at generate time and then goes missing at render time, which is
+    exactly the failure this function exists to prevent.
+    """
+    rel = shot.get("image_path")
+    if rel:
+        cand = project / rel
+        if cand.exists():
+            return cand
+    name = shot.get("image", "")
+    for folder in MEDIA_DIRS:
+        cand = project / folder / name
+        if cand.exists():
+            return cand
+    return project / "images" / name          # report the conventional path
+
+
 def apply_shot_lead(spans: list[Span], lead_ms: int) -> list[Span]:
     """Cuts lead speech onset (SPEC §5.2): every boundary except t=0 moves
     earlier by lead; spans stay contiguous."""
@@ -238,6 +265,8 @@ def write_outputs(out_dir: Path, *, lang: str, fps: int, narration: str,
             "confidence": round(span.confidence, 3),
             "had_digits": digit_flags[i - 1],
             "image": img.name,
+            "image_path": img.relative_to(out_dir.parent).as_posix()
+            if out_dir.parent in img.parents else img.name,
             "motion": {"preset": mot.preset, "rate": mot.rate, "anchor": mot.anchor},
             "clamped": sched.clamped, "max_zoom": round(sched.max_zoom, 2),
             "cue_s": cue,

@@ -15,6 +15,7 @@ from pathlib import Path
 
 from comfy_api.latest import io, ui
 
+from .memoacts_core.project import resolve_media
 from .memoacts_core.schedule import PRESETS, Motion, compute
 from .nodes_types import Shots
 
@@ -124,7 +125,7 @@ class MemoActsShotReport(io.ComfyNode):
             "",
         ]
         for s in doc["shots"]:
-            img = project / "images" / s["image"]
+            img = resolve_media(project, s)
             try:
                 with PILImage.open(img) as im:
                     src_w, src_h = im.size

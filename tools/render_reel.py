@@ -29,6 +29,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from PIL import Image  # noqa: E402
 
 from memoacts_core import subs  # noqa: E402
+from memoacts_core.project import resolve_media  # noqa: E402
 from memoacts_core.effects import PRESETS, preset  # noqa: E402
 from memoacts_core.render import ShotRender, render_reel  # noqa: E402
 from memoacts_core.schedule import Motion, compute  # noqa: E402
@@ -71,9 +72,9 @@ def main() -> int:
 
     shots: list[ShotRender] = []
     for s in doc["shots"]:
-        img = proj / "images" / s["image"]
+        img = resolve_media(proj, s)
         if not img.exists():
-            print(f"missing image for shot {s['id']}: {img}")
+            print(f"missing media for shot {s['id']}: {img}")
             return 1
         with Image.open(img) as im:
             src_w, src_h = im.size
