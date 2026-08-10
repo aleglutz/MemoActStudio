@@ -162,57 +162,20 @@ unattributable `ServiceError`. Both are August-intensive blockers, not P2 work.
 
 ## Next task
 
-1. **First run on the real English project** — script + narration awaited from
-   the project owner (expected 2026-07-29). This is the first evaluation of
-   SPEC §6.2 criteria 1–9, which `demo_en` cannot exercise: four synthetic
-   stills and 13.8 s prove mechanics, not acceptance.
-3. **Calibrate the effect presets** against the reference creator's actual
-   reels. The shipped values are placeholders chosen on synthetic images, which
-   exaggerate grain badly (SPEC §5.4).
-4. **Decide the workshop's effect budget.** Effects triple to quadruple render
-   time; a heavy preset puts a 2.5-min reel at ~17 min, which does not fit a
-   rotation slot at ~8 students per machine (SPEC §6.2.11).
+**See `docs/PLAN.md`** — the ordered work plan, written 2026-08-10 after the
+first full render of `legends_of_surrender` and superseding what stood here.
 
-Also open, unchanged: the seminar-scale Cloud concurrency test and a facilitator
-recovery procedure (both August blockers, see P1 above), and the English script
-+ narration for the retargeted test project (§6.2).
+Short version, in order: a semi-transparent subtitle plate (hours); word-timed
+caption segmentation so a line fits on one line (the aligner already computes
+word timings and discards them); multiple visual shots per narration block in
+`shots.csv`, which is both the editing control and most of the missing pacing;
+oversized composites so stacked frames can move; animated maps; then video
+fragments — which reverses a documented "Won't" and wants a deliberate call.
 
-- The 4 images are **already uploaded**; digests are in the run log of the
-  2026-07-28 session (re-upload is cheap and idempotent with `overwrite=true`).
-- **8 remaining graphs still need the #4 digest rewrite** before submission —
-  `projects/demo_en/cloud_graphs/*.json` reference bare filenames and will fail.
-  Worth teaching `run_p1_local.py --export-all` to emit a `cloud_name` field, or
-  adding a small patch step to the submission path.
-- Current projection, **unconfirmed**: ~225 s of graph execution for 415 frames
-  plus ~9× per-chunk overhead ≈ 4–4.5 min billable. Extrapolated from one
-  36-frame sample (the *smallest* chunk) — do not feed it into the cohort budget
-  before the real run.
-- `docs/PARTICIPANT_GRAPH_RECIPE.md` needs a fix for #4 — a facilitator uploading
-  via the Cloud UI gets a hash they must paste into every `LoadImage`.
+A drag-and-drop timeline inside ComfyUI is deferred on purpose: it would be a
+view onto the shots.csv model, so the model comes first.
 
-Then: the new English project, once its script + narration arrive.
-
-## Local environment notes
-
-- The local ComfyUI server is **down** (background process exited, code 58).
-  Restart before any local runs, from
-  `C:\Users\Aleg\beehAIve\ComfyUI-Easy-Install\ComfyUI-Easy-Install`:
-  `.\python_embeded\python.exe -I ComfyUI\main.py --windows-standalone-build`
-  → serves on 127.0.0.1:8188; check with GET /system_stats.
-- Not needed for Cloud work: `--export-all` runs offline, and submission goes
-  through the `comfy-cloud` MCP.
-- Hand-added locally (not in a lockfile anywhere): `ComfyUI_essentials` cloned
-  into custom_nodes (heavy requirements deliberately NOT installed);
-  `stable-ts` + `num2words` in the **embedded** python.
-- `comfy-cloud` MCP is authenticated and working. It is a CLI-added **local
-  scope** server → appears in Claude Code's `/mcp` panel, never in claude.ai
-  connector settings. The session that authenticates it has no
-  `mcp__comfy-cloud__*` tools; the registry is fixed at startup, so a fresh
-  session is required after authenticating.
-
-## Deferred validations (documented, not tasks)
-
-- ~~RU alignment quality on real Sidur narration~~ — dropped with v3.1.
-- ~~Armenian rendering via the PNG-strip path~~ — dropped with v3.1.
-- EN aligner confirmation run on the new narration, once it arrives
-  (`ALIGNERS.md` bake-off protocol, now a confirmation rather than a selection).
+Still outstanding and unchanged: the seminar-scale Cloud concurrency test and a
+facilitator recovery procedure (`GAPS.md`), the rented-machine specification
+(`HARDENING.md`), and the Olm-DragCrop redistribution licence, which blocks
+imaging the workshop machines (`SURVEY.md §3`).
