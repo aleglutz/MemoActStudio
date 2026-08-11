@@ -1,19 +1,20 @@
 shot,media,in,motion,rate,anchor,effects,notes
-0:00,Karlshorst-Prepared.jpg,,pan_rl,0,,,DRAFT — the empty prepared hall as a cold open
-0:08,S01-02_two-band.png,,static,,,,"two-band: Reims + Karlshorst = the two dates named in the line"
-0:16,Karlshorst_Signing.jpg,,pan_lr,0,,,the night the question is about
-0:21,Reims-Signing.jpg,,pan_rl,0,,,Reims signing
-0:33,Reims_Protocol_Jodl.jpg,,zoom_in,0.06,,,Jodl's signature — 33% headroom so a zoom is safe
-0:46,General_Dwight_D._Eisenhower.jpg,,zoom_out,0.06,,,"""the men who actually give orders"" — 42% headroom"
-0:53,Wehrmacht-at-Tempelhof-Shagin-MBK.jpg,,pan_lr,0,,,"arrival at Tempelhof. WARNING: 768x514, enlarged x3.7 — the softest frame in the reel"
-1:01,London.jpg,,pan_rl,0,,,Truman and Churchill announce
-1:09,Berlin.jpg,,pan_lr,0,,,"""Karlshorst stalls"" while the West celebrates"
-1:14,GIoS_Wehrmacht_Signed_Ru.jpg,,zoom_in,0.06,,,the Russian text that arrived incomplete — 33% headroom
-1:20,S14_three-band.png,,static,,,,"three-band: RU instrument / delegation / EN instrument — the signing itself"
-1:28,S07_two-band_bw.png,,static,,,,"two-band b/w: the West's version of events"
-1:35,Moscow.jpg,,pan_rl,0,,,the Moscow announcement
-1:49,StalinCropped1943.jpg,,pan_lr,0,,,"Soviet framing of the victory. WARNING: 960x1280, enlarged x1.50"
-1:59,map_baltics.png,,zoom_in,0.05,,,"map: Latvia, Estonia, Lithuania in flag colours"
-2:07,map_poland_ukraine.png,,zoom_out,0.05,,,map: Poland and Ukraine in flag colours
-2:17,Karlshorst_Signing.jpg,,pan_rl,0,,,"""the delay in Karlshorst"" — reprise of shot 3"
-2:25,S18_three-cities_bw.png,,static,,,,"three-band b/w: London / Berlin / Moscow — closing question"
+0:00,Karlshorst-Foyer-8Mai-9Maya_square_1920.png,,square_in,,,,"cold open: the foyer wall carries both dates — opens as a square, pushes to full-bleed"
+0:07,Karlshorst-Prepared.jpg,,pan_rl,0,,,DRAFT — the empty prepared hall
+0:17,S01-02_two-band.png,,static,,,,"two-band: Reims + Karlshorst = the two dates named in the line"
+0:22,Karlshorst_Signing.jpg,,pan_lr,0,,,the night the question is about
+0:27,Reims-Signing.jpg,,pan_rl,0,,,Reims signing
+0:41,Reims_Protocol_Jodl.jpg,,zoom_in,0.06,,,Jodl's signature — 33% headroom so a zoom is safe
+0:55,General_Dwight_D._Eisenhower.jpg,,zoom_out,0.06,,,"""the men who actually give orders"" — 42% headroom. PENDING: to be replaced by a zoom into Jodl at Reims, then the protocol's ranks"
+1:03,Wehrmacht-at-Tempelhof-Shagin-MBK.jpg,,pan_lr,0,,,"arrival at Tempelhof. WARNING: 768x514, enlarged x3.7 — the softest frame in the reel"
+1:10,London.jpg,,pan_rl,0,,,Truman and Churchill announce
+1:19,Berlin.jpg,,pan_lr,0,,,"""Karlshorst stalls"" while the West celebrates"
+1:24,GIoS_Wehrmacht_Signed_Ru.jpg,,zoom_in,0.06,,,the Russian text that arrived incomplete — 33% headroom
+1:29,S14_three-band.png,,static,,,,"three-band: RU instrument / delegation / EN instrument — the signing itself"
+1:37,S07_two-band_bw.png,,static,,,,"two-band b/w: the West's version of events"
+1:44,Moscow.jpg,,pan_rl,0,,,the Moscow announcement
+1:59,StalinCropped1943.jpg,,pan_lr,0,,,"Soviet framing of the victory. WARNING: 960x1280, enlarged x1.50"
+2:10,map_baltics.png,,zoom_in,0.05,,,"map: Latvia, Estonia, Lithuania in flag colours"
+2:18,map_poland_ukraine.png,,zoom_out,0.05,,,map: Poland and Ukraine in flag colours
+2:30,Karlshorst_Signing.jpg,,pan_rl,0,,,"""the delay in Karlshorst"" — reprise"
+2:39,S18_three-cities_bw.png,,static,,,,"three-band b/w: London / Berlin / Moscow — closing question"
