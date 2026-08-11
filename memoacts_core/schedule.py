@@ -86,7 +86,7 @@ FOCUSABLE = ("static", "zoom_in", "zoom_out")
 
 
 def focus_window(src_w: int, src_h: int, focus: tuple[float, float, float],
-                 w0: float, out_w: int = 1080
+                 w0: float, out_w: int = 1080, aspect: float = ASPECT
                  ) -> tuple[float, float, float, float, bool]:
     """Resolve `(cx, cy, w)` fractions into a pixel window `(w, h, cx, cy)`.
 
@@ -102,25 +102,30 @@ def focus_window(src_w: int, src_h: int, focus: tuple[float, float, float],
     if w < out_w:
         w = min(float(out_w), w0)
         clamped = True
-    h = w / ASPECT
+    h = w / aspect
     if h > src_h:                      # taller than the source: fall back to it
         h = float(src_h)
-        w = h * ASPECT
+        w = h * aspect
     return w, h, cxf * src_w, cyf * src_h, clamped
 
 
 def compute(src_w: int, src_h: int, n_frames: int, motion: Motion,
-            out_w: int = 1080) -> ShotSchedule:
+            out_w: int = 1080, aspect: float = ASPECT) -> ShotSchedule:
     """Per-frame crop rects. Resolution guard (SPEC §5.2): the crop window may
-    never go below out_w pixels wide — rate is clamped, never silently upscaled."""
-    w0, h0 = base_window(src_w, src_h)
+    never go below out_w pixels wide — rate is clamped, never silently upscaled.
+
+    `aspect` is the shape being filled, w/h. It defaults to the 9:16 reel frame,
+    and exists because a stacked band is 1080x636 — the same presets, the same
+    guard, a different rectangle. Nothing else in the motion vocabulary changes.
+    """
+    w0, h0 = base_window(src_w, src_h, aspect)
     sched = ShotSchedule()
     sched.max_zoom = w0 / out_w
 
     rate = max(0.0, motion.rate)
     preset = motion.preset if motion.preset in PRESETS else "static"
 
-    if preset == "fit" and src_w / src_h > ASPECT:
+    if preset == "fit" and src_w / src_h > aspect:
         # Show the whole frame, full output width, letterboxed. There is no crop
         # at all, so a landscape source is *reduced* rather than enlarged —
         # 1280x800 lands at 1080x675, a 0.84x downscale, where the same source
@@ -155,7 +160,7 @@ def compute(src_w: int, src_h: int, n_frames: int, motion: Motion,
         # The push-in is therefore geometric — `rate` adds nothing and is
         # ignored — and the final frame is exactly the ordinary 9:16 window,
         # which is why the resolution guard needs no special case here.
-        out_h = out_w / ASPECT
+        out_h = out_w / aspect
         for i in range(n_frames):
             t = _ease(i / (n_frames - 1)) if n_frames > 1 else 0.0
             dst_h = out_w + (out_h - out_w) * t
@@ -177,14 +182,14 @@ def compute(src_w: int, src_h: int, n_frames: int, motion: Motion,
         # centre are interpolated together on the same eased t, so the framing
         # never drifts sideways faster than it closes.
         fw, fh, fcx, fcy, sched.clamped = focus_window(
-            src_w, src_h, motion.focus, w0, out_w)
+            src_w, src_h, motion.focus, w0, out_w, aspect)
         cx0 = src_w / 2
         cy0 = h0 / 2 if motion.anchor == "top" else src_h / 2
         for i in range(n_frames):
             t = _ease(i / (n_frames - 1)) if n_frames > 1 else 0.0
             u = 1.0 if preset == "static" else (t if preset == "zoom_in" else 1 - t)
             w = w0 + (fw - w0) * u
-            h = w / ASPECT
+            h = w / aspect
             cx = cx0 + (fcx - cx0) * u
             cy = cy0 + (fcy - cy0) * u
             w_i = int(round(w / 2)) * 2
@@ -214,7 +219,7 @@ def compute(src_w: int, src_h: int, n_frames: int, motion: Motion,
         else:  # pans hold the zoomed size and translate
             z = 1.0 - rate
         w = w0 * z
-        h = w / ASPECT
+        h = w / aspect
         # anchor placement
         cx = src_w / 2
         cy = h0 / 2 if motion.anchor == "top" else src_h / 2
