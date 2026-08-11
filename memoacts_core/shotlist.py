@@ -10,10 +10,15 @@ Format — a header row, then one row per shot you want to say something about.
 Every column except `shot` is optional, blank cells mean "leave the default",
 and a row starting with `#` is a comment:
 
-    shot,media,in,motion,rate,anchor,focus,label,effects,notes
-    1,Berlin.jpg,,zoom_in,0.05,,,Berlin,archive_soft,opening
-    0:21,MBK_KAPFILM_FINAL.mp4,2:14,static,,,,,,Tempelhof arrival
-    0:41,Reims-Signing.jpg,,zoom_in,,,0.44 0.62 0.30,,,push in to the signature
+    shot,media,in,motion,rate,anchor,speed,focus,label,effects,notes
+    1,Berlin.jpg,,zoom_in,0.05,,,,Berlin,archive_soft,opening
+    0:21,MBK_KAPFILM_FINAL.mp4,2:14,static,,,0.4,,,,Tempelhof arrival in slow motion
+    0:41,Reims-Signing.jpg,,zoom_in,,,,0.44 0.62 0.30,,,push in to the signature
+
+`in` and `speed` apply to footage only: `in` is where in the fragment the shot
+starts, `speed` its playback rate (0.4 is slow motion). How *much* footage gets
+used is not stated — the shot's duration comes from the narration, and the
+fragment bends to it.
 
 `label` is the tag burnt into the top-right corner — a place or a person, for
 the shots where the narration does not say which. It holds a few seconds from
@@ -102,6 +107,7 @@ class ShotEdit:
     motion: str = ""
     rate: float | None = None
     anchor: str = ""
+    speed: float | None = None         # footage playback rate; 1.0 = as shot
     focus: str = ""                    # raw; parsed in apply_shot_list so a bad
     label: str = ""                    # value can warn with its row's key
     effects: str = ""
@@ -120,6 +126,7 @@ class ResolvedShot:
     motion: str = ""
     rate: float | None = None
     anchor: str = ""
+    speed: float | None = None
     focus: tuple[float, float, float] | None = None
     label: str = ""
     effects: str = ""
@@ -168,6 +175,10 @@ def read_shot_list(path: Path) -> list[ShotEdit]:
                 edit.rate = float(row["rate"]) if row.get("rate") else None
             except ValueError:
                 edit.rate = None
+            try:
+                edit.speed = float(row["speed"]) if row.get("speed") else None
+            except ValueError:
+                edit.speed = None
             rows.append(edit)
     return rows
 
@@ -240,6 +251,15 @@ def apply_shot_list(shots: list[ScriptShot], edits: list[ShotEdit],
         target.rate = edit.rate if edit.rate is not None else target.rate
         target.anchor = edit.anchor or target.anchor
         target.label = edit.label or target.label
+        if edit.speed is not None:
+            if edit.speed <= 0:
+                warnings.append(f"shots.csv: shot {edit.key} speed "
+                                f"{edit.speed} must be > 0; ignored")
+            elif not target.is_video:
+                warnings.append(f"shots.csv: shot {edit.key} sets a speed but "
+                                f"its media is not footage; ignored")
+            else:
+                target.speed = edit.speed
         target.effects = edit.effects or target.effects
 
     return resolved, warnings
@@ -255,10 +275,10 @@ def write_template(path: Path, shots: list[ScriptShot]) -> Path:
     with path.open("w", newline="", encoding="utf-8") as fh:
         w = csv.writer(fh)
         w.writerow(["shot", "media", "in", "motion", "rate", "anchor",
-                    "focus", "label", "effects", "notes"])
+                    "speed", "focus", "label", "effects", "notes"])
         for i, s in enumerate(shots, 1):
             cue = ("" if s.cue is None
                    else f"{int(s.cue) // 60}:{int(s.cue) % 60:02d}")
-            w.writerow([cue or i, "", "", "", "", "", "", "", "",
+            w.writerow([cue or i, "", "", "", "", "", "", "", "", "",
                         s.text[:60] + ("…" if len(s.text) > 60 else "")])
     return path

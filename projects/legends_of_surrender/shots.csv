@@ -1,20 +1,20 @@
-shot,media,in,motion,rate,anchor,focus,label,effects,notes
-0:00,Karlshorst-Foyer-8Mai-9Maya_square_1920.png,,square_in,,,,,,"cold open: the foyer wall carries both dates — opens as a square, pushes to full-bleed"
-0:07,Karlshorst-Prepared.jpg,,pan_rl,0,,,Berlin-Karlshorst,,"DRAFT — the empty prepared hall. The line says ""here"", so the tag says where"
-0:17,S01-02_two-band.png,,static,,,,,,"two-band: Reims + Karlshorst = the two dates named in the line"
-0:22,Karlshorst_Signing.jpg,,pan_lr,0,,,,,the night the question is about
-0:27,Reims-Signing.jpg,,pan_rl,0,,,"Reims, France",,Reims signing — the wide
-0:41,Reims-Signing_Jodl.png,,zoom_in,,,0.50 0.46 0.77,Colonel General Alfred Jodl,,"""a staff officer with no real power"" — Jodl from behind, pushing in. Derived crop: the wide has only 5% of zoom headroom"
-0:55,Reims_Protocol_Jodl.jpg,,zoom_in,,,0.554 0.524 0.62,,,"""the men who actually give orders"" — the protocol names them by rank; ends on those four lines"
-1:03,Wehrmacht-at-Tempelhof-Shagin-MBK.jpg,,pan_lr,0,,,Berlin-Tempelhof,,"arrival at Tempelhof. WARNING: 768x514, enlarged x3.7 — the softest frame in the reel"
-1:10,London.jpg,,pan_rl,0,,,London,,Truman and Churchill announce
-1:19,Berlin.jpg,,pan_lr,0,,,Berlin,,"""Karlshorst stalls"" while the West celebrates"
-1:24,GIoS_Wehrmacht_Signed_Ru.jpg,,zoom_in,0.06,,,,,the Russian text that arrived incomplete — 33% headroom
-1:29,S14_three-band.png,,static,,,,,,"three-band: RU instrument / delegation / EN instrument — the signing itself"
-1:37,S07_two-band_bw.png,,static,,,,,,"two-band b/w: the West's version of events"
-1:44,Moscow.jpg,,pan_rl,0,,,Moscow,,the Moscow announcement
-1:59,StalinCropped1943.jpg,,pan_lr,0,,,,,"Soviet framing of the victory. WARNING: 960x1280, enlarged x1.50"
-2:10,map_baltics.png,,zoom_in,0.05,,,,,"map: Latvia, Estonia, Lithuania in flag colours"
-2:18,map_poland_ukraine.png,,zoom_out,0.05,,,,,map: Poland and Ukraine in flag colours
-2:30,Karlshorst_Signing.jpg,,pan_rl,0,,,,,"""the delay in Karlshorst"" — reprise"
-2:39,S18_three-cities_bw.png,,static,,,,,,"three-band b/w: London / Berlin / Moscow — closing question"
+shot,media,in,motion,rate,anchor,speed,focus,label,effects,notes
+0:00,Karlshorst-Foyer-8Mai-9Maya_square_1920.png,,square_in,,,,,,,"cold open: the foyer wall carries both dates — opens as a square, pushes to full-bleed"
+0:07,Karlshorst-Prepared.jpg,,pan_rl,0,,,,Berlin-Karlshorst,,"DRAFT — the empty prepared hall. The line says ""here"", so the tag says where"
+0:17,S01-02_two-band.png,,static,,,,,,,two-band: Reims + Karlshorst = the two dates named in the line
+0:22,Karlshorst_Signing.jpg,,pan_lr,0,,,,,,the night the question is about
+0:27,Reims-Signing.jpg,,pan_rl,0,,,,"Reims, France",,Reims signing — the wide
+0:41,Reims-Signing_Jodl.png,,zoom_in,,,,0.50 0.46 0.77,Colonel General Alfred Jodl,,"""a staff officer with no real power"" — Jodl from behind, pushing in. Derived crop: the wide has only 5% of zoom headroom"
+0:55,Reims_Protocol_Jodl.jpg,,zoom_in,,,,0.554 0.524 0.62,,,"""the men who actually give orders"" — the protocol names them by rank; ends on those four lines"
+1:03,MBK_KAPFILM_FINAL.mp4,0:32,static,,,0.5,,Berlin-Tempelhof,,"arrival at Tempelhof — the KAPFILM footage the still was a frame of"
+1:10,London.jpg,,pan_rl,0,,,,London,,Truman and Churchill announce
+1:19,Berlin.jpg,,pan_lr,0,,,,Berlin,,"""Karlshorst stalls"" while the West celebrates"
+1:24,GIoS_Wehrmacht_Signed_Ru.jpg,,zoom_in,0.06,,,,,,the Russian text that arrived incomplete — 33% headroom
+1:29,S14_three-band.png,,static,,,,,,,three-band: RU instrument / delegation / EN instrument — the signing itself
+1:37,S07_two-band_bw.png,,static,,,,,,,two-band b/w: the West's version of events
+1:44,Moscow.jpg,,pan_rl,0,,,,Moscow,,the Moscow announcement
+1:59,StalinCropped1943.jpg,,pan_lr,0,,,,,,"Soviet framing of the victory. WARNING: 960x1280, enlarged x1.50"
+2:10,map_baltics.png,,zoom_in,0.05,,,,,,"map: Latvia, Estonia, Lithuania in flag colours"
+2:18,map_poland_ukraine.png,,zoom_out,0.05,,,,,,map: Poland and Ukraine in flag colours
+2:30,Karlshorst_Signing.jpg,,pan_rl,0,,,,,,"""the delay in Karlshorst"" — reprise"
+2:39,S18_three-cities_bw.png,,static,,,,,,,three-band b/w: London / Berlin / Moscow — closing question

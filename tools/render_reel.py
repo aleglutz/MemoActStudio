@@ -33,6 +33,7 @@ from memoacts_core.project import resolve_media  # noqa: E402
 from memoacts_core.effects import PRESETS, preset  # noqa: E402
 from memoacts_core.render import ShotRender, render_reel  # noqa: E402
 from memoacts_core.schedule import Motion, compute  # noqa: E402
+from memoacts_core.video import is_video, probe  # noqa: E402
 
 
 def main() -> int:
@@ -90,14 +91,19 @@ def main() -> int:
         if not img.exists():
             print(f"missing media for shot {s['id']}: {img}")
             return 1
-        with Image.open(img) as im:
-            src_w, src_h = im.size
+        if is_video(img):
+            src_w, src_h = probe(img).size
+        else:
+            with Image.open(img) as im:
+                src_w, src_h = im.size
         sched = compute(src_w, src_h, s["n_frames"], Motion(**s["motion"]),
                         out_w=out_w)
         # A fresh stack per shot: the pipeline holds decoder state (texture
         # clip position), so sharing one across shots would interleave them.
         fx = preset(args.effects) if args.effects != "none" else None
-        shots.append(ShotRender(image=img, schedule=sched, effects=fx))
+        shots.append(ShotRender(media=img, schedule=sched, effects=fx,
+                                media_in=s.get("media_in") or 0.0,
+                                speed=s.get("speed") or 1.0))
 
     out_path = args.out or proj / "out" / "reel.mp4"
     out_path.parent.mkdir(parents=True, exist_ok=True)

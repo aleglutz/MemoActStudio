@@ -58,10 +58,17 @@ def load_source(path: Path) -> Image.Image:
 
 @dataclass
 class ShotRender:
-    """One shot: a still, its per-frame crop rects, and an optional effect stack."""
-    image: Path
+    """One shot: its media, per-frame crop rects, and an optional effect stack.
+
+    `media` is a still or a video fragment; the difference is confined to where
+    frame *i*'s pixels come from (see `_source_frames`). `media_in` and `speed`
+    are footage-only and ignored for a still.
+    """
+    media: Path
     schedule: ShotSchedule
     effects: "EffectStack | None" = None
+    media_in: float = 0.0
+    speed: float = 1.0
 
 
 def _check_upscale(shot: ShotRender, out_w: int, policy: str) -> None:
@@ -82,12 +89,30 @@ def _check_upscale(shot: ShotRender, out_w: int, policy: str) -> None:
     if narrowest >= out_w:
         return
     factor = out_w / narrowest
-    msg = (f"{shot.image.name}: source supplies only {narrowest}px for a "
+    msg = (f"{shot.media.name}: source supplies only {narrowest}px for a "
            f"{out_w}px output ({factor:.2f}x enlargement)")
     if policy == "error":
         raise ValueError(msg)
     if policy == "warn":
         warnings.warn(msg, stacklevel=3)
+
+
+def _source_frames(shot: ShotRender, n: int, fps: int) -> Iterator[Image.Image]:
+    """The shot's `n` source frames, at native resolution.
+
+    This is the whole of the still/footage difference. A still is decoded once
+    and handed back n times — the caller crops it, which copies, so sharing the
+    original is safe and one decode is the point (§GAPS #2, frame-streaming).
+    Footage is decoded lazily by `video.frames`, one frame per output frame.
+    """
+    from .video import frames as video_frames, is_video
+    if is_video(shot.media):
+        yield from video_frames(shot.media, n, start=shot.media_in, fps=fps,
+                                speed=shot.speed)
+        return
+    src = load_source(shot.media)
+    for _ in range(n):
+        yield src
 
 
 def shot_frames(shot: ShotRender, out_w: int = OUT_W, out_h: int = OUT_H,
@@ -109,10 +134,9 @@ def shot_frames(shot: ShotRender, out_w: int = OUT_W, out_h: int = OUT_H,
         raise ValueError(f"on_upscale must be warn|error|allow, got {on_upscale!r}")
     _check_upscale(shot, out_w, on_upscale)
 
-    src = load_source(shot.image)
-    src_w, src_h = src.size
     s = shot.schedule
     n = len(s.ws)
+    sources = _source_frames(shot, n, fps)
 
     offsets = [(0, 0)] * n
     pipeline = None
@@ -124,6 +148,8 @@ def shot_frames(shot: ShotRender, out_w: int = OUT_W, out_h: int = OUT_H,
 
     try:
         for i, (x, y, w, h) in enumerate(zip(s.xs, s.ys, s.ws, s.hs)):
+            src = next(sources)
+            src_w, src_h = src.size
             dx, dy = offsets[i]
             # Clamp into the source: at the edge the shake flattens rather than
             # sliding past the image and producing a black border.
@@ -141,6 +167,7 @@ def shot_frames(shot: ShotRender, out_w: int = OUT_W, out_h: int = OUT_H,
                             (0, (out_h - dst_h) // 2))
             yield frame if pipeline is None else pipeline.apply(frame, i)
     finally:
+        sources.close()
         if pipeline is not None:
             pipeline.close()
 

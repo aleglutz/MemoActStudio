@@ -67,11 +67,8 @@ def main() -> int:
     warnings += edit_warnings
     footage = [f"shot {i}" for i, p in enumerate(picks, 1) if p.is_video]
     if footage:
-        print(f"error: {len(footage)} shot(s) reference footage "
-              f"({', '.join(footage)}), which this pipeline cannot render yet — "
-              f"video fragments are SPEC §0 'Won't' for September and the "
-              f"cutting model is still undecided. Use a still for now.")
-        return 1
+        print(f"footage: {len(footage)} shot(s) use a video fragment "
+              f"({', '.join(footage)})")
     for i, p in enumerate(picks):
         if p.media is not None:
             imgs[i] = p.media
@@ -111,10 +108,19 @@ def main() -> int:
     n_frames = frames_for([(s.t_start, s.t_end) for s in spans], args.fps)
 
     from PIL import Image
+
+    from memoacts_core.video import is_video, probe
     motions, schedules = [], []
     for i, (img, nf) in enumerate(zip(imgs, n_frames)):
-        with Image.open(img) as im:
-            src_w, src_h = im.size
+        if is_video(img):
+            # Footage is measured the same way a still is — the schedule only
+            # needs the frame's dimensions, and every motion preset then works
+            # on a fragment without knowing it is one.
+            info = probe(img)
+            src_w, src_h = info.size
+        else:
+            with Image.open(img) as im:
+                src_w, src_h = im.size
         mot = default_motion(i)
         pick = picks[i]
         if pick.motion:
@@ -144,7 +150,9 @@ def main() -> int:
                          images=imgs, motions=motions, schedules=schedules,
                          n_frames=n_frames, max_chunk=args.max_chunk,
                          cues=[sh.cue for sh in script_shots],
-                         labels=[p.label for p in picks])
+                         labels=[p.label for p in picks],
+                         media_ins=[p.media_in for p in picks],
+                         speeds=[p.speed for p in picks])
     print("wrote", path)
     print((out / "report.txt").read_text(encoding="utf-8"))
     return 0

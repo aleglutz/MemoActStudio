@@ -1,4 +1,4 @@
-# shots.json + crop CSV — prepared-inputs contract, schema 1.3
+# shots.json + crop CSV — prepared-inputs contract, schema 1.4
 
 **Frozen 2026-07-24.** This is the interface handed to participants (SPEC §4).
 Additive changes bump the minor version; anything that breaks an existing
@@ -15,6 +15,9 @@ a 1.1 file behaves as.
 
 **1.3 (2026-08-11)** adds `label`, the corner tag naming a place or a person.
 Additive: an empty string is the absence of one, which is how a 1.2 file reads.
+
+**1.4 (2026-08-11)** adds `media_in` and `speed` for video fragments. Additive:
+both are `null` for a still, which is every shot in a 1.3 file.
 
 ## shots.json
 
@@ -42,7 +45,9 @@ Per shot:
 | `estimated` | bool | true = proportional fallback, not aligned (SPEC §5.1) |
 | `confidence` | float 0–1 | mean word probability from the aligner; 0 when estimated |
 | `had_digits` | bool | block contained digits — read `confidence` with care |
-| `image` | str | filename inside the project `images/` dir |
+| `image` | str | media filename; a still in `images/`, `composites/` or `maps/`, or a fragment in `video/` |
+| `media_in` | float s\|null | *1.4, footage only.* Where in the fragment this shot starts. How much is consumed is not stored: the shot's duration comes from the narration and the footage bends to it. |
+| `speed` | float\|null | *1.4, footage only.* Playback rate; 0.4 is the slow motion SPEC §5.2 asks for. The frame count is unaffected — speed changes how much footage is spent, not how long the shot runs. |
 | `motion` | obj | `{preset, rate, anchor, focus}`; presets: `static, zoom_in, zoom_out, pan_lr, pan_rl, pan_ud, pan_du, square_in`. `square_in` opens as a square inset and pushes in to full-bleed; it is the only preset whose image does not fill the frame throughout, and the only one that ignores `rate` (its push-in is geometric). |
 | `motion.focus` | [float]\|null | *1.2, optional.* `[cx, cy, w]` in fractions of the source: the window the shot is *about*. `zoom_in` opens on the full frame and arrives here, `zoom_out` starts here and pulls back, `static` holds it; the pans ignore it and the generator warns. Supersedes `rate`, which is a fraction of the whole frame and so cannot reach a detail. Guarded like any other window: never narrower than the output width, never wider than the base 9:16 window, and `clamped` reports when it was widened. |
 | `clamped` | bool | resolution guard reduced `rate` so the crop never drops below output width (no silent upscaling) |

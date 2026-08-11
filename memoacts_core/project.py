@@ -243,13 +243,17 @@ def write_outputs(out_dir: Path, *, lang: str, fps: int, narration: str,
                   schedules: list[ShotSchedule], n_frames: list[int],
                   max_chunk: int,
                   cues: list[float | None] | None = None,
-                  labels: list[str] | None = None) -> Path:
+                  labels: list[str] | None = None,
+                  media_ins: list[float | None] | None = None,
+                  speeds: list[float | None] | None = None) -> Path:
     out_dir.mkdir(parents=True, exist_ok=True)
     crops = out_dir / "crops"
     crops.mkdir(exist_ok=True)
 
     cues = cues or [None] * len(blocks)
     labels = labels or [""] * len(blocks)
+    media_ins = media_ins or [None] * len(blocks)
+    speeds = speeds or [None] * len(blocks)
     shots = []
     report = [f"MemoActs shot report — schema {SCHEMA_VERSION}",
               f"narration: {narration}  duration: {duration:.2f}s  fps: {fps}  "
@@ -287,6 +291,11 @@ def write_outputs(out_dir: Path, *, lang: str, fps: int, narration: str,
             # Burnt into the corner, so it is screen text and gets the same
             # treatment as the caption: written verbatim, never normalised.
             "label": labels[i - 1],
+            # Footage only. `media_in` is where in the fragment this shot
+            # starts and `speed` its playback rate; both are null for a still,
+            # and the renderer ignores them there.
+            "media_in": media_ins[i - 1],
+            "speed": speeds[i - 1],
             "cue_s": cue,
             "cue_drift_s": None if cue is None else round(span.t_start - cue, 2),
             # Word timings, kept so captions can be cut inside a block at real

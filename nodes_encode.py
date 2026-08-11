@@ -16,6 +16,7 @@ from comfy_api.latest import io, ui
 from .memoacts_core.render import ShotRender, render_reel
 from .memoacts_core.project import resolve_media
 from .memoacts_core.schedule import Motion, compute
+from .memoacts_core.video import is_video, probe
 from .nodes_types import Shots, Subs
 
 
@@ -73,17 +74,22 @@ class MemoActsRenderReel(io.ComfyNode):
             img = resolve_media(project, s)
             if not img.exists():
                 raise ValueError(f"shot {s['id']}: missing media {img}")
-            with PILImage.open(img) as im:
-                src_w, src_h = im.size
+            if is_video(img):
+                src_w, src_h = probe(img).size
+            else:
+                with PILImage.open(img) as im:
+                    src_w, src_h = im.size
             # Each shot gets its own copy: the pipeline holds decoder state for
             # a texture clip, so a shared stack would interleave two shots'
             # positions in the same loop.
             stack = stacks.get(s["id"])
             renders.append(ShotRender(
-                image=img,
+                media=img,
                 schedule=compute(src_w, src_h, s["n_frames"],
                                  Motion(**s["motion"]), out_w=out_w),
                 effects=copy.deepcopy(stack) if stack is not None else None,
+                media_in=s.get("media_in") or 0.0,
+                speed=s.get("speed") or 1.0,
             ))
 
         out_dir = Path(folder_paths.get_output_directory())
