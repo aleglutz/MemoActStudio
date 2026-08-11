@@ -33,6 +33,13 @@ _MONTHS = ("January|February|March|April|May|June|July|August|September|"
 _DATE_MD_RE = re.compile(rf"\b({_MONTHS})\s+(\d{{1,2}})\b(?!\s*[:.]\d)", re.I)
 _DATE_DM_RE = re.compile(rf"\b(\d{{1,2}})\s+({_MONTHS})\b", re.I)
 
+#: "8th", "1st", "22nd" — a written ordinal. Without this the bare-number rule
+#: expands the digits and leaves the suffix stranded: "8th" became "eightth",
+#: which the narrator never says, so the aligner had a token it could not match.
+#: Only bites once the script writes dates as digits, which is the house style
+#: now that captions show what the script wrote.
+_ORDINAL_SUFFIX_RE = re.compile(r"\b(\d+)(?:st|nd|rd|th)\b", re.I)
+
 #: "1950s", "1970s" — a decade, read as a plural year.
 _DECADE_RE = re.compile(r"\b(\d{4})s\b")
 
@@ -138,6 +145,10 @@ def normalize_block(text: str, lang: str) -> tuple[str, bool]:
         # this material dates sit on exactly the boundaries alignment drifts on.
         def ordinal(value: str) -> str:
             return num2words(int(value), lang="en", to="ordinal")
+
+        # Written ordinals first: "8th" is already marked as one, so it must not
+        # reach the bare-number rule that would strand the suffix.
+        out = _ORDINAL_SUFFIX_RE.sub(lambda m: ordinal(m.group(1)), out)
 
         out = _DATE_MD_RE.sub(
             lambda m: f"{m.group(1)} {ordinal(m.group(2))}", out)
