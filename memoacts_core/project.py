@@ -273,7 +273,14 @@ def write_outputs(out_dir: Path, *, lang: str, fps: int, narration: str,
             "image": img.name,
             "image_path": img.relative_to(out_dir.parent).as_posix()
             if out_dir.parent in img.parents else img.name,
-            "motion": {"preset": mot.preset, "rate": mot.rate, "anchor": mot.anchor},
+            # Kept flat so `Motion(**shot["motion"])` still reconstructs it —
+            # that call is how the renderer, the CLI and the nodes all read a
+            # shot back, and a nested shape would have to be unpacked in three
+            # places. A list rather than a tuple only because JSON has no tuple;
+            # Motion accepts either.
+            "motion": {"preset": mot.preset, "rate": mot.rate,
+                       "anchor": mot.anchor,
+                       "focus": list(mot.focus) if mot.focus else None},
             "clamped": sched.clamped, "max_zoom": round(sched.max_zoom, 2),
             "cue_s": cue,
             "cue_drift_s": None if cue is None else round(span.t_start - cue, 2),

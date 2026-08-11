@@ -20,7 +20,8 @@ from memoacts_core.normalize import normalize_block
 from memoacts_core.project import (apply_shot_lead, list_images,
                                    parse_script_shots, resolve_shot_images,
                                    write_outputs)
-from memoacts_core.schedule import Motion, compute, default_motion, frames_for
+from memoacts_core.schedule import (FOCUSABLE, Motion, compute, default_motion,
+                                    frames_for)
 from memoacts_core.shotlist import apply_shot_list, read_shot_list
 
 
@@ -124,6 +125,15 @@ def main() -> int:
             mot = Motion(preset=mot.preset,
                          rate=pick.rate if pick.rate is not None else mot.rate,
                          anchor=pick.anchor or mot.anchor)
+        if pick.focus is not None:
+            if mot.preset in FOCUSABLE:
+                mot.focus = pick.focus
+            else:
+                # Silently dropping it would leave a shot list that reads as if
+                # the framing had been decided (SPEC §6.2.12: legible failure).
+                print(f"warning: shot {i + 1} sets a focus but its motion is "
+                      f"{mot.preset!r}, which traverses rather than arrives; "
+                      f"focus ignored. Use one of {', '.join(FOCUSABLE)}.")
         motions.append(mot)
         schedules.append(compute(src_w, src_h, nf, mot))
 

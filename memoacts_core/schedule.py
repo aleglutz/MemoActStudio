@@ -19,6 +19,18 @@ class Motion:
     preset: str = "static"
     rate: float = 0.06        # zoom fraction per shot (SPEC §5.2: slow zoom ~4-8 %)
     anchor: str = "center"    # center | top
+    #: Where in the source the shot is *about*, as `(cx, cy, w)` in fractions of
+    #: the source: a centre plus the window's width. Height follows from 9:16.
+    #:
+    #: `rate` says how much the frame breathes; `focus` says what it ends on, and
+    #: they answer different questions. A rate is a fraction of the whole frame —
+    #: 4-8 % is a drift, and asking it to reach one face in a group photograph
+    #: would mean a rate near 1.0, which the resolution guard would refuse
+    #: anyway. So a shot that lands on a detail states the detail instead, and
+    #: the preset decides the direction of travel: `zoom_in` opens wide and
+    #: arrives here, `zoom_out` starts here and pulls back, `static` holds it.
+    #: `rate` is unused when a focus is set. Pans ignore it (see `compute`).
+    focus: tuple[float, float, float] | None = None
 
 
 @dataclass
@@ -67,6 +79,36 @@ def base_window(src_w: int, src_h: int, aspect: float = ASPECT
     return float(src_w), src_w / aspect
 
 
+#: Presets a focus can steer. The pans are excluded by construction: their whole
+#: shape is "hold one size and traverse", so a destination window would either
+#: contradict the traversal or replace it.
+FOCUSABLE = ("static", "zoom_in", "zoom_out")
+
+
+def focus_window(src_w: int, src_h: int, focus: tuple[float, float, float],
+                 w0: float, out_w: int = 1080
+                 ) -> tuple[float, float, float, float, bool]:
+    """Resolve `(cx, cy, w)` fractions into a pixel window `(w, h, cx, cy)`.
+
+    Returns the window plus whether it had to be widened. Two ceilings apply and
+    both are the resolution guard in different clothes: the window may not be
+    narrower than the output (that would enlarge), and it may not be wider than
+    the base 9:16 window (there is no more image to show). The centre is left
+    alone here — `compute` clamps the rect into the source once it has one.
+    """
+    cxf, cyf, wf = focus
+    w = min(wf * src_w, w0)
+    clamped = False
+    if w < out_w:
+        w = min(float(out_w), w0)
+        clamped = True
+    h = w / ASPECT
+    if h > src_h:                      # taller than the source: fall back to it
+        h = float(src_h)
+        w = h * ASPECT
+    return w, h, cxf * src_w, cyf * src_h, clamped
+
+
 def compute(src_w: int, src_h: int, n_frames: int, motion: Motion,
             out_w: int = 1080) -> ShotSchedule:
     """Per-frame crop rects. Resolution guard (SPEC §5.2): the crop window may
@@ -100,6 +142,32 @@ def compute(src_w: int, src_h: int, n_frames: int, motion: Motion,
             sched.ys.append(int(round(min(max((src_h - h_i) / 2, 0),
                                           max(src_h - h_i, 0)))))
             sched.dst_hs.append(int(round(dst_h / 2)) * 2)
+        return sched
+
+    if motion.focus is not None and preset in FOCUSABLE:
+        # Travel between the whole frame and the stated detail. `static` simply
+        # sits at the detail; zoom_in arrives, zoom_out departs. Width and
+        # centre are interpolated together on the same eased t, so the framing
+        # never drifts sideways faster than it closes.
+        fw, fh, fcx, fcy, sched.clamped = focus_window(
+            src_w, src_h, motion.focus, w0, out_w)
+        cx0 = src_w / 2
+        cy0 = h0 / 2 if motion.anchor == "top" else src_h / 2
+        for i in range(n_frames):
+            t = _ease(i / (n_frames - 1)) if n_frames > 1 else 0.0
+            u = 1.0 if preset == "static" else (t if preset == "zoom_in" else 1 - t)
+            w = w0 + (fw - w0) * u
+            h = w / ASPECT
+            cx = cx0 + (fcx - cx0) * u
+            cy = cy0 + (fcy - cy0) * u
+            w_i = int(round(w / 2)) * 2
+            h_i = int(round(h / 2)) * 2
+            sched.ws.append(w_i)
+            sched.hs.append(h_i)
+            sched.xs.append(int(round(min(max(cx - w / 2, 0),
+                                          max(src_w - w_i, 0)))))
+            sched.ys.append(int(round(min(max(cy - h / 2, 0),
+                                          max(src_h - h_i, 0)))))
         return sched
 
     # guard: deepest window used by this preset is w0 * (1 - rate)

@@ -10,9 +10,17 @@ Format — a header row, then one row per shot you want to say something about.
 Every column except `shot` is optional, blank cells mean "leave the default",
 and a row starting with `#` is a comment:
 
-    shot,media,in,motion,rate,anchor,effects,notes
-    1,Berlin.jpg,,zoom_in,0.05,,archive_soft,opening
-    0:21,MBK_KAPFILM_FINAL.mp4,2:14,static,,,,Tempelhof arrival
+    shot,media,in,motion,rate,anchor,focus,effects,notes
+    1,Berlin.jpg,,zoom_in,0.05,,,archive_soft,opening
+    0:21,MBK_KAPFILM_FINAL.mp4,2:14,static,,,,,Tempelhof arrival
+    0:41,Reims-Signing.jpg,,zoom_in,,,0.44 0.62 0.30,,push in to the signature
+
+`focus` is what the shot is *about*: a point in the image and how much of the
+width to end on, all as fractions — `0.44 0.62 0.30` means "centre at 44 % across
+and 62 % down, ending on the middle 30 % of the width". Separate with spaces,
+commas or slashes. `zoom_in` arrives there, `zoom_out` leaves from there,
+`static` holds it; the pans ignore it. It replaces `rate` rather than joining it
+— see `schedule.Motion.focus` for why a rate cannot reach a detail.
 
 `shot` addresses the shot either by **number** (1-based, as in the shot report)
 or by the **cue timecode** written in the script. Cues are the safer handle:
@@ -37,6 +45,31 @@ IMAGE_EXTS = {".jpg", ".jpeg", ".png", ".webp", ".tif", ".tiff", ".bmp"}
 VIDEO_EXTS = {".mp4", ".mov", ".mkv", ".avi", ".webm", ".m4v"}
 
 _TIMECODE_RE = re.compile(r"^(?:(\d+):)?(\d{1,2}):(\d{2}(?:\.\d+)?)$")
+_FOCUS_SEP = re.compile(r"[,\s/]+")
+
+
+def parse_focus(value: str) -> tuple[float, float, float] | str | None:
+    """`"0.44 0.62 0.30"` -> `(0.44, 0.62, 0.30)`. Blank -> None.
+
+    Returns a plain string on bad input — the reason, for the caller to warn
+    with. Fractions rather than pixels so the value survives the source being
+    re-cropped or re-scaled, which happens to these images repeatedly.
+    """
+    value = (value or "").strip()
+    if not value:
+        return None
+    parts = [p for p in _FOCUS_SEP.split(value) if p]
+    if len(parts) != 3:
+        return f"expected three numbers (cx cy w), got {len(parts)}"
+    try:
+        cx, cy, w = (float(p) for p in parts)
+    except ValueError:
+        return "expected numbers"
+    if not (0.0 <= cx <= 1.0 and 0.0 <= cy <= 1.0):
+        return "cx and cy are fractions of the source, so both must be 0..1"
+    if not (0.0 < w <= 1.0):
+        return "w is a fraction of the source width, so it must be >0 and <=1"
+    return cx, cy, w
 
 
 def parse_timecode(value: str) -> float | None:
@@ -65,7 +98,8 @@ class ShotEdit:
     motion: str = ""
     rate: float | None = None
     anchor: str = ""
-    effects: str = ""
+    focus: str = ""                    # raw; parsed in apply_shot_list so a bad
+    effects: str = ""                  # value can warn with its row's key
     notes: str = ""
 
     @property
@@ -81,6 +115,7 @@ class ResolvedShot:
     motion: str = ""
     rate: float | None = None
     anchor: str = ""
+    focus: tuple[float, float, float] | None = None
     effects: str = ""
 
     @property
@@ -111,6 +146,7 @@ def read_shot_list(path: Path) -> list[ShotEdit]:
                 media_in=parse_timecode(row.get("in", "")),
                 motion=row.get("motion", ""),
                 anchor=row.get("anchor", ""),
+                focus=row.get("focus", ""),
                 effects=row.get("effects", ""),
                 notes=row.get("notes", ""),
             )
@@ -186,6 +222,13 @@ def apply_shot_list(shots: list[ScriptShot], edits: list[ShotEdit],
                 f"shots.csv: shot {edit.key} has an in-point but its media is "
                 f"not footage; the in-point is ignored")
 
+        focus = parse_focus(edit.focus)
+        if isinstance(focus, str):
+            warnings.append(f"shots.csv: shot {edit.key} focus {edit.focus!r}: "
+                            f"{focus}; ignored")
+        elif focus is not None:
+            target.focus = focus
+
         target.motion = edit.motion or target.motion
         target.rate = edit.rate if edit.rate is not None else target.rate
         target.anchor = edit.anchor or target.anchor
@@ -204,10 +247,10 @@ def write_template(path: Path, shots: list[ScriptShot]) -> Path:
     with path.open("w", newline="", encoding="utf-8") as fh:
         w = csv.writer(fh)
         w.writerow(["shot", "media", "in", "motion", "rate", "anchor",
-                    "effects", "notes"])
+                    "focus", "effects", "notes"])
         for i, s in enumerate(shots, 1):
             cue = ("" if s.cue is None
                    else f"{int(s.cue) // 60}:{int(s.cue) % 60:02d}")
-            w.writerow([cue or i, "", "", "", "", "", "",
+            w.writerow([cue or i, "", "", "", "", "", "", "",
                         s.text[:60] + ("…" if len(s.text) > 60 else "")])
     return path

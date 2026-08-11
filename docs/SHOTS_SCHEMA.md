@@ -1,4 +1,4 @@
-# shots.json + crop CSV — prepared-inputs contract, schema 1.1
+# shots.json + crop CSV — prepared-inputs contract, schema 1.2
 
 **Frozen 2026-07-24.** This is the interface handed to participants (SPEC §4).
 Additive changes bump the minor version; anything that breaks an existing
@@ -8,6 +8,10 @@ is always present.
 **1.1 (2026-08-10)** adds the optional per-shot `words` array. Purely additive:
 a 1.0 reader ignores it, and a 1.0 file still loads — the subtitle builder
 falls back to one caption per block when it is absent.
+
+**1.2 (2026-08-11)** adds `motion.focus`, the window a shot arrives at or leaves
+from. Additive: it is `null` on every shot that does not set one, which is what
+a 1.1 file behaves as.
 
 ## shots.json
 
@@ -36,7 +40,8 @@ Per shot:
 | `confidence` | float 0–1 | mean word probability from the aligner; 0 when estimated |
 | `had_digits` | bool | block contained digits — read `confidence` with care |
 | `image` | str | filename inside the project `images/` dir |
-| `motion` | obj | `{preset, rate, anchor}`; presets: `static, zoom_in, zoom_out, pan_lr, pan_rl, pan_ud, pan_du, square_in`. `square_in` opens as a square inset and pushes in to full-bleed; it is the only preset whose image does not fill the frame throughout, and the only one that ignores `rate` (its push-in is geometric). |
+| `motion` | obj | `{preset, rate, anchor, focus}`; presets: `static, zoom_in, zoom_out, pan_lr, pan_rl, pan_ud, pan_du, square_in`. `square_in` opens as a square inset and pushes in to full-bleed; it is the only preset whose image does not fill the frame throughout, and the only one that ignores `rate` (its push-in is geometric). |
+| `motion.focus` | [float]\|null | *1.2, optional.* `[cx, cy, w]` in fractions of the source: the window the shot is *about*. `zoom_in` opens on the full frame and arrives here, `zoom_out` starts here and pulls back, `static` holds it; the pans ignore it and the generator warns. Supersedes `rate`, which is a fraction of the whole frame and so cannot reach a detail. Guarded like any other window: never narrower than the output width, never wider than the base 9:16 window, and `clamped` reports when it was widened. |
 | `clamped` | bool | resolution guard reduced `rate` so the crop never drops below output width (no silent upscaling) |
 | `max_zoom` | float | how far this source *could* zoom (source-window-width / 1080) |
 | `words` | [obj] | *1.1, optional.* `{text, t_start, t_end}` per word, **verbatim script text** with aligner timings. Lets a block be cut into single-line captions at real word boundaries (`memoacts_core.caption`). Absent on 1.0 files and when `estimated`; in a block flagged `had_digits` the word *placement* is approximate, because normalisation changes the token count — block boundaries stay exact. |

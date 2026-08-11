@@ -57,7 +57,11 @@ class MemoActsSetMotion(io.ComfyNode):
                 f"no shot {shot_id}; this table has 1..{len(entries)}")
         for s in entries:
             if shot_id in (0, s["id"]):
-                s["motion"] = {"preset": preset, "rate": rate, "anchor": anchor}
+                # The focus survives a preset change: it says what the shot is
+                # about, which changing the direction of travel does not revise.
+                # Overwriting the dict wholesale would silently discard it.
+                s["motion"] = {"preset": preset, "rate": rate, "anchor": anchor,
+                               "focus": s.get("motion", {}).get("focus")}
         return io.NodeOutput(out)
 
 
