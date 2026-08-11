@@ -20,6 +20,8 @@ from __future__ import annotations
 import argparse
 import json
 import math
+import sys
+from dataclasses import dataclass
 from pathlib import Path
 
 import numpy as np
@@ -214,18 +216,27 @@ def hexr(c: str) -> np.ndarray:
     return np.array([int(c[i:i + 2], 16) for i in (0, 2, 4)], dtype=np.float32)
 
 
-def draw(features: list[dict], highlight: list[str], dest: Path,
-         context: float = 2.6, relief_path: Path = DEFAULT_RELIEF) -> Path:
-    feats = [(name_of(f["properties"]), projected_rings(f)) for f in features]
-    feats = [(n, p) for n, p in feats if p]
-    view = view_for(feats, highlight, context)
+@dataclass
+class Wash:
+    """One country's flag wash, ready to be blended at any strength.
 
+    Cropped to the country's bounding box. A country covers a small part of the
+    plate, and compositing the whole frame per country per frame is most of the
+    cost of an animated fill — Latvia is under 2 % of the pixels.
+    """
+    name: str
+    box: tuple[int, int, int, int]       # y0, y1, x0, x1
+    mask: np.ndarray
+    lit: np.ndarray
+    edge: np.ndarray
+
+
+def _plate(feats, view, relief) -> np.ndarray:
+    """Everything under the flags: sea, lit land, borders. Never animates."""
     land = fill_mask([p for _, polys in feats for p in polys], view)
     land_soft = np.asarray(
         Image.fromarray((land * 255).astype(np.uint8)).filter(
             ImageFilter.GaussianBlur(2.0)), dtype=np.float32) / 255.0
-
-    relief = sample_relief(view, Image.open(relief_path).convert("L"))
 
     # Sea: shallower near the coast, so the shoreline reads without a hard line.
     shelf = np.clip(land_soft * 2.4, 0, 1)[..., None]
@@ -239,12 +250,19 @@ def draw(features: list[dict], highlight: list[str], dest: Path,
 
     # Borders under the flags, so a wash does not bury them.
     borders = outline_mask([p for _, polys in feats for p in polys], view, 1)
-    img = img * (1 - 0.30 * borders[..., None]) + BORDER_RGB * (0.30 * borders[..., None])
+    return (img * (1 - 0.30 * borders[..., None])
+            + BORDER_RGB * (0.30 * borders[..., None]))
 
-    wanted = {h.lower() for h in highlight}
-    for name, polys in feats:
-        if name.lower() not in wanted:
+
+def _washes(feats, highlight: list[str], view, relief) -> list[Wash]:
+    """One `Wash` per highlighted country, in the order named."""
+    by_name = {n.lower(): (n, p) for n, p in feats}
+    out: list[Wash] = []
+    for want in highlight:
+        hit = by_name.get(want.lower())
+        if hit is None:
             continue
+        name, polys = hit
         mask = fill_mask(polys, view)
         if mask.max() <= 0:
             continue
@@ -280,16 +298,121 @@ def draw(features: list[dict], highlight: list[str], dest: Path,
         wash[~painted] = hexr(colours[-1])      # rounding edge at the boundary
 
         # Multiply the wash by the relief so ridges and valleys stay visible
-        # through the colour, then blend — a flat fill reads as a sticker.
-        lit = wash * (1.0 + (relief[..., None] - 1.0) * LAND_RELIEF_GAIN)
-        a = (FLAG_ALPHA * mask)[..., None]
-        img = img * (1 - a) + np.clip(lit, 0, 255) * a
+        # through the colour — a flat fill reads as a sticker.
+        lit = np.clip(wash * (1.0 + (relief[..., None] - 1.0) * LAND_RELIEF_GAIN),
+                      0, 255)
+        edge = outline_mask(polys, view, 3)
 
-        edge = outline_mask(polys, view, 3)[..., None]
-        img = img * (1 - 0.85 * edge) + COAST_RGB * (0.85 * edge)
+        ys0, ys1 = int(max(by0 - 4, 0)), int(min(by1 + 4, OUT_H))
+        xs0, xs1 = int(max(bx0 - 4, 0)), int(min(bx1 + 4, OUT_W))
+        out.append(Wash(name, (ys0, ys1, xs0, xs1),
+                        mask[ys0:ys1, xs0:xs1],
+                        lit[ys0:ys1, xs0:xs1],
+                        edge[ys0:ys1, xs0:xs1]))
+    return out
+
+
+def compose(plate: np.ndarray, washes: list[Wash],
+            alphas: list[float]) -> np.ndarray:
+    """The plate with each wash blended at its own strength (0..1)."""
+    img = plate.copy()
+    for w, a in zip(washes, alphas):
+        if a <= 0.0:
+            continue
+        y0, y1, x0, x1 = w.box
+        sub = img[y0:y1, x0:x1]
+        aa = (FLAG_ALPHA * a * w.mask)[..., None]
+        sub *= (1 - aa)
+        sub += w.lit * aa
+        ee = (0.85 * a * w.edge)[..., None]
+        sub *= (1 - ee)
+        sub += COAST_RGB * ee
+    return img
+
+
+def _ease(t: float) -> float:
+    """Cosine ease, matching `memoacts_core.schedule` so a wash arriving and a
+    camera moving feel like the same hand."""
+    t = min(max(t, 0.0), 1.0)
+    return (1 - math.cos(math.pi * t)) / 2
+
+
+def stagger(n: int, t: float, *, fill: float, fade: float) -> list[float]:
+    """Strength of each of `n` washes at time `t`, arriving one after another.
+
+    They arrive in the order the countries were named, because the narration
+    names them in order and a map that fills all at once says "these three"
+    where the line says "Latvia, Estonia and Lithuania".
+    """
+    if n <= 0:
+        return []
+    step = 0.0 if n == 1 else max(fill - fade, 0.0) / (n - 1)
+    return [_ease((t - i * step) / fade if fade > 0 else 1.0) for i in range(n)]
+
+
+def draw(features: list[dict], highlight: list[str], dest: Path,
+         context: float = 2.6, relief_path: Path = DEFAULT_RELIEF) -> Path:
+    """The finished plate as a single image — every wash at full strength."""
+    feats = [(name_of(f["properties"]), projected_rings(f)) for f in features]
+    feats = [(n, p) for n, p in feats if p]
+    view = view_for(feats, highlight, context)
+    relief = sample_relief(view, Image.open(relief_path).convert("L"))
+    washes = _washes(feats, highlight, view, relief)
+    img = compose(_plate(feats, view, relief), washes, [1.0] * len(washes))
 
     dest.parent.mkdir(parents=True, exist_ok=True)
     Image.fromarray(np.clip(img, 0, 255).astype(np.uint8)).save(dest)
+    return dest
+
+
+def sequence(features: list[dict], highlight: list[str], dest: Path, *,
+             frames: int, fps: int = 30, fill: float = 5.0, fade: float = 1.2,
+             already: list[str] | None = None, context: float = 2.6,
+             relief_path: Path = DEFAULT_RELIEF) -> Path:
+    """The plate as a clip whose flags wash in one country at a time.
+
+    `already` names countries that are filled from the first frame — the reel
+    moves west across two map shots, and a country that has already changed its
+    calendar has not un-changed it by the next line. Carrying them keeps the
+    second plate a continuation rather than a fresh assertion.
+
+    Written as a video because the renderer already treats footage as "a still
+    that changes every frame" (memoacts_core.video): the shot then takes any
+    motion preset, and nothing in the reel path has to know this one is drawn.
+    """
+    already = already or []
+    ordered = already + [h for h in highlight if h not in already]
+
+    feats = [(name_of(f["properties"]), projected_rings(f)) for f in features]
+    feats = [(n, p) for n, p in feats if p]
+    # Framed on what is arriving, not on everything shown. Including the
+    # carried-over countries in the fit stretched the second plate from the
+    # Baltics to Ukraine and then padded that by the context factor, which put
+    # the whole of Europe on screen and made the two countries the line is
+    # actually about too small to read. Carried flags are continuity, not
+    # subject; they appear if they fall inside the frame.
+    view = view_for(feats, highlight, context)
+    relief = sample_relief(view, Image.open(relief_path).convert("L"))
+
+    plate = _plate(feats, view, relief)
+    held = _washes(feats, already, view, relief)
+    arriving = _washes(feats, [h for h in ordered if h not in already],
+                       view, relief)
+
+    def gen():
+        for i in range(frames):
+            t = i / fps
+            alphas = [1.0] * len(held) + stagger(len(arriving), t,
+                                                 fill=fill, fade=fade)
+            img = compose(plate, held + arriving, alphas)
+            yield Image.fromarray(np.clip(img, 0, 255).astype(np.uint8))
+
+    sys.path.insert(0, str(ROOT))
+    from memoacts_core.render import encode
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    # crf 8: flat washes over shaded relief band badly at ordinary rates, and
+    # this is an authored source the reel will crop into, not a delivery file.
+    encode(gen(), dest, fps, crf=8, out_w=OUT_W, out_h=OUT_H, max_mbps=None)
     return dest
 
 
@@ -301,9 +424,30 @@ def main() -> int:
     ap.add_argument("--highlight", nargs="*", default=[])
     ap.add_argument("--name", default="map")
     ap.add_argument("--context", type=float, default=2.6)
+    ap.add_argument("--frames", type=int, default=0,
+                    help="render a clip of this many frames whose flags wash "
+                         "in one country at a time, instead of a finished PNG")
+    ap.add_argument("--fps", type=int, default=30)
+    ap.add_argument("--fill", type=float, default=5.0,
+                    help="seconds for every wash to have arrived (default: 5)")
+    ap.add_argument("--fade", type=float, default=1.2,
+                    help="seconds one country takes to arrive (default: 1.2)")
+    ap.add_argument("--already", nargs="*", default=[],
+                    help="countries already washed in the first frame, carried "
+                         "over from an earlier map shot")
     args = ap.parse_args()
 
     data = json.loads(args.geojson.read_text(encoding="utf-8"))
+    if args.frames:
+        dest = sequence(data["features"], args.highlight,
+                        args.out / f"{args.name}.mp4", frames=args.frames,
+                        fps=args.fps, fill=args.fill, fade=args.fade,
+                        already=args.already, context=args.context,
+                        relief_path=args.relief)
+        print(f"wrote {dest}  {args.frames} frames  "
+              f"arriving={args.highlight or '(none)'}  "
+              f"already={args.already or '(none)'}")
+        return 0
     dest = draw(data["features"], args.highlight,
                 args.out / f"{args.name}.png", args.context, args.relief)
     print(f"wrote {dest}  highlight={args.highlight or '(none)'}")
