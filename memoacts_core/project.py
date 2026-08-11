@@ -242,12 +242,14 @@ def write_outputs(out_dir: Path, *, lang: str, fps: int, narration: str,
                   spans: list[Span], images: list[Path], motions: list[Motion],
                   schedules: list[ShotSchedule], n_frames: list[int],
                   max_chunk: int,
-                  cues: list[float | None] | None = None) -> Path:
+                  cues: list[float | None] | None = None,
+                  labels: list[str] | None = None) -> Path:
     out_dir.mkdir(parents=True, exist_ok=True)
     crops = out_dir / "crops"
     crops.mkdir(exist_ok=True)
 
     cues = cues or [None] * len(blocks)
+    labels = labels or [""] * len(blocks)
     shots = []
     report = [f"MemoActs shot report — schema {SCHEMA_VERSION}",
               f"narration: {narration}  duration: {duration:.2f}s  fps: {fps}  "
@@ -282,6 +284,9 @@ def write_outputs(out_dir: Path, *, lang: str, fps: int, narration: str,
                        "anchor": mot.anchor,
                        "focus": list(mot.focus) if mot.focus else None},
             "clamped": sched.clamped, "max_zoom": round(sched.max_zoom, 2),
+            # Burnt into the corner, so it is screen text and gets the same
+            # treatment as the caption: written verbatim, never normalised.
+            "label": labels[i - 1],
             "cue_s": cue,
             "cue_drift_s": None if cue is None else round(span.t_start - cue, 2),
             # Word timings, kept so captions can be cut inside a block at real

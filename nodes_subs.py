@@ -68,6 +68,21 @@ class MemoActsSubtitles(io.ComfyNode):
                             "spends silence that follows it; never overlaps "
                             "the next caption.",
                 ),
+                io.Float.Input(
+                    "label_hold", default=3.0, min=0.0, max=30.0, step=0.5,
+                    tooltip="Seconds a corner tag stays up from its shot's "
+                            "start — the `label` column of shots.csv, naming a "
+                            "place or a person. 0 leaves them out. It rides in "
+                            "the same .ass as the captions, so it costs "
+                            "nothing per frame.",
+                ),
+                io.Int.Input("label_size", default=40, min=8, max=200),
+                io.Int.Input(
+                    "label_margin_v", default=220, min=0, max=1800,
+                    tooltip="Gap from the *top* edge, in output pixels: the tag "
+                            "is anchored top-right, so its margin runs the "
+                            "other way from the caption's.",
+                ),
                 io.String.Input("stem", default="subtitles"),
             ],
             outputs=[Subs.Output("SUBS")],
@@ -76,7 +91,7 @@ class MemoActsSubtitles(io.ComfyNode):
     @classmethod
     def execute(cls, shots, size, color, margin_v, shadow, outline,
                 plate_opacity, plate_color, plate_pad, segment, min_duration,
-                stem):
+                label_hold, label_size, label_margin_v, stem):
         doc = shots["doc"]
         out_dir = Path(shots["project_dir"]) / "out"
 
@@ -90,10 +105,21 @@ class MemoActsSubtitles(io.ComfyNode):
         cues = core_subs.cues_from_shots(doc["shots"], style, play_w,
                                          segment=segment,
                                          min_duration=min_duration)
-        ass, srt = core_subs.write_tracks(out_dir, cues, stem=stem, style=style)
+        label_st = core_subs.label_style(size=label_size,
+                                         margin_v=label_margin_v,
+                                         plate_opacity=plate_opacity,
+                                         plate_colour=plate_color)
+        labels = ([] if label_hold <= 0 else
+                  core_subs.labels_from_shots(doc["shots"], hold=label_hold))
+        ass, srt = core_subs.write_tracks(out_dir, cues, stem=stem, style=style,
+                                          labels=labels, label_st=label_st)
         wrapped = core_subs.check_wrap(cues, style, play_w)
         for c in wrapped:
             logging.warning("MemoActsSubtitles: caption wraps, its plate will "
                             "overlap the next line: %r", c.text)
+        for c in core_subs.check_wrap(labels, label_st, play_w):
+            logging.warning("MemoActsSubtitles: label is too wide for one "
+                            "line: %r", c.text)
         return io.NodeOutput({"ass": str(ass), "srt": str(srt),
-                              "cues": len(cues), "wrapped": len(wrapped)})
+                              "cues": len(cues), "wrapped": len(wrapped),
+                              "labels": len(labels)})

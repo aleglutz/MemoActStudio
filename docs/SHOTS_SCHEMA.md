@@ -1,4 +1,4 @@
-# shots.json + crop CSV — prepared-inputs contract, schema 1.2
+# shots.json + crop CSV — prepared-inputs contract, schema 1.3
 
 **Frozen 2026-07-24.** This is the interface handed to participants (SPEC §4).
 Additive changes bump the minor version; anything that breaks an existing
@@ -12,6 +12,9 @@ falls back to one caption per block when it is absent.
 **1.2 (2026-08-11)** adds `motion.focus`, the window a shot arrives at or leaves
 from. Additive: it is `null` on every shot that does not set one, which is what
 a 1.1 file behaves as.
+
+**1.3 (2026-08-11)** adds `label`, the corner tag naming a place or a person.
+Additive: an empty string is the absence of one, which is how a 1.2 file reads.
 
 ## shots.json
 
@@ -45,6 +48,7 @@ Per shot:
 | `clamped` | bool | resolution guard reduced `rate` so the crop never drops below output width (no silent upscaling) |
 | `max_zoom` | float | how far this source *could* zoom (source-window-width / 1080) |
 | `words` | [obj] | *1.1, optional.* `{text, t_start, t_end}` per word, **verbatim script text** with aligner timings. Lets a block be cut into single-line captions at real word boundaries (`memoacts_core.caption`). Absent on 1.0 files and when `estimated`; in a block flagged `had_digits` the word *placement* is approximate, because normalisation changes the token count — block boundaries stay exact. |
+| `label` | str | *1.3, optional.* Tag burnt into the top-right corner — a place or a person, for shots where the narration does not name what is on screen. Verbatim, like `text`: it is screen text, so normalisation never touches it. It rides in the same `.ass` as the captions under a second style, so burn-in stays one libass pass and the cost is per cue rather than per frame. Empty means no tag. |
 | `crops` | [str] | crop-file stems, one per chunk (`shot_03`, or `shot_03_c0`, `shot_03_c1`, … when chunked to `--max-chunk` frames) |
 
 A `square_in` shot also writes `crops/<stem>.dst_h.csv` — the height the image

@@ -37,12 +37,19 @@ _FONT_FILE = "ShareTechMono-Regular.ttf"
 class SubStyle:
     """Neutral default styling, matching the look P1 established with DrawText+.
 
-    `margin_v` is the gap from the bottom edge in play-resolution pixels. The
-    default keeps captions clear of the region where Reels/TikTok/Shorts draw
-    their own UI — but the exact safe-zone figures are still an unverified SPEC
-    §10 open item, so treat 420 as "what P1 used and looked right", not as
+    `margin_v` is the gap from the edge the style is anchored to, in
+    play-resolution pixels — the bottom for `alignment` 1–3, the top for 7–9.
+    The default keeps captions clear of the region where Reels/TikTok/Shorts
+    draw their own UI — but the exact safe-zone figures are still an unverified
+    SPEC §10 open item, so treat 420 as "what P1 used and looked right", not as
     researched platform guidance.
     """
+    #: Style name as written into the .ass. Cues select a style by this name, so
+    #: a track can carry captions and labels in one file and one libass pass.
+    name: str = "Default"
+    #: ASS numpad alignment: 1–3 bottom, 4–6 middle, 7–9 top; 1/4/7 left,
+    #: 2/5/8 centre, 3/6/9 right.
+    alignment: int = 2
     font: str = "Share Tech Mono"
     #: 56, up from P1's 44. Affordable only because a caption is now one short
     #: line rather than a whole narration block: at 56 the usable width holds
@@ -115,13 +122,51 @@ class Cue:
     t_start: float
     t_end: float
     text: str
+    style: str = "Default"
 
 
-def build_ass(cues: list[Cue], style: SubStyle | None = None,
-              play_w: int = PLAY_W, play_h: int = PLAY_H) -> str:
-    st = style or SubStyle()
+def label_style(**over) -> SubStyle:
+    """The identifying tag: who this is, or where this is.
+
+    Top-right, because everything else is committed — the caption owns the
+    bottom, and the right edge below the midline is where Reels/TikTok/Shorts
+    stack their own action column. Smaller than the caption and it must stay
+    that way: a label competing with the narration line reads as a second
+    voice rather than an annotation.
+
+    Same unverified-safe-zone caveat as `SubStyle`: 220 from the top is chosen
+    to clear a platform header, not measured against one (SPEC §10).
+    """
+    st = SubStyle(name="Label", alignment=9, size=40, margin_v=220,
+                  plate_opacity=0.55)
+    for k, v in over.items():
+        setattr(st, k, v)
+    return st
+
+
+def _style_line(st: SubStyle) -> str:
     boxed = st.plate_opacity > 0.0
     plate_col = _ass_colour(st.plate_colour, st.plate_opacity)
+    # BorderStyle 1 = outline + drop shadow; 3 = opaque box, where the Outline
+    # field becomes the box's padding rather than a stroke width. Renderers
+    # disagree about which colour fills that box — VSFilter uses OutlineColour,
+    # some builds reach for BackColour — so both are set to the plate colour and
+    # the question stops mattering.
+    return (
+        f"Style: {st.name},{st.font},{st.size},{_ass_colour(st.primary)},"
+        f"{_ass_colour(st.primary)},{plate_col if boxed else _ass_colour(st.outline)},"
+        f"{plate_col if boxed else _ass_colour(st.shadow)},{int(st.bold)},0,0,0,"
+        f"100,100,0,0,{3 if boxed else 1},"
+        f"{st.plate_pad if boxed else st.outline_width},"
+        f"{0.0 if boxed else st.shadow_depth},{st.alignment},"
+        f"{st.margin_l},{st.margin_r},{st.margin_v},1"
+    )
+
+
+def build_ass(cues: list[Cue], style: SubStyle | list[SubStyle] | None = None,
+              play_w: int = PLAY_W, play_h: int = PLAY_H) -> str:
+    styles = ([style] if isinstance(style, SubStyle)
+              else list(style) if style else [SubStyle()])
     header = [
         "[Script Info]",
         "ScriptType: v4.00+",
@@ -137,26 +182,20 @@ def build_ass(cues: list[Cue], style: SubStyle | None = None,
         "OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, "
         "ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, "
         "Alignment, MarginL, MarginR, MarginV, Encoding",
-        # Alignment 2 = bottom centre.
-        # BorderStyle 1 = outline + drop shadow; 3 = opaque box, where the
-        # Outline field becomes the box's padding rather than a stroke width.
-        # Renderers disagree about which colour fills that box — VSFilter uses
-        # OutlineColour, some builds reach for BackColour — so both are set to
-        # the plate colour and the question stops mattering.
-        f"Style: Default,{st.font},{st.size},{_ass_colour(st.primary)},"
-        f"{_ass_colour(st.primary)},{plate_col if boxed else _ass_colour(st.outline)},"
-        f"{plate_col if boxed else _ass_colour(st.shadow)},{int(st.bold)},0,0,0,"
-        f"100,100,0,0,{3 if boxed else 1},"
-        f"{st.plate_pad if boxed else st.outline_width},"
-        f"{0.0 if boxed else st.shadow_depth},2,"
-        f"{st.margin_l},{st.margin_r},{st.margin_v},1",
+        *(_style_line(st) for st in styles),
         "",
         "[Events]",
         "Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, "
         "Effect, Text",
     ]
+    known = {st.name for st in styles}
+    for c in cues:
+        if c.style not in known:
+            raise ValueError(
+                f"cue at {c.t_start:.2f}s wants style {c.style!r}, which this "
+                f"track does not define (has: {', '.join(sorted(known))})")
     body = [
-        f"Dialogue: 0,{_ass_time(c.t_start)},{_ass_time(c.t_end)},Default,,"
+        f"Dialogue: 0,{_ass_time(c.t_start)},{_ass_time(c.t_end)},{c.style},,"
         f"0,0,0,,{_escape_ass(c.text)}"
         for c in cues
     ]
@@ -205,6 +244,32 @@ def cues_from_shots(shots: list[dict], style: SubStyle | None = None,
     return cues
 
 
+def labels_from_shots(shots: list[dict], *, hold: float = 3.0,
+                      style_name: str = "Label") -> list[Cue]:
+    """One cue per shot that carries a `label` — a place or a person.
+
+    The label goes up with the shot and holds for `hold` seconds, or the whole
+    shot if that is shorter. It deliberately does not run the length of the
+    shot: a tag is an answer to "who is this / where is this", and once the
+    viewer has read it, leaving it up turns it into part of the frame. Blocks
+    here run to fourteen seconds, so "whole shot" would be exactly that.
+
+    Same field for both jobs by design — a location and a name sit in the same
+    corner and read the same way, so there is nothing to gain from two
+    mechanisms and a category to get wrong if there were two.
+    """
+    cues: list[Cue] = []
+    for s in shots:
+        text = (s.get("label") or "").strip()
+        if not text:
+            continue
+        t0 = s["t_start"]
+        t1 = min(t0 + hold, s["t_end"])
+        if t1 > t0:
+            cues.append(Cue(t0, t1, text, style=style_name))
+    return cues
+
+
 def check_wrap(cues: list[Cue], style: SubStyle | None = None,
                play_w: int = PLAY_W) -> list[Cue]:
     """Return the cues that will not fit on one line.
@@ -221,11 +286,25 @@ def check_wrap(cues: list[Cue], style: SubStyle | None = None,
 
 
 def write_tracks(out_dir: Path, cues: list[Cue], *, stem: str = "subtitles",
-                 style: SubStyle | None = None) -> tuple[Path, Path]:
-    """Write both the burn-in source and the sidecar. Returns (ass, srt)."""
+                 style: SubStyle | None = None,
+                 labels: list[Cue] | None = None,
+                 label_st: SubStyle | None = None) -> tuple[Path, Path]:
+    """Write both the burn-in source and the sidecar. Returns (ass, srt).
+
+    Labels join the captions in the one `.ass`, so burn-in stays a single
+    libass pass and they cost nothing per frame (GAPS.md #3). They are kept out
+    of the `.srt`: that sidecar is the spoken text, and a place-name nobody says
+    aloud does not belong in it.
+    """
     out_dir.mkdir(parents=True, exist_ok=True)
     ass = out_dir / f"{stem}.ass"
     srt = out_dir / f"{stem}.srt"
-    ass.write_text(build_ass(cues, style), encoding="utf-8")
+    st = style or SubStyle()
+    styles = [st]
+    events = list(cues)
+    if labels:
+        styles.append(label_st or label_style())
+        events = sorted(events + labels, key=lambda c: c.t_start)
+    ass.write_text(build_ass(events, styles), encoding="utf-8")
     srt.write_text(build_srt(cues), encoding="utf-8")
     return ass, srt

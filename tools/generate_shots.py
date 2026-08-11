@@ -143,7 +143,8 @@ def main() -> int:
                          norm_blocks=normed, digit_flags=flags, spans=spans,
                          images=imgs, motions=motions, schedules=schedules,
                          n_frames=n_frames, max_chunk=args.max_chunk,
-                         cues=[sh.cue for sh in script_shots])
+                         cues=[sh.cue for sh in script_shots],
+                         labels=[p.label for p in picks])
     print("wrote", path)
     print((out / "report.txt").read_text(encoding="utf-8"))
     return 0

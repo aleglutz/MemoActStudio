@@ -54,6 +54,11 @@ def main() -> int:
     ap.add_argument("--plate", type=float, default=0.55,
                     help="opacity of the box behind the caption; 0 falls back "
                          "to the plain outline style (default: 0.55)")
+    ap.add_argument("--no-labels", action="store_true",
+                    help="skip the corner tags naming a place or a person")
+    ap.add_argument("--label-hold", type=float, default=3.0,
+                    help="seconds a corner tag stays up from the shot's start "
+                         "(default: 3.0)")
     ap.add_argument("--on-upscale", default="warn",
                     choices=["warn", "error", "allow"],
                     help="what to do when a source cannot fill the output "
@@ -102,8 +107,12 @@ def main() -> int:
         style = subs.SubStyle(plate_opacity=args.plate, size=args.sub_size)
         cues = subs.cues_from_shots(doc["shots"], style, out_w,
                                     segment=not args.no_segment)
+        labels = ([] if args.no_labels
+                  else subs.labels_from_shots(doc["shots"], hold=args.label_hold))
         ass, srt = subs.write_tracks(out_path.parent, cues, stem=out_path.stem,
-                                     style=style)
+                                     style=style, labels=labels)
+        if labels:
+            print(f"labels: {len(labels)} corner tags, {args.label_hold:.1f}s each")
         # A wrapped caption stacks two plates and puts a dark bar through the
         # text, so this is a defect report, not a style note.
         for c in subs.check_wrap(cues, style, out_w):

@@ -10,10 +10,14 @@ Format — a header row, then one row per shot you want to say something about.
 Every column except `shot` is optional, blank cells mean "leave the default",
 and a row starting with `#` is a comment:
 
-    shot,media,in,motion,rate,anchor,focus,effects,notes
-    1,Berlin.jpg,,zoom_in,0.05,,,archive_soft,opening
-    0:21,MBK_KAPFILM_FINAL.mp4,2:14,static,,,,,Tempelhof arrival
-    0:41,Reims-Signing.jpg,,zoom_in,,,0.44 0.62 0.30,,push in to the signature
+    shot,media,in,motion,rate,anchor,focus,label,effects,notes
+    1,Berlin.jpg,,zoom_in,0.05,,,Berlin,archive_soft,opening
+    0:21,MBK_KAPFILM_FINAL.mp4,2:14,static,,,,,,Tempelhof arrival
+    0:41,Reims-Signing.jpg,,zoom_in,,,0.44 0.62 0.30,,,push in to the signature
+
+`label` is the tag burnt into the top-right corner — a place or a person, for
+the shots where the narration does not say which. It holds a few seconds from
+the shot's start, not the whole shot.
 
 `focus` is what the shot is *about*: a point in the image and how much of the
 width to end on, all as fractions — `0.44 0.62 0.30` means "centre at 44 % across
@@ -99,7 +103,8 @@ class ShotEdit:
     rate: float | None = None
     anchor: str = ""
     focus: str = ""                    # raw; parsed in apply_shot_list so a bad
-    effects: str = ""                  # value can warn with its row's key
+    label: str = ""                    # value can warn with its row's key
+    effects: str = ""
     notes: str = ""
 
     @property
@@ -116,6 +121,7 @@ class ResolvedShot:
     rate: float | None = None
     anchor: str = ""
     focus: tuple[float, float, float] | None = None
+    label: str = ""
     effects: str = ""
 
     @property
@@ -147,6 +153,7 @@ def read_shot_list(path: Path) -> list[ShotEdit]:
                 motion=row.get("motion", ""),
                 anchor=row.get("anchor", ""),
                 focus=row.get("focus", ""),
+                label=row.get("label", ""),
                 effects=row.get("effects", ""),
                 notes=row.get("notes", ""),
             )
@@ -232,6 +239,7 @@ def apply_shot_list(shots: list[ScriptShot], edits: list[ShotEdit],
         target.motion = edit.motion or target.motion
         target.rate = edit.rate if edit.rate is not None else target.rate
         target.anchor = edit.anchor or target.anchor
+        target.label = edit.label or target.label
         target.effects = edit.effects or target.effects
 
     return resolved, warnings
@@ -247,10 +255,10 @@ def write_template(path: Path, shots: list[ScriptShot]) -> Path:
     with path.open("w", newline="", encoding="utf-8") as fh:
         w = csv.writer(fh)
         w.writerow(["shot", "media", "in", "motion", "rate", "anchor",
-                    "focus", "effects", "notes"])
+                    "focus", "label", "effects", "notes"])
         for i, s in enumerate(shots, 1):
             cue = ("" if s.cue is None
                    else f"{int(s.cue) // 60}:{int(s.cue) % 60:02d}")
-            w.writerow([cue or i, "", "", "", "", "", "", "",
+            w.writerow([cue or i, "", "", "", "", "", "", "", "",
                         s.text[:60] + ("…" if len(s.text) > 60 else "")])
     return path
