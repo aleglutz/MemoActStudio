@@ -15,6 +15,10 @@ and a row starting with `#` is a comment:
     0:21,MBK_KAPFILM_FINAL.mp4,2:14,static,,,0.4,,,,Tempelhof arrival in slow motion
     0:41,Reims-Signing.jpg,,zoom_in,,,,0.44 0.62 0.30,,,push in to the signature
 
+`fit` as the motion shows the media whole, full width, with bands above and
+below — the honest framing for landscape footage, which a 9:16 crop would have
+to enlarge.
+
 `in` and `speed` apply to footage only: `in` is where in the fragment the shot
 starts, `speed` its playback rate (0.4 is slow motion). How *much* footage gets
 used is not stated — the shot's duration comes from the narration, and the

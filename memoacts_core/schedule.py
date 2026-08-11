@@ -11,7 +11,7 @@ from dataclasses import dataclass, field
 
 ASPECT = 9 / 16
 PRESETS = ("static", "zoom_in", "zoom_out", "pan_lr", "pan_rl", "pan_ud",
-           "pan_du", "square_in")
+           "pan_du", "square_in", "fit")
 
 
 @dataclass
@@ -119,6 +119,33 @@ def compute(src_w: int, src_h: int, n_frames: int, motion: Motion,
 
     rate = max(0.0, motion.rate)
     preset = motion.preset if motion.preset in PRESETS else "static"
+
+    if preset == "fit" and src_w / src_h > ASPECT:
+        # Show the whole frame, full output width, letterboxed. There is no crop
+        # at all, so a landscape source is *reduced* rather than enlarged —
+        # 1280x800 lands at 1080x675, a 0.84x downscale, where the same source
+        # cropped to 9:16 would have to invent 2.4x. The bands are the price and
+        # they are honest: nothing outside them was ever filmed.
+        #
+        # It reuses square_in's dst_hs channel, which already means "the image
+        # occupies this much of the frame's height"; the renderer needs nothing
+        # new. Unlike square_in the value is constant, because there is nothing
+        # to travel towards once the whole frame is on screen.
+        w_i = (src_w // 2) * 2
+        h_i = (src_h // 2) * 2
+        dst_h = int(round(out_w * h_i / w_i / 2)) * 2
+        sched.max_zoom = w_i / out_w
+        for _ in range(n_frames):
+            sched.ws.append(w_i)
+            sched.hs.append(h_i)
+            sched.xs.append(0)
+            sched.ys.append(0)
+            sched.dst_hs.append(dst_h)
+        return sched
+    if preset == "fit":
+        # Already at least as tall as 9:16, so fitting to width would overflow
+        # the frame. There is nothing to letterbox — hold the ordinary window.
+        preset = "static"
 
     if preset == "square_in":
         # The image opens as a square inset and pushes in until it is

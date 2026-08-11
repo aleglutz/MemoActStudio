@@ -48,7 +48,7 @@ Per shot:
 | `image` | str | media filename; a still in `images/`, `composites/` or `maps/`, or a fragment in `video/` |
 | `media_in` | float s\|null | *1.4, footage only.* Where in the fragment this shot starts. How much is consumed is not stored: the shot's duration comes from the narration and the footage bends to it. |
 | `speed` | float\|null | *1.4, footage only.* Playback rate; 0.4 is the slow motion SPEC §5.2 asks for. The frame count is unaffected — speed changes how much footage is spent, not how long the shot runs. |
-| `motion` | obj | `{preset, rate, anchor, focus}`; presets: `static, zoom_in, zoom_out, pan_lr, pan_rl, pan_ud, pan_du, square_in`. `square_in` opens as a square inset and pushes in to full-bleed; it is the only preset whose image does not fill the frame throughout, and the only one that ignores `rate` (its push-in is geometric). |
+| `motion` | obj | `{preset, rate, anchor, focus}`; presets: `static, zoom_in, zoom_out, pan_lr, pan_rl, pan_ud, pan_du, square_in, fit`. `square_in` opens as a square inset and pushes in to full-bleed; `fit` shows the media whole at full output width, letterboxed — no crop, so a landscape source is reduced rather than enlarged. Both write `dst_h`; `square_in`'s grows, `fit`'s is constant. Neither uses `rate`. |
 | `motion.focus` | [float]\|null | *1.2, optional.* `[cx, cy, w]` in fractions of the source: the window the shot is *about*. `zoom_in` opens on the full frame and arrives here, `zoom_out` starts here and pulls back, `static` holds it; the pans ignore it and the generator warns. Supersedes `rate`, which is a fraction of the whole frame and so cannot reach a detail. Guarded like any other window: never narrower than the output width, never wider than the base 9:16 window, and `clamped` reports when it was widened. |
 | `clamped` | bool | resolution guard reduced `rate` so the crop never drops below output width (no silent upscaling) |
 | `max_zoom` | float | how far this source *could* zoom (source-window-width / 1080) |
@@ -56,7 +56,7 @@ Per shot:
 | `label` | str | *1.3, optional.* Tag burnt into the top-right corner — a place or a person, for shots where the narration does not name what is on screen. Verbatim, like `text`: it is screen text, so normalisation never touches it. It rides in the same `.ass` as the captions under a second style, so burn-in stays one libass pass and the cost is per cue rather than per frame. Empty means no tag. |
 | `crops` | [str] | crop-file stems, one per chunk (`shot_03`, or `shot_03_c0`, `shot_03_c1`, … when chunked to `--max-chunk` frames) |
 
-A `square_in` shot also writes `crops/<stem>.dst_h.csv` — the height the image
+A `square_in` or `fit` shot also writes `crops/<stem>.dst_h.csv` — the height the image
 occupies in the output frame, per frame, full output width. Absent for every
 other preset, where the crop fills the frame by definition.
 
