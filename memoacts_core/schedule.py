@@ -10,7 +10,8 @@ import math
 from dataclasses import dataclass, field
 
 ASPECT = 9 / 16
-PRESETS = ("static", "zoom_in", "zoom_out", "pan_lr", "pan_rl", "pan_ud", "pan_du")
+PRESETS = ("static", "zoom_in", "zoom_out", "pan_lr", "pan_rl", "pan_ud",
+           "pan_du", "square_in")
 
 
 @dataclass
@@ -28,10 +29,18 @@ class ShotSchedule:
     hs: list[int] = field(default_factory=list)
     clamped: bool = False
     max_zoom: float = 1.0     # how far this source could zoom before < out_w
+    #: Height the image occupies in the *output* frame, per frame. Empty for
+    #: every preset but `square_in`, and empty means "fills the frame", which is
+    #: what every other preset does and what the renderer assumed outright
+    #: before this existed. Width is always the full output width.
+    dst_hs: list[int] = field(default_factory=list)
 
     def csv(self) -> dict[str, str]:
         j = lambda v: ",".join(map(str, v))
-        return {"w": j(self.ws), "h": j(self.hs), "x": j(self.xs), "y": j(self.ys)}
+        out = {"w": j(self.ws), "h": j(self.hs), "x": j(self.xs), "y": j(self.ys)}
+        if self.dst_hs:
+            out["dst_h"] = j(self.dst_hs)
+        return out
 
     def chunks(self, max_frames: int) -> list["ShotSchedule"]:
         n = len(self.ws)
@@ -41,7 +50,8 @@ class ShotSchedule:
         for a in range(0, n, max_frames):
             b = min(a + max_frames, n)
             out.append(ShotSchedule(self.xs[a:b], self.ys[a:b], self.ws[a:b],
-                                    self.hs[a:b], self.clamped, self.max_zoom))
+                                    self.hs[a:b], self.clamped, self.max_zoom,
+                                    self.dst_hs[a:b]))
         return out
 
 
@@ -49,11 +59,12 @@ def _ease(t: float) -> float:
     return (1 - math.cos(math.pi * t)) / 2
 
 
-def base_window(src_w: int, src_h: int) -> tuple[float, float]:
-    """Largest 9:16 window inside the source."""
-    if src_w / src_h > ASPECT:
-        return src_h * ASPECT, float(src_h)
-    return float(src_w), src_w / ASPECT
+def base_window(src_w: int, src_h: int, aspect: float = ASPECT
+                ) -> tuple[float, float]:
+    """Largest window of `aspect` (w/h) inside the source. Defaults to 9:16."""
+    if src_w / src_h > aspect:
+        return src_h * aspect, float(src_h)
+    return float(src_w), src_w / aspect
 
 
 def compute(src_w: int, src_h: int, n_frames: int, motion: Motion,
@@ -66,6 +77,30 @@ def compute(src_w: int, src_h: int, n_frames: int, motion: Motion,
 
     rate = max(0.0, motion.rate)
     preset = motion.preset if motion.preset in PRESETS else "static"
+
+    if preset == "square_in":
+        # The image opens as a square inset and pushes in until it is
+        # full-bleed. Two things move together: the destination grows from
+        # out_w x out_w to the whole frame, and the crop follows the
+        # destination's aspect, so the field of view narrows as the frame opens.
+        # The push-in is therefore geometric — `rate` adds nothing and is
+        # ignored — and the final frame is exactly the ordinary 9:16 window,
+        # which is why the resolution guard needs no special case here.
+        out_h = out_w / ASPECT
+        for i in range(n_frames):
+            t = _ease(i / (n_frames - 1)) if n_frames > 1 else 0.0
+            dst_h = out_w + (out_h - out_w) * t
+            w, h = base_window(src_w, src_h, out_w / dst_h)
+            w_i = int(round(w / 2)) * 2
+            h_i = int(round(h / 2)) * 2
+            sched.ws.append(w_i)
+            sched.hs.append(h_i)
+            sched.xs.append(int(round(min(max((src_w - w_i) / 2, 0),
+                                          max(src_w - w_i, 0)))))
+            sched.ys.append(int(round(min(max((src_h - h_i) / 2, 0),
+                                          max(src_h - h_i, 0)))))
+            sched.dst_hs.append(int(round(dst_h / 2)) * 2)
+        return sched
 
     # guard: deepest window used by this preset is w0 * (1 - rate)
     min_w = w0 * (1 - rate) if preset != "static" else w0

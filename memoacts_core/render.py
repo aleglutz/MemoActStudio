@@ -32,6 +32,10 @@ from .schedule import ShotSchedule
 OUT_W, OUT_H = 1080, 1920
 RESAMPLE = Image.Resampling.LANCZOS
 
+#: What shows around an image that does not fill the frame (`square_in`).
+#: Black, so the inset reads as a card rather than as a rendering mistake.
+MATTE = (0, 0, 0)
+
 
 def ffmpeg_exe() -> str:
     exe = shutil.which("ffmpeg")
@@ -69,12 +73,17 @@ def _check_upscale(shot: ShotRender, out_w: int, policy: str) -> None:
     output, a 1.9x enlargement. Clamping the rate cannot fix that, and the
     project forbids upscaling silently, so the decision surfaces here.
     """
-    widest = max(shot.schedule.ws, default=out_w)
-    if widest >= out_w:
+    # The *narrowest* crop is the binding one — it is the frame stretched
+    # furthest. `compute` clamps the zoom rate so that for the ordinary presets
+    # this equals the base window anyway; it differs for `square_in`, whose crop
+    # narrows as the frame opens, and reporting the widest there would describe
+    # the one frame that is fine and stay quiet about the rest.
+    narrowest = min(shot.schedule.ws, default=out_w)
+    if narrowest >= out_w:
         return
-    factor = out_w / widest
-    msg = (f"{shot.image.name}: source supplies only {widest}px for a {out_w}px "
-           f"output ({factor:.2f}x enlargement)")
+    factor = out_w / narrowest
+    msg = (f"{shot.image.name}: source supplies only {narrowest}px for a "
+           f"{out_w}px output ({factor:.2f}x enlargement)")
     if policy == "error":
         raise ValueError(msg)
     if policy == "warn":
@@ -120,7 +129,16 @@ def shot_frames(shot: ShotRender, out_w: int = OUT_W, out_h: int = OUT_H,
             # sliding past the image and producing a black border.
             x = min(max(x + dx, 0), max(src_w - w, 0))
             y = min(max(y + dy, 0), max(src_h - h, 0))
-            frame = src.crop((x, y, x + w, y + h)).resize((out_w, out_h), RESAMPLE)
+            crop = src.crop((x, y, x + w, y + h))
+            dst_h = s.dst_hs[i] if s.dst_hs else out_h
+            if dst_h >= out_h:
+                frame = crop.resize((out_w, out_h), RESAMPLE)
+            else:
+                # The image does not fill the frame yet (square_in). Letterbox
+                # rather than stretch: the bands are part of the device.
+                frame = Image.new("RGB", (out_w, out_h), MATTE)
+                frame.paste(crop.resize((out_w, dst_h), RESAMPLE),
+                            (0, (out_h - dst_h) // 2))
             yield frame if pipeline is None else pipeline.apply(frame, i)
     finally:
         if pipeline is not None:

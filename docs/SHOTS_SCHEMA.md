@@ -36,11 +36,15 @@ Per shot:
 | `confidence` | float 0–1 | mean word probability from the aligner; 0 when estimated |
 | `had_digits` | bool | block contained digits — read `confidence` with care |
 | `image` | str | filename inside the project `images/` dir |
-| `motion` | obj | `{preset, rate, anchor}`; presets: `static, zoom_in, zoom_out, pan_lr, pan_rl, pan_ud, pan_du` |
+| `motion` | obj | `{preset, rate, anchor}`; presets: `static, zoom_in, zoom_out, pan_lr, pan_rl, pan_ud, pan_du, square_in`. `square_in` opens as a square inset and pushes in to full-bleed; it is the only preset whose image does not fill the frame throughout, and the only one that ignores `rate` (its push-in is geometric). |
 | `clamped` | bool | resolution guard reduced `rate` so the crop never drops below output width (no silent upscaling) |
 | `max_zoom` | float | how far this source *could* zoom (source-window-width / 1080) |
 | `words` | [obj] | *1.1, optional.* `{text, t_start, t_end}` per word, **verbatim script text** with aligner timings. Lets a block be cut into single-line captions at real word boundaries (`memoacts_core.caption`). Absent on 1.0 files and when `estimated`; in a block flagged `had_digits` the word *placement* is approximate, because normalisation changes the token count — block boundaries stay exact. |
 | `crops` | [str] | crop-file stems, one per chunk (`shot_03`, or `shot_03_c0`, `shot_03_c1`, … when chunked to `--max-chunk` frames) |
+
+A `square_in` shot also writes `crops/<stem>.dst_h.csv` — the height the image
+occupies in the output frame, per frame, full output width. Absent for every
+other preset, where the crop fills the frame by definition.
 
 ## Crop CSVs (`crops/<stem>.{w,h,x,y}.csv`)
 
