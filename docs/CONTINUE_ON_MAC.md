@@ -25,9 +25,13 @@ The repository is **316 KB** and holds everything decided: the code, `script.md`
 geodata. Media is deliberately not versioned (`.gitignore`), so it travels
 separately — but most of it does not need to travel at all:
 
+Since 2026-08-12 the code syncs through a private GitHub repository, so only
+media has to be carried by hand. The `git bundle` route below still works if
+you would rather not clone.
+
 | | Size | Travels? |
 |---|---|---|
-| The repository, full history | 316 KB | **yes** — one `git bundle` file |
+| The repository, full history | 316 KB | **no** — `git clone`, or a `git bundle` file |
 | `images/` | 18 MB | **yes** — sources, not reproducible |
 | `video/MBK_KAPFILM_FINAL.mp4` | 169 MB | **an excerpt is enough**; the reel uses 6.68 s from 0:40 |
 | `maps/*.mp4` | 4.6 MB | no — regenerate, see below |
@@ -40,8 +44,10 @@ copied output can silently disagree with the inputs it claims to come from.
 
 ## Setting up
 
+The code lives in a private repository, so the clone is ordinary:
+
 ```bash
-git clone memoacts.bundle MemoActStudio
+git clone https://github.com/aleglutz/memoacts-studio.git MemoActStudio
 cd MemoActStudio
 
 brew install ffmpeg                  # libx264 and libass; both are required
