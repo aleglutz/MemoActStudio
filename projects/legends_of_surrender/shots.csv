@@ -13,7 +13,7 @@ shot,media,in,motion,rate,anchor,speed,focus,label,effects,notes
 1:29,S14_three-band.mp4,,static,,,,,,,"three-band: RU instrument / delegation / EN instrument. Each band moves on its own — the docs breathe in and out, the delegation drifts. Rebuild: tools/render_bands.py"
 1:37,S07_two-band_bw.png,,static,,,,,,,two-band b/w: the West's version of events
 1:44,Moscow.jpg,,pan_rl,0,,,,Moscow,,the Moscow announcement
-1:59,StalinCropped1943.jpg,,pan_lr,0,,,,,,"Soviet framing of the victory. WARNING: 960x1280, enlarged x1.50"
+1:59,Loznitca_VDay_Treptov.jpg,,pan_lr,0.05,,,,Berlin,,"9 May at Treptower Park today — a full horizontal traverse of the crowd. Replaces the 1943 Stalin still. Loznitsa, Victory Day (2018): NOT public domain, see SOURCES.md. 2048x858 scope, so the 9:16 crop enlarges x2.24"
 2:10,map_baltics.mp4,,zoom_in,0.05,,,,,,"map: Latvia, Estonia and Lithuania wash in one at a time, in the order the line names them"
 2:18,map_poland_ukraine.mp4,,zoom_out,0.05,,,,,,"map: Poland then Ukraine arrive; the Baltics stay filled from the previous shot"
 2:30,Karlshorst_Signing.jpg,,pan_rl,0,,,,,,"""the delay in Karlshorst"" — reprise"
