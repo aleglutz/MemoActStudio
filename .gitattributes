@@ -1,0 +1,16 @@
+# One line ending everywhere.
+#
+# The project now moves between the Windows ComfyUI install and a Mac. Without
+# this, every text file rewrites itself on each checkout and every diff is a
+# whole-file diff — noise that hides the changes that matter. The index is
+# already pure LF (verified: 0 files stored with CRLF), so this freezes the
+# state the repository is in rather than converting anything.
+* text=auto eol=lf
+
+# Never line-ending-converted, never diffed as text.
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.ttf  binary
+*.pdf  binary
+*.mp4  binary
