@@ -6,7 +6,7 @@
         --band Wehrmacht_in_Karlshorst.jpg:0.482:pan_lr:0.10 \
         --band GIoS_Wehrmacht_Signed_En.jpg:0.530:zoom_out:0.08
 
-Writes `<project>/composites/<name>.mp4`.
+Writes `<project>/composites/<name>.mp4`, or `<name>.png` with `--still`.
 
 `docs/THREEBAND_TOOL.md` builds the same frame in ComfyUI and freezes it to a
 PNG. That is the right tool for choosing the framing — you drag each band by
@@ -14,6 +14,14 @@ eye. This one takes the framing as numbers and makes it move: a band is 1080x636
 rather than 9:16, so each one gets its own `schedule.compute` at the band's
 aspect and its own preset, and three sources drift independently inside one
 still-looking frame.
+
+`--still` and `--mono` exist so that the *whole* set of stacked frames a reel
+needs can be rebuilt here. Three of this project's composites were frozen stills
+made in ComfyUI with a source-available node whose licence forbids
+redistribution (`SURVEY.md §3`), which put them outside anything the repository
+could reproduce — and an asset a project cannot rebuild is one nobody can
+correct. `--still` renders the opening frame with motion held; `--mono` is a
+plain luminance conversion, applied last, after the bands are seated.
 
 The output is a clip because `memoacts_core.video` already makes footage
 indistinguishable from a still to the rest of the reel — same as the animated
@@ -76,13 +84,24 @@ def main() -> int:
     ap.add_argument("--name", required=True)
     ap.add_argument("--band", action="append", default=[],
                     help="file[:cy[:preset[:rate]]], repeated per band, top first")
-    ap.add_argument("--frames", type=int, required=True)
+    ap.add_argument("--frames", type=int, default=None,
+                    help="clip length in frames; ignored (and unnecessary) "
+                         "with --still")
     ap.add_argument("--fps", type=int, default=30)
     ap.add_argument("--crf", type=int, default=12)
+    ap.add_argument("--still", action="store_true",
+                    help="write one PNG instead of a clip; every band is held "
+                         "at its opening framing")
+    ap.add_argument("--mono", action="store_true",
+                    help="convert the finished frame to black and white")
     args = ap.parse_args()
 
     if len(args.band) < 2:
         print("need at least two bands"); return 1
+    if args.still:
+        args.frames = 1
+    elif args.frames is None:
+        print("--frames is required unless --still"); return 1
 
     bh = band_height(len(args.band))
     aspect = OUT_W / bh
@@ -94,6 +113,13 @@ def main() -> int:
         name, cy, preset, rate = parse_band(spec)
         path = resolve(args.project, name)
         src = load_source(path)
+        if args.still and preset != "static":
+            # Say it rather than silently dropping the band's preset: the spec
+            # strings are copied between a clip and a still, and a motion that
+            # quietly stopped happening is the kind of difference nobody looks
+            # for later.
+            print(f"  {name}: {preset} held — a still has no motion")
+            preset, rate = "static", 0.0
         sched = compute(*src.size, args.frames, Motion(preset=preset, rate=rate),
                         out_w=OUT_W, aspect=aspect)
         # Re-seat the window on the band's chosen centre. `compute` frames
@@ -109,22 +135,31 @@ def main() -> int:
               f"{'-> x%.2f ENLARGES' % (OUT_W / narrowest) if narrowest < OUT_W else 'ok'}")
         plans.append((src, sched, ys))
 
-    def frames():
-        for i in range(args.frames):
-            frame = Image.new("RGB", (OUT_W, OUT_H), SEAM_RGB)
-            y = 0
-            for src, sched, ys in plans:
-                box = (sched.xs[i], ys[i],
-                       sched.xs[i] + sched.ws[i], ys[i] + sched.hs[i])
-                frame.paste(src.crop(box).resize((OUT_W, bh), RESAMPLE), (0, y))
-                y += bh + SEAM
-            yield frame
+    def compose(i: int) -> Image.Image:
+        frame = Image.new("RGB", (OUT_W, OUT_H), SEAM_RGB)
+        y = 0
+        for src, sched, ys in plans:
+            box = (sched.xs[i], ys[i],
+                   sched.xs[i] + sched.ws[i], ys[i] + sched.hs[i])
+            frame.paste(src.crop(box).resize((OUT_W, bh), RESAMPLE), (0, y))
+            y += bh + SEAM
+        # Last, so the seams and every band desaturate together rather than one
+        # band at a time — and so a colour band added later cannot be missed.
+        return frame.convert("L").convert("RGB") if args.mono else frame
 
-    dest = args.project / "composites" / f"{args.name}.mp4"
-    dest.parent.mkdir(parents=True, exist_ok=True)
-    encode(frames(), dest, args.fps, crf=args.crf,
-           out_w=OUT_W, out_h=OUT_H, max_mbps=None)
-    print(f"wrote {dest}  {args.frames} frames")
+    dest_dir = args.project / "composites"
+    dest_dir.mkdir(parents=True, exist_ok=True)
+
+    if args.still:
+        dest = dest_dir / f"{args.name}.png"
+        compose(0).save(dest)
+        print(f"wrote {dest}  one frame{'  b/w' if args.mono else ''}")
+        return 0
+
+    dest = dest_dir / f"{args.name}.mp4"
+    encode((compose(i) for i in range(args.frames)), dest, args.fps,
+           crf=args.crf, out_w=OUT_W, out_h=OUT_H, max_mbps=None)
+    print(f"wrote {dest}  {args.frames} frames{'  b/w' if args.mono else ''}")
     return 0
 
 
