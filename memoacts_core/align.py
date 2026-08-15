@@ -36,8 +36,48 @@ class Span:
 
 
 class Aligner(Protocol):
+    def audio_duration(self, audio_path: Path) -> float: ...
+
     def align(self, audio_path: Path, blocks: list[str], lang: str,
               display_blocks: list[str] | None = None) -> list[Span]: ...
+
+
+def audio_duration(audio_path: Path) -> float:
+    """Length of an audio file in seconds, read with ffprobe.
+
+    Engine-independent on purpose, and deliberately not torchaudio.
+    `torchaudio.info` was removed in torchaudio 2.9 with the rest of the
+    deprecated I/O layer, so the old call now raises AttributeError on any
+    current install — and keeping it would mean pinning torchaudio, which pins
+    torch, to preserve one function. ffmpeg is already a hard dependency of the
+    render path (it is what burns the subtitles in), so this costs no install.
+
+    The number matters more than its one line suggests: it sets the last shot's
+    end, and therefore the length of the reel. Prefer the audio stream's own
+    duration over the container's, and refuse rather than guess — a raw ADTS
+    `.aac` reports a duration derived from its bitrate, which measured 3.3 s
+    long on a 2:45 read.
+    """
+    import json
+    import subprocess
+
+    from .video import ffprobe_exe
+
+    out = subprocess.run(
+        [ffprobe_exe(), "-v", "error", "-select_streams", "a:0",
+         "-show_entries", "stream=duration:format=duration",
+         "-of", "json", str(audio_path)],
+        capture_output=True, text=True, check=True).stdout
+    doc = json.loads(out)
+    streams = doc.get("streams") or [{}]
+    for value in (streams[0].get("duration"),
+                  doc.get("format", {}).get("duration")):
+        if value not in (None, "", "N/A"):
+            return float(value)
+    raise ValueError(
+        f"{audio_path.name}: ffprobe reports no duration for the audio stream. "
+        "A raw stream without a container often cannot state one — remux or "
+        "convert to WAV.")
 
 
 def proportional_spans(blocks: list[str], duration: float) -> list[Span]:
@@ -83,10 +123,7 @@ class StableTsAligner:
         return self._model
 
     def audio_duration(self, audio_path: Path) -> float:
-        import torchaudio
-
-        info = torchaudio.info(str(audio_path))
-        return info.num_frames / info.sample_rate
+        return audio_duration(audio_path)
 
     def align(self, audio_path: Path, blocks: list[str], lang: str,
               display_blocks: list[str] | None = None) -> list[Span]:
