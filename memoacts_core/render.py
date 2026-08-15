@@ -180,14 +180,34 @@ def reel_frames(shots: Iterable[ShotRender], out_w: int = OUT_W,
 
 
 def _escape_filter_path(path: Path) -> str:
-    r"""Escape a path for use inside an ffmpeg filter argument.
+    r"""Escape a path for use as an *unquoted* ffmpeg filter option value.
 
-    ffmpeg parses the filtergraph itself, so a Windows path needs its drive
-    colon escaped and its separators flipped: C:\a\b.ass -> C\:/a/b.ass.
+    Two parsers stand between this string and libass, and each consumes one
+    level of escaping: the filtergraph parser splits filters on ':' and
+    unescapes, then the filter's own option parser splits options on ':' and
+    unescapes again. A Windows drive colon therefore has to be written
+    ``C\\:/a/b.ass`` to arrive as ``C:/a/b.ass``; as_posix() flips the
+    separators on the way.
+
+    Quoting the value instead — ``subtitles='...'`` — is what this did until
+    now, and **ffmpeg 8.0 stopped accepting it**: the opening quote is read as
+    running to the *last* quote in the filter, so the ``':fontsdir='`` between
+    them is swallowed and the parse dies with "No option name near ...".
+    Escaping works on both, and quoting never solved the colon anyway — a
+    quoted ``C:/a/b.ass`` still splits at the filter's own option parser, which
+    is why the escape was there as well.
+
     Getting this wrong fails as "Unable to open file", which reads like a
     missing file rather than a quoting bug.
     """
-    return path.resolve().as_posix().replace(":", r"\:")
+    s = path.resolve().as_posix()
+    # Backslashes first, or the escapes added next would themselves be escaped.
+    # as_posix() has already removed the separators, so this only bites on a
+    # backslash inside a filename.
+    s = s.replace("\\", "\\\\\\\\")
+    for ch in (":", "'"):
+        s = s.replace(ch, "\\\\" + ch)
+    return s
 
 
 def encode(frames: Iterable[Image.Image], out_path: Path, fps: int, *,
@@ -221,9 +241,9 @@ def encode(frames: Iterable[Image.Image], out_path: Path, fps: int, *,
         if fontsdir is None:
             from .subs import FONTS_DIR
             fontsdir = FONTS_DIR
-        vf = f"subtitles='{_escape_filter_path(ass)}'"
+        vf = f"subtitles=filename={_escape_filter_path(ass)}"
         if fontsdir.is_dir():
-            vf += f":fontsdir='{_escape_filter_path(fontsdir)}'"
+            vf += f":fontsdir={_escape_filter_path(fontsdir)}"
         else:
             warnings.warn(
                 f"fonts directory {fontsdir} not found; libass will fall back "
