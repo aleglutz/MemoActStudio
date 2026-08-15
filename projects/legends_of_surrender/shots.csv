@@ -1,20 +1,21 @@
 shot,media,in,motion,rate,anchor,speed,focus,label,effects,notes
 0:00,Karlshorst-Foyer-8Mai-9Maya_square_1920.png,,square_in,,,,,,,"cold open: the foyer wall carries both dates — opens as a square, pushes to full-bleed"
-0:07,Karlshorst-Prepared.jpg,,pan_rl,0,,,,Berlin-Karlshorst,,"DRAFT — the empty prepared hall. The line says ""here"", so the tag says where"
-0:17,S01-02_two-band.png,,static,,,,,,,two-band: Reims + Karlshorst = the two dates named in the line
-0:22,Karlshorst_Signing.jpg,,pan_lr,0,,,,,,the night the question is about
-0:27,Reims-Signing.jpg,,pan_rl,0,,,,"Reims, France",,Reims signing — the wide
-0:41,Reims-Signing_Jodl.png,,zoom_in,,,,0.50 0.46 0.77,Colonel General Alfred Jodl,,"""a staff officer with no real power"" — Jodl from behind, pushing in. Derived crop: the wide has only 5% of zoom headroom"
-0:55,Reims_Protocol_Jodl.jpg,,zoom_in,,,,0.554 0.524 0.62,,,"""the men who actually give orders"" — the protocol names them by rank; ends on those four lines"
-1:03,MBK_KAPFILM_FINAL.mp4,0:40,fit,,,,,Berlin-Tempelhof,,"arrival at Tempelhof, KAPFILM footage. Banded: full width, no enlargement — the 9:16 crop would need x2.4"
-1:10,Truman_Churchill_Potsdam.jpg,,zoom_in,0.06,,,,,,"Truman and Churchill announce. NB the photo is Potsdam, 16 July 1945 — right men, wrong moment; see SOURCES.md. PD-UKGov, IWM BU 8944"
-1:19,London.jpg,,pan_lr,0,,,,London,,"""While London and Washington begin celebrating"" — VE Day crowd. Replaced the dancing Soviet soldiers, which showed Berlin celebrating against a line about London"
-1:24,GIoS_Wehrmacht_Signed_Ru_p1.jpg,,fit,,,,,,,"the Russian text that arrived incomplete — page 1 of the act. Banded: the scan is 1024x1410 (klein), so a 9:16 crop would need x1.36; whole page at x1.05 instead"
-1:29,S14_three-band.mp4,,static,,,,,,,"three-band: RU instrument / delegation / EN instrument. Each band moves on its own — the docs breathe in and out, the delegation drifts. Rebuild: tools/render_bands.py"
-1:37,S07_two-band_bw.png,,static,,,,,,,two-band b/w: the West's version of events
+0:06,Karlshorst-Prepared.jpg,,pan_rl,0,,,,Berlin-Karlshorst,,"DRAFT — the empty prepared hall. The line says ""here"", so the tag says where"
+0:14,S01-02_two-band.png,,static,,,,,,,two-band: Reims + Karlshorst = the two dates named in the line
+0:18,Karlshorst_Signing.jpg,,pan_lr,0,,,,,,the night the question is about
+0:23,General_Dwight_D._Eisenhower.jpg,,zoom_in,0.05,,,,,,"DRAFT — new block in the re-recorded script (""we have to go to Reims""). Reims was Eisenhower's headquarters, and this is the only unused still that carries the place. Alternative: a map plate highlighting France, which would read as geography but spends the map device before the calendar section owns it"
+0:30,Reims-Signing.jpg,,pan_rl,0,,,,"Reims, France",,Reims signing — the wide
+0:42,Reims-Signing_Jodl.png,,zoom_in,,,,0.50 0.46 0.77,Colonel General Alfred Jodl,,"""a staff officer with no real power"" — Jodl from behind, pushing in. Derived crop: the wide has only 5% of zoom headroom"
+0:54,Reims_Protocol_Jodl.jpg,,zoom_in,,,,0.554 0.524 0.62,,,"""the men who actually give orders"" — the protocol names them by rank; ends on those four lines"
+1:01,MBK_KAPFILM_FINAL.mp4,0:40,fit,,,,,Berlin-Tempelhof,,"arrival at Tempelhof, KAPFILM footage. Banded: full width, no enlargement — the 9:16 crop would need x2.4"
+1:09,Truman_Churchill_Potsdam.jpg,,zoom_in,0.06,,,,,,"Truman and Churchill announce. NB the photo is Potsdam, 16 July 1945 — right men, wrong moment; see SOURCES.md. PD-UKGov, IWM BU 8944"
+1:21,London.jpg,,pan_lr,0,,,,London,,"""While London and Washington begin celebrating"" — VE Day crowd. Replaced the dancing Soviet soldiers, which showed Berlin celebrating against a line about London"
+1:26,GIoS_Wehrmacht_Signed_Ru_p1.jpg,,fit,,,,,,,"the Russian text that arrived incomplete — page 1 of the act. Banded: the scan is 1024x1410 (klein), so a 9:16 crop would need x1.36; whole page at x1.05 instead"
+1:32,S14_three-band.mp4,,static,,,,,,,"three-band: RU instrument / delegation / EN instrument. Each band moves on its own — the docs breathe in and out, the delegation drifts. Rebuild: tools/render_bands.py"
+1:38,New_York_May-8_1945.jpg,,pan_lr,0,,,,New York,,"VE Day on Wall Street, 8 May — the West's version of events, replacing the S07 two-band. Portrait but still wider than 9:16: the window is 1440x2560 of 1870x2560, so the traverse is 430px and short by construction. No vertical headroom at all — a pan_ud would not move. Rights unchecked, not yet in SOURCES.md"
 1:44,Moscow.jpg,,pan_rl,0,,,,Moscow,,the Moscow announcement
-1:59,Loznitca_VDay_Treptov.jpg,,pan_lr,0.05,,,,Berlin,,"9 May at Treptower Park today — a full horizontal traverse of the crowd. Replaces the 1943 Stalin still. Loznitsa, Victory Day (2018): NOT public domain, see SOURCES.md. 2048x858 scope, so the 9:16 crop enlarges x2.24"
+1:58,Loznitca_VDay_Treptov.jpg,,pan_lr,0.05,,,,Berlin,,"9 May at Treptower Park today — a full horizontal traverse of the crowd. Replaces the 1943 Stalin still. Loznitsa, Victory Day (2018): NOT public domain, see SOURCES.md. 2048x858 scope, so the 9:16 crop enlarges x2.24"
 2:10,map_baltics.mp4,,zoom_in,0.05,,,,,,"map: Latvia, Estonia and Lithuania wash in one at a time, in the order the line names them"
 2:18,map_poland_ukraine.mp4,,zoom_out,0.05,,,,,,"map: Poland then Ukraine arrive; the Baltics stay filled from the previous shot"
-2:30,Karlshorst_Signing.jpg,,pan_rl,0,,,,,,"""the delay in Karlshorst"" — reprise"
-2:39,S18_three-cities_bw.png,,static,,,,,,,three-band b/w: London / Berlin / Moscow — closing question
+2:29,Karlshorst_Signing.jpg,,pan_rl,0,,,,,,"""the delay in Karlshorst"" — reprise"
+2:40,S18_three-cities_bw.png,,static,,,,,,,three-band b/w: London / Berlin / Moscow — closing question
