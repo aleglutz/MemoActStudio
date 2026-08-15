@@ -31,17 +31,26 @@ python -c "import stable_whisper, num2words, numpy, PIL; print('ok')"
 ## 1. One-time setup on a new machine
 
 ```bash
-brew install ffmpeg                      # must carry libass and libx264
+brew tap homebrew-ffmpeg/ffmpeg          # see below — not the core formula
+brew install homebrew-ffmpeg/ffmpeg/ffmpeg
 python3 -m venv .venv
 source .venv/bin/activate
 pip install stable-ts num2words numpy pillow
 ```
 
-Verify ffmpeg has the subtitle library, or burn-in fails at render time rather
-than at install time:
+**Not `brew install ffmpeg`.** Homebrew's core formula no longer lists libass
+among its dependencies, so the ffmpeg it installs has no `subtitles` filter at
+all, and the render dies with `No such filter: 'subtitles'` — after every frame
+has been generated, which is the expensive place to find out. The
+[homebrew-ffmpeg](https://github.com/homebrew-ffmpeg/homebrew-ffmpeg) tap builds
+it in by default. If the core formula is already installed, `brew unlink ffmpeg`
+first so the tap's binary is the one on PATH.
+
+Verify before rendering anything, not after:
 
 ```bash
-ffmpeg -version | grep -o libass
+ffmpeg -version | grep -o libass         # must print libass
+ffmpeg -filters | grep -w subtitles      # must print one line
 ```
 
 `stable-ts` pulls in torch, and the Whisper model downloads on first alignment
@@ -142,7 +151,8 @@ than to seconds. No timing is stored anywhere that survives the new read.
 | `ModuleNotFoundError: stable_whisper` | the environment is not active — step 0 |
 | `command not found: python` | same; macOS ships `python3` only |
 | `ffmpeg: command not found` | step 1 |
-| subtitles missing from the render | ffmpeg built without libass — step 1 |
+| `No such filter: 'subtitles'` | ffmpeg built without libass — step 1, and note it is *not* the core Homebrew formula |
+| `No option name near …` in a filter | ffmpeg 8 rejects quoted filter values; `memoacts_core.render` escapes them instead — update the repository |
 | every shot reports `cue … matches no block in script.md` | `shots.csv` keys no longer match `script.md`; re-key one of the two |
 | `confidence` is `0.00` everywhere | alignment fell back to proportional timing; the log above says why |
 | a shot renders as its default | its media is missing — the generator warns by name and carries on |
