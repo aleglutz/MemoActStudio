@@ -291,9 +291,16 @@ def main() -> int:
                     page = to
             for t0, t1, to in turns:
                 if t0 <= t < t1:
-                    from_page = at(keys, max(t0 - 1e-6, 0.0), ease)[3]
-                    yield fold(compose(pages[from_page - 1], cx, cy, s, cache),
-                               compose(pages[to - 1], cx, cy, s, cache_b),
+                    before = at(keys, max(t0 - 1e-6, 0.0), ease)
+                    from_page, s_out = before[3], before[2]
+                    s_in = at(keys, t1, ease)[2]
+                    # Each sheet keeps its own scale through the turn. They
+                    # differ because the scans do — 1024px against 1860px for
+                    # the same sheet of paper — so interpolating between them
+                    # would shrink the page being turned while it turns, which
+                    # is the one thing paper does not do.
+                    yield fold(compose(pages[from_page - 1], cx, cy, s_out, cache),
+                               compose(pages[to - 1], cx, cy, s_in, cache_b),
                                (t - t0) / (t1 - t0))
                     break
             else:

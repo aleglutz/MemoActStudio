@@ -65,48 +65,58 @@ arrives and settles rather than stopping dead.
 
 ### The path
 
-Page 1 is the 1024x1410 "klein" scan and pages 2 and 3 are 1860x2560, so `s`
-differs to hold one reading size: 2.60 and 1.43 both give a page about 2660 px
-wide, which is 27 lines in the frame. The close beat on page 3 runs at 2.00.
+Page 2 is not in the reel: one turn, page 1 to page 3. The scans differ (1024x1410
+and 1860x2560), so `s` differs to hold one reading size — 2.60 and 1.43 both give
+a sheet about 2660 px wide, 27 text lines in frame, the reference's own framing.
+**Page 3 is at one scale for its whole section**, which is what removes the seam:
+the camera reaches Keitel by travelling, never by getting closer.
 
-Magnification is therefore real — up to 2.6x on page 1 — and **deliberate**:
-`UPSCALE.md` forbids silent enlargement, not enlargement, and the tool prints
-the factor at every run. It is plain Lanczos, which invents nothing. When the
-scans are upscaled, divide every `s` by the upscale factor and the framing is
-unchanged.
+Magnification is real — 2.6x on the klein scan — and deliberate: `UPSCALE.md`
+forbids silent enlargement, not enlargement, and the factor is printed every run.
+It is plain Lanczos, which invents nothing. When the scans are upscaled, divide
+every `s` by the upscale factor; the framing does not move.
 
     python tools/render_move.py --project projects/legends_of_surrender \
         --image GIoS_Wehrmacht_Signed_Ru_p1.jpg \
-        --image GIoS_Wehrmacht_Signed_Ru_p2.jpg \
         --image GIoS_Wehrmacht_Signed_Ru.jpg \
         --name S12_ru_page_move --frames 344 --ease cosine \
-        --key 0.000:0.500,0.950,2.60,1 --key 0.044:0.500,0.950,2.60 \
-        --key 0.140:0.100,0.940,2.60 --key 0.201:0.100,0.940,2.60 \
-        --key 0.305:0.620,0.760,2.60 --key 0.340:0.620,0.760,2.60 \
-        --key 0.401:0.550,0.700,1.43 --key 0.471:0.180,0.660,1.43 \
-        --key 0.541:0.180,0.660,1.43 --key 0.637:0.600,0.520,1.43 \
-        --key 0.698:0.550,0.500,1.43 --key 0.750:0.550,0.500,1.43 \
-        --key 0.855:0.150,0.560,1.43 --key 0.856:0.520,1.090,2.00 \
-        --key 0.959:0.431,1.033,2.00 --key 1.000:0.431,1.033,2.00 \
-        --turn 0.340,0.401,2 --turn 0.637,0.698,3
+        --key 0.000:0.500,0.950,2.60,1 --key 0.035:0.500,0.950,2.60 \
+        --key 0.122:-0.231,0.950,2.60 --key 0.166:-0.231,0.950,2.60 \
+        --key 0.279:1.231,0.863,2.60  --key 0.314:1.231,0.863,2.60 \
+        --key 0.384:0.550,0.780,2.60 \
+        --key 0.414:0.550,0.780,1.43 \
+        --key 0.528:-0.066,0.204,1.43 --key 0.567:-0.066,0.204,1.43 \
+        --key 0.672:0.796,0.309,1.43  --key 0.715:0.796,0.309,1.43 \
+        --key 0.942:0.328,0.929,1.43  --key 1.000:0.328,0.929,1.43 \
+        --turn 0.384,0.414,2
 
-Read as beats, at the reference's rhythm — nine of them in 11.5 s, none longer
-than 1.3 s:
+| time | | speed |
+|---|---|---|
+| 0.0–0.4 s | held on the head of page 1 | |
+| 0.4–1.4 s | the sheet goes left | 790 px/s |
+| 1.4–1.9 s | **held on the "10" in blue pencil**, top right | |
+| 1.9–3.2 s | back right and down, a whip | 1220 px/s |
+| 3.2–3.6 s | **held on the tape and punch holes** at the left margin | |
+| 3.6–4.4 s | one more shift left, to mid-page | 840 px/s |
+| **4.4–4.75 s** | **the page is turned over** — 0.34 s, and page 3 is underneath | |
+| 4.75–6.05 s | down to de Lattre de Tassigny, bottom right | 990 px/s |
+| 6.05–6.5 s | held | |
+| 6.5–7.7 s | left to Spaatz, bottom left | 790 px/s |
+| 7.7–8.2 s | held | |
+| 8.2–10.8 s | the long rise to Keitel's autograph | 500 px/s |
+| 10.8–11.5 s | held on it | |
 
-| time | |
-|---|---|
-| 0.0–0.5 s | held on the head of page 1: the title and the opening clause |
-| 0.5–1.6 s | the sheet goes left, ~390 px/s |
-| 1.6–2.3 s | held |
-| 2.3–3.5 s | diagonally right and up, ~550 px/s — reading down the page |
-| 3.5–3.9 s | held |
-| **3.9–4.6 s** | **the page turns**, and page 2 is underneath |
-| 4.6–6.2 s | left, then held across the shot cut at 5.42 s |
-| 6.2–7.3 s | right and up |
-| **7.3–8.0 s** | **the second turn**, to page 3 |
-| 8.0–9.8 s | held, then left |
-| 9.8 s | closer, **on a cut** — the reference never zooms |
-| 9.8–11.5 s | a slow slide that ends on Keitel's signature |
+The two detail beats are the reason the sequence reads as someone handling a
+document rather than a camera executing a move: a pencilled "10" that some
+archivist wrote, and the tape somebody used to reinforce the punch holes. The
+signatures are what the shot is about; those two say the thing is an object that
+has been filed, lent and repaired.
+
+Coordinates on the page, if a beat ever needs re-aiming: the "10" sits at
+(0.95, 0.035), the tape at (0.035, 0.31); on page 3, de Lattre (0.73, 0.655),
+Spaatz (0.38, 0.60), Keitel (0.57, 0.275). A key that centres page point
+(px, py) is `cx = 0.5 + (0.5 - px) * pw / 1080`, `cy = 0.5 + (0.5 - py) * ph / 1920`,
+clamped so the sheet still covers the frame.
 
 ### The turn
 
@@ -114,8 +124,9 @@ than 1.3 s:
 between two scans says "another page"; it does not say a hand. What says a hand
 is the crease: a seam crossing the frame, the lifted part of the sheet mirrored
 back over itself and foreshortened, its underside darkening as it leans, and a
-shadow thrown on the page it uncovers. It is all 2D compositing — the sheet is
-never modelled — which holds up at 0.7 s per turn.
+shadow thrown on the page it uncovers. Each sheet keeps its own scale through
+the turn — they differ only because the scans do, and interpolating between them
+would shrink the page while it turns, which is the one thing paper does not do.
 
 The clip is 344 frames against the 338 the two shots consume, so the settle
 lands at the end of the second shot rather than after it. **If the narration is
