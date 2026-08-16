@@ -47,6 +47,7 @@ import math
 import sys
 from pathlib import Path
 
+import numpy as np
 from PIL import Image
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
@@ -119,6 +120,61 @@ def at(keys, t: float, ease) -> tuple[float, float, float, int]:
     return prev[1], prev[2], prev[3], prev[4]
 
 
+def parse_turn(spec: str) -> tuple[float, float, int]:
+    """`t0,t1,page` -> the page is turned over between t0 and t1, revealing it."""
+    try:
+        t0, t1, page = spec.split(",")
+        return float(t0), float(t1), int(page)
+    except ValueError:
+        raise SystemExit(f"turn {spec!r}: expected t0,t1,page as fractions and "
+                         "a 1-based page number")
+
+
+def fold(a: Image.Image, b: Image.Image, u: float) -> Image.Image:
+    """Page `a` turning off to the left, revealing `b`. `u` runs 0 to 1.
+
+    A cut between two scans says "another page"; it does not say a hand. What
+    reads as a hand is the crease: a seam travelling across the frame, the
+    lifted part of the sheet folded back over itself and foreshortened, its
+    underside catching less light the further it leans, and a shadow thrown
+    onto the page underneath. All of that is 2D — the sheet is never modelled,
+    only mirrored and squeezed — which is enough at this speed, and keeps the
+    turn a compositing step rather than a renderer.
+    """
+    W, H = a.size
+    x_s = int(round((1.0 - u) * W))          # the crease, sweeping right to left
+    out = np.asarray(a, dtype=np.float32).copy()
+    nb = np.asarray(b, dtype=np.float32)
+
+    if x_s < W:
+        out[:, x_s:] = nb[:, x_s:]
+        # The lifted sheet throws a shadow on what it uncovers, strongest at
+        # the crease. Without it the two pages read as one flat collage.
+        shade_w = min(90, W - x_s)
+        if shade_w > 1:
+            g = np.linspace(0.52, 1.0, shade_w, dtype=np.float32)[None, :, None]
+            out[:, x_s:x_s + shade_w] *= g
+
+    lift = W - x_s
+    flap_w = int(round(lift * (1.0 - u) ** 0.7))
+    if flap_w >= 2 and lift >= 2:
+        flap = np.asarray(
+            a.crop((x_s, 0, W, H)).transpose(Image.FLIP_LEFT_RIGHT)
+             .resize((flap_w, H), RESAMPLE), dtype=np.float32)
+        # The underside leans away from the light: darkest at the free edge,
+        # nearly unshaded at the crease.
+        g = np.linspace(0.44, 0.92, flap_w, dtype=np.float32)[None, :, None]
+        flap *= g
+        x0 = max(0, x_s - flap_w)
+        out[:, x0:x_s] = flap[:, flap_w - (x_s - x0):]
+        # A bright line where the sheet folds over itself.
+        if 0 < x_s < W:
+            out[:, max(0, x_s - 2):x_s] = np.minimum(
+                out[:, max(0, x_s - 2):x_s] * 1.35 + 26, 255)
+
+    return Image.fromarray(np.clip(out, 0, 255).astype(np.uint8))
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--project", type=Path, required=True)
@@ -128,6 +184,9 @@ def main() -> int:
     ap.add_argument("--name", required=True)
     ap.add_argument("--key", action="append", default=[],
                     help="t:cx,cy,s[,page]; at least two, ordered by t")
+    ap.add_argument("--turn", action="append", default=[],
+                    help="t0,t1,page — turn the sheet over between t0 and t1, "
+                         "revealing that page; repeatable")
     ap.add_argument("--frames", type=int, required=True)
     ap.add_argument("--fps", type=int, default=30)
     ap.add_argument("--crf", type=int, default=12)
@@ -154,6 +213,21 @@ def main() -> int:
         page = k[4] or page
         filled.append(k[:4] + (page,))
     keys = filled
+
+    turns = sorted((parse_turn(t) for t in args.turn), key=lambda t: t[0])
+    # A turn is a page change, so it belongs in the page timeline before
+    # anything reads it. Getting this wrong once cost a run whose coverage
+    # report was computed against the wrong scan entirely: the keys after a
+    # turn still claimed page 1, which is 1024px wide where the others are
+    # 1860, and every one of them was reported as leaving the frame.
+    filled2 = []
+    for k in keys:
+        page = k[4]
+        for t0, t1, to in turns:
+            if k[0] >= t1:
+                page = to
+        filled2.append(k[:4] + (page,))
+    keys = filled2
 
     pages = [load_source(resolve(args.project, name)) for name in args.image]
     for name, im in zip(args.image, pages):
@@ -188,27 +262,42 @@ def main() -> int:
               ", ".join(f"{t:.3f}" for t in gaps) +
               " and the bed shows there; raise s at those keys to cover it")
 
+    for t0, t1, page in turns:
+        print(f"  turn  {t0:.3f}-{t1:.3f} -> page {page} "
+              f"({(t1 - t0) * args.frames / args.fps:.2f} s)")
+
+    def compose(src: Image.Image, cx: float, cy: float, s: float, cache) -> Image.Image:
+        pw = max(1, int(round(src.size[0] * s)))
+        ph = max(1, int(round(src.size[1] * s)))
+        key = (id(src), pw)
+        if key not in cache:
+            cache.clear()
+            cache[key] = src.resize((pw, ph), RESAMPLE)
+        frame = Image.new("RGB", (OUT_W, OUT_H), bed)
+        frame.paste(cache[key], (int(round(cx * OUT_W - pw / 2)),
+                                 int(round(cy * OUT_H - ph / 2))))
+        return frame
+
     def frames():
         cache: dict[tuple[int, int], Image.Image] = {}
+        cache_b: dict[tuple[int, int], Image.Image] = {}
         for i in range(args.frames):
             t = i / max(args.frames - 1, 1)
             cx, cy, s, page = at(keys, t, ease)
-            src = pages[page - 1]
-            pw = max(1, int(round(src.size[0] * s)))
-            ph = max(1, int(round(src.size[1] * s)))
-            key = (page, pw)
-            if key not in cache:
-                # One resize per distinct width, not per frame: a slide holds
-                # its scale for many frames and the resample is the expensive
-                # part. Keyed on the page too, or a page change would inherit
-                # the other page's pixels.
-                cache.clear()
-                cache[key] = src.resize((pw, ph), RESAMPLE)
-            frame = Image.new("RGB", (OUT_W, OUT_H), bed)
-            frame.paste(cache[key], (int(round(cx * OUT_W - pw / 2)),
-                                     int(round(cy * OUT_H - ph / 2))))
-            yield frame
-
+            # A turn owns the page on both sides of itself: before it ends the
+            # sheet on top is the one being turned, after it the one revealed.
+            for t0, t1, to in turns:
+                if t >= t1:
+                    page = to
+            for t0, t1, to in turns:
+                if t0 <= t < t1:
+                    from_page = at(keys, max(t0 - 1e-6, 0.0), ease)[3]
+                    yield fold(compose(pages[from_page - 1], cx, cy, s, cache),
+                               compose(pages[to - 1], cx, cy, s, cache_b),
+                               (t - t0) / (t1 - t0))
+                    break
+            else:
+                yield compose(pages[page - 1], cx, cy, s, cache)
     dest = args.project / "composites" / f"{args.name}.mp4"
     dest.parent.mkdir(parents=True, exist_ok=True)
     encode(frames(), dest, args.fps, crf=args.crf,
