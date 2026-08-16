@@ -79,6 +79,63 @@ BORDER_RGB = np.array([120, 126, 118], dtype=np.float32)
 
 FLAG_ALPHA = 0.55       # a wash, so the terrain still reads underneath
 
+#: Alternative palettes, sampled from the reel's own document scans rather than
+#: chosen: the act pages and the Reims protocol sit either side of these maps,
+#: and their paper measures 239-249 / 221-240 / 198-215 across the four scans —
+#: warm by about +38 red over blue — with ink between 69,49,43 and 132,101,89.
+#: Taking land from paper and water from ink is what ties the drawn material to
+#: the photographed material; the flags stay flags, since a wash that drifted
+#: with the palette would stop being a national colour.
+#:
+#: `--palette` picks one. `terrain` is the original and stays the default, so a
+#: plate rebuilt from an old command line comes back unchanged.
+PALETTES: dict[str, dict] = {
+    "terrain": {
+        "sea_deep": (10, 26, 38), "sea_shelf": (20, 46, 62),
+        "land": (96, 100, 78), "coast": (196, 214, 224),
+        "border": (120, 126, 118), "flag_alpha": 0.55, "relief_gain": 1.35,
+    },
+    # Paper and ink: the strongest reading of the documents, and the largest
+    # break from the current look — land is the page, water is what was
+    # written on it.
+    "paper": {
+        "sea_deep": (46, 36, 32), "sea_shelf": (94, 76, 64),
+        "land": (214, 199, 173), "coast": (250, 243, 224),
+        "border": (150, 132, 112), "flag_alpha": 0.58, "relief_gain": 1.15,
+    },
+    # The same idea carried into the water as well: a tea-stained plate with
+    # no cool anywhere, closest to the aged Russian scan.
+    "sepia": {
+        "sea_deep": (84, 68, 56), "sea_shelf": (132, 112, 92),
+        "land": (198, 181, 154), "coast": (238, 226, 204),
+        "border": (160, 140, 118), "flag_alpha": 0.62, "relief_gain": 1.10,
+    },
+    # Paper land, but the water keeps the blue-black of the signatures rather
+    # than the brown of the typescript: the least distance from the reel as it
+    # stands, and sea that still reads unmistakably as sea.
+    "ink": {
+        "sea_deep": (28, 32, 44), "sea_shelf": (62, 70, 84),
+        "land": (216, 206, 188), "coast": (244, 238, 224),
+        "border": (126, 120, 106), "flag_alpha": 0.55, "relief_gain": 1.20,
+    },
+}
+
+
+def use_palette(name: str) -> None:
+    """Rebind the module's palette. Same reasoning as --scale: these are read
+    as module state by every helper below, and threading a palette object
+    through each would be a wider change than picking a colour deserves."""
+    global SEA_DEEP, SEA_SHELF, LAND_BASE, COAST_RGB, BORDER_RGB
+    global FLAG_ALPHA, LAND_RELIEF_GAIN
+    p = PALETTES[name]
+    SEA_DEEP = np.array(p["sea_deep"], dtype=np.float32)
+    SEA_SHELF = np.array(p["sea_shelf"], dtype=np.float32)
+    LAND_BASE = np.array(p["land"], dtype=np.float32)
+    COAST_RGB = np.array(p["coast"], dtype=np.float32)
+    BORDER_RGB = np.array(p["border"], dtype=np.float32)
+    FLAG_ALPHA = p["flag_alpha"]
+    LAND_RELIEF_GAIN = p["relief_gain"]
+
 
 def project(lon: float, lat: float) -> tuple[float, float]:
     """Equirectangular with a cosine correction at the view's mid-latitude."""
@@ -518,7 +575,12 @@ def main() -> int:
                     help="multiply the plate size (default 1440x2560). A shot "
                          "can push in by the plate's own factor over the 1080 "
                          "output, so 2.0 buys a 2.67x move instead of 1.33x")
+    ap.add_argument("--palette", default="terrain", choices=sorted(PALETTES),
+                    help="land and water colours; the non-default ones are "
+                         "sampled from the reel's document scans")
     args = ap.parse_args()
+
+    use_palette(args.palette)
 
     if args.scale != 1.0:
         # Rebound rather than threaded through: every helper here reads these
