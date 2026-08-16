@@ -1,30 +1,40 @@
-"""A camera path across a single still, rendered as a clip (SPEC §5.2).
+"""A page moved under the camera, rendered as a clip (SPEC §5.2).
 
     python tools/render_move.py --project projects/legends_of_surrender \
-        --image GIoS_Wehrmacht_Signed_Ru.jpg --name S12_ru_page_move \
-        --frames 360 \
-        --key 0.00:0.500,0.500,0.774 \
-        --key 0.30:0.360,0.600,0.581 \
-        --key 0.62:0.640,0.560,0.581 \
-        --key 1.00:0.520,0.375,0.581
+        --image GIoS_Wehrmacht_Signed_Ru_p1.jpg \
+        --image GIoS_Wehrmacht_Signed_Ru.jpg \
+        --name S12_ru_page_move --frames 344 --ease linear \
+        --key 0.000:0.780,0.460,0.62,1 \
+        --key 0.150:0.500,0.500,0.62 \
+        --key 0.473:0.620,0.400,0.58,2 \
+        --key 1.000:0.466,0.667,1.00
 
 Writes `<project>/composites/<name>.mp4`.
 
-Why a clip rather than a motion preset: a preset is one gesture, and a shot
-boundary starts it again from the beginning. A document being read is one
-gesture that outlasts a line of narration — so the path is baked once here, and
-the shots that need it read consecutive parts through `shots.csv`'s `in`
-column. `memoacts_core.video` already treats footage as a still that changes
-every frame, so nothing downstream knows this shot is a photograph.
+The model is a sheet of paper on a scanner bed, not a camera window over an
+image. A key places the *page*: `cx`,`cy` are where its centre sits on the
+frame in frame fractions, and `s` is its width as a fraction of the source's
+own pixels — `s = 1.0` is one page pixel per output pixel, so anything above it
+is enlargement and is refused by default. The page may be smaller than the
+frame; then the bed shows around it, which is the point. A page whose edge
+never leaves the frame reads as a photograph of a document, and a page whose
+edge crosses the frame reads as a document being handled.
 
-A key is `t:cx,cy,w`, all fractions of the source: `t` along the clip, `cx`/`cy`
-the centre of the window, `w` its width. Between keys the move eases in and out,
-which means the camera arrives at each key and settles before leaving it —
-reading a page, not sweeping past it.
+Two things follow from that and are worth stating, because they are the reason
+this exists rather than a motion preset:
 
-The window never leaves the image and, unless told otherwise, never falls below
-the output width: a path that would enlarge the source is a path the source
-cannot support, and the honest fix is a better scan, not a bigger crop.
+- **Several pages, one movement.** `--image` repeats; a key's fourth field
+  switches to that page *at that instant*. A page change is a cut, which is how
+  turning a page reads when the camera does not move with it.
+- **The movement outlives a shot.** A preset restarts at every shot boundary,
+  so a gesture spanning two lines of narration cannot be written in shots.csv
+  at all. Here the path is baked once and the shots read consecutive parts of
+  it through the `in` column, as `memoacts_core.video` already does for footage.
+
+`--ease linear` holds a constant speed and stops dead at a key, which is what a
+sheet shoved across glass does; `cosine` (the default) arrives and settles, and
+matches `memoacts_core.schedule` so a baked path and a preset feel like one
+hand.
 """
 from __future__ import annotations
 
@@ -33,6 +43,8 @@ import math
 import sys
 from pathlib import Path
 
+from PIL import Image
+
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from memoacts_core.project import MEDIA_DIRS  # noqa: E402
@@ -40,25 +52,35 @@ from memoacts_core.render import RESAMPLE, encode, load_source  # noqa: E402
 
 OUT_W, OUT_H = 1080, 1920
 
+#: Bed colour. The deep tone of the map palette (`render_map.PALETTES["ink"]`),
+#: so the surface a document lies on and the sea on the plates are the same
+#: colour — the reel has two drawn surfaces and no reason for them to disagree.
+BED = (28, 32, 44)
 
-def parse_key(spec: str) -> tuple[float, float, float, float]:
-    """`t:cx,cy,w` -> (t, cx, cy, w), all fractions."""
+
+def parse_key(spec: str) -> tuple[float, float, float, float, int | None]:
+    """`t:cx,cy,s[,page]` -> (t, cx, cy, s, page or None)."""
     try:
         t, rest = spec.split(":", 1)
-        cx, cy, w = (float(v) for v in rest.split(","))
+        parts = rest.split(",")
+        cx, cy, s = (float(v) for v in parts[:3])
+        page = int(parts[3]) if len(parts) > 3 and parts[3].strip() else None
         t = float(t)
+    except (ValueError, IndexError):
+        raise SystemExit(f"key {spec!r}: expected t:cx,cy,s[,page]")
+    if not 0.0 <= t <= 1.0:
+        raise SystemExit(f"key {spec!r}: t is a fraction of the clip, got {t}")
+    if s <= 0:
+        raise SystemExit(f"key {spec!r}: s is a width fraction, got {s}")
+    return t, cx, cy, s, page
+
+
+def parse_bed(spec: str) -> tuple[int, int, int]:
+    try:
+        r, g, b = (int(v) for v in spec.split(","))
+        return r, g, b
     except ValueError:
-        raise SystemExit(f"key {spec!r}: expected t:cx,cy,w as fractions")
-    for name, v in (("t", t), ("cx", cx), ("cy", cy), ("w", w)):
-        if not 0.0 <= v <= 1.0:
-            raise SystemExit(f"key {spec!r}: {name} is a fraction, got {v}")
-    return t, cx, cy, w
-
-
-def ease(t: float) -> float:
-    """Cosine ease, the same curve `memoacts_core.schedule` uses, so a baked
-    path and a motion preset feel like the same hand."""
-    return (1 - math.cos(math.pi * min(max(t, 0.0), 1.0))) / 2
+        raise SystemExit(f"--bed {spec!r}: expected R,G,B")
 
 
 def resolve(project: Path, name: str) -> Path:
@@ -69,71 +91,108 @@ def resolve(project: Path, name: str) -> Path:
     raise SystemExit(f"{name}: in none of {', '.join(MEDIA_DIRS)}")
 
 
-def window(keys, t: float, size: tuple[int, int]) -> tuple[int, int, int, int]:
-    """The crop box at time `t`, in source pixels, clamped inside the image."""
-    W, H = size
-    for (t0, x0, y0, w0), (t1, x1, y1, w1) in zip(keys, keys[1:]):
-        if t <= t1 or (t1, x1, y1, w1) is keys[-1]:
-            span = t1 - t0
-            k = ease((t - t0) / span) if span > 0 else 1.0
-            cx = x0 + (x1 - x0) * k
-            cy = y0 + (y1 - y0) * k
-            w = w0 + (w1 - w0) * k
-            break
-    ww = int(round(w * W))
-    hh = int(round(ww * OUT_H / OUT_W))
-    if hh > H:                       # taller than the page: fit the height
-        hh, ww = H, int(round(H * OUT_W / OUT_H))
-    left = int(round(cx * W - ww / 2))
-    top = int(round(cy * H - hh / 2))
-    left = max(0, min(left, W - ww))
-    top = max(0, min(top, H - hh))
-    return left, top, left + ww, top + hh
+def ease_cosine(t: float) -> float:
+    return (1 - math.cos(math.pi * min(max(t, 0.0), 1.0))) / 2
+
+
+def at(keys, t: float, ease) -> tuple[float, float, float, int]:
+    """Placement at time `t`: page centre, width fraction, and which page.
+
+    The page index does not interpolate — it steps at its key, so a page change
+    is a cut on one frame rather than a dissolve nobody asked for.
+    """
+    prev = keys[0]
+    for nxt in keys[1:]:
+        if t <= nxt[0]:
+            span = nxt[0] - prev[0]
+            k = ease((t - prev[0]) / span) if span > 0 else 1.0
+            page = nxt[4] if (span == 0 or t >= nxt[0]) and nxt[4] else prev[4]
+            return (prev[1] + (nxt[1] - prev[1]) * k,
+                    prev[2] + (nxt[2] - prev[2]) * k,
+                    prev[3] + (nxt[3] - prev[3]) * k,
+                    page)
+        prev = nxt
+    return prev[1], prev[2], prev[3], prev[4]
 
 
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--project", type=Path, required=True)
-    ap.add_argument("--image", required=True)
+    ap.add_argument("--image", action="append", default=[],
+                    help="page, repeated; a key's fourth field selects one "
+                         "(1-based) and switches to it at that instant")
     ap.add_argument("--name", required=True)
     ap.add_argument("--key", action="append", default=[],
-                    help="t:cx,cy,w in fractions of the source, repeated; "
-                         "at least two, ordered by t")
+                    help="t:cx,cy,s[,page]; at least two, ordered by t")
     ap.add_argument("--frames", type=int, required=True)
     ap.add_argument("--fps", type=int, default=30)
     ap.add_argument("--crf", type=int, default=12)
-    ap.add_argument("--on-upscale", default="warn",
+    ap.add_argument("--bed", default=",".join(str(v) for v in BED),
+                    help="R,G,B of the surface the page lies on")
+    ap.add_argument("--ease", default="cosine", choices=["cosine", "linear"])
+    ap.add_argument("--on-upscale", default="error",
                     choices=["warn", "error", "allow"])
     args = ap.parse_args()
 
+    if not args.image:
+        print("need at least one --image"); return 1
     keys = sorted((parse_key(k) for k in args.key), key=lambda k: k[0])
     if len(keys) < 2:
         print("need at least two keys"); return 1
+    if keys[0][4] is None:
+        keys[0] = keys[0][:4] + (1,)
+    # Carry the page forward, so only the keys that change it name one.
+    filled, page = [], keys[0][4]
+    for k in keys:
+        page = k[4] or page
+        filled.append(k[:4] + (page,))
+    keys = filled
 
-    src = load_source(resolve(args.project, args.image))
-    W, H = src.size
-    print(f"{args.image} {W}x{H} -> {args.frames} frames at {args.fps} fps")
+    pages = [load_source(resolve(args.project, name)) for name in args.image]
+    for name, im in zip(args.image, pages):
+        print(f"  page {name} {im.size[0]}x{im.size[1]}")
+    bed = parse_bed(args.bed)
+    ease = ease_cosine if args.ease == "cosine" else (lambda t: t)
 
-    narrowest = min(window(keys, i / max(args.frames - 1, 1), src.size)[2]
-                    - window(keys, i / max(args.frames - 1, 1), src.size)[0]
-                    for i in range(args.frames))
-    if narrowest < OUT_W:
-        msg = (f"{args.image}: the path reaches {narrowest}px wide for a "
-               f"{OUT_W}px output ({OUT_W / narrowest:.2f}x enlargement)")
+    worst = max(k[3] for k in keys)
+    if worst > 1.0:
+        msg = (f"the path magnifies a page to {worst:.2f}x its own pixels; "
+               "a page cannot supply detail it does not have")
         if args.on_upscale == "error":
-            raise SystemExit(msg)
+            raise SystemExit(f"{args.name}: {msg}")
         if args.on_upscale == "warn":
             print(f"  WARNING {msg}")
-    for t, cx, cy, w in keys:
-        box = window(keys, t, src.size)
-        print(f"  key t={t:.2f}  centre {cx:.3f},{cy:.3f}  width {w:.3f} "
-              f"-> crop {box[2] - box[0]}x{box[3] - box[1]} at {box[0]},{box[1]}")
+
+    for t, cx, cy, s, page in keys:
+        W, H = pages[page - 1].size
+        pw, ph = int(round(W * s)), int(round(H * s))
+        covers = (pw >= OUT_W and ph >= OUT_H
+                  and cx * OUT_W - pw / 2 <= 0 and cx * OUT_W + pw / 2 >= OUT_W
+                  and cy * OUT_H - ph / 2 <= 0 and cy * OUT_H + ph / 2 >= OUT_H)
+        print(f"  key t={t:.3f}  page {page}  centre {cx:.3f},{cy:.3f}  "
+              f"s={s:.2f} -> {pw}x{ph} px  "
+              f"{'full bleed' if covers else 'bed visible'}")
 
     def frames():
+        cache: dict[tuple[int, int], Image.Image] = {}
         for i in range(args.frames):
             t = i / max(args.frames - 1, 1)
-            yield src.crop(window(keys, t, src.size)).resize(
-                (OUT_W, OUT_H), RESAMPLE)
+            cx, cy, s, page = at(keys, t, ease)
+            src = pages[page - 1]
+            pw = max(1, int(round(src.size[0] * s)))
+            ph = max(1, int(round(src.size[1] * s)))
+            key = (page, pw)
+            if key not in cache:
+                # One resize per distinct width, not per frame: a slide holds
+                # its scale for many frames and the resample is the expensive
+                # part. Keyed on the page too, or a page change would inherit
+                # the other page's pixels.
+                cache.clear()
+                cache[key] = src.resize((pw, ph), RESAMPLE)
+            frame = Image.new("RGB", (OUT_W, OUT_H), bed)
+            frame.paste(cache[key], (int(round(cx * OUT_W - pw / 2)),
+                                     int(round(cy * OUT_H - ph / 2))))
+            yield frame
 
     dest = args.project / "composites" / f"{args.name}.mp4"
     dest.parent.mkdir(parents=True, exist_ok=True)
