@@ -29,3 +29,6 @@ projects/*/index.json
 
 # LibreOffice lock files, left behind while a .csv is open
 .~lock.*#
+
+# Finder metadata, created by simply opening a folder on macOS.
+.DS_Store
