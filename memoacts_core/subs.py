@@ -48,8 +48,12 @@ class SubStyle:
     #: a track can carry captions and labels in one file and one libass pass.
     name: str = "Default"
     #: ASS numpad alignment: 1–3 bottom, 4–6 middle, 7–9 top; 1/4/7 left,
-    #: 2/5/8 centre, 3/6/9 right.
-    alignment: int = 2
+    #: 2/5/8 centre, 3/6/9 right. 5 puts the caption across the middle of the
+    #: frame rather than along the bottom: this reel is 9:16 and its subjects
+    #: — a signature, a face, a map — sit centre-frame, so a caption at the
+    #: bottom asks the eye to travel away from the picture and back for every
+    #: cue. Middle alignment ignores margin_v.
+    alignment: int = 5
     font: str = "Share Tech Mono"
     #: 56, up from P1's 44. Affordable only because a caption is now one short
     #: line rather than a whole narration block: at 56 the usable width holds
@@ -63,14 +67,14 @@ class SubStyle:
     shadow_depth: float = 2.0
     margin_l: int = 60
     margin_r: int = 60
-    margin_v: int = 420
+    margin_v: int = 0
     bold: bool = False
 
     #: Plate behind the text. White captions over a pale document are
     #: unreadable without one — the archival stills in this material run from
     #: near-black to bare paper, and no outline colour survives both.
     #: 0 disables it and restores the plain outline style.
-    plate_opacity: float = 0.55
+    plate_opacity: float = 0.80
     plate_colour: str = "#000000"
     plate_pad: float = 10.0        # how far the box extends past the text
 
@@ -138,7 +142,23 @@ def label_style(**over) -> SubStyle:
     to clear a platform header, not measured against one (SPEC §10).
     """
     st = SubStyle(name="Label", alignment=9, size=40, margin_v=220,
-                  plate_opacity=0.55)
+                  plate_opacity=0.70)
+    for k, v in over.items():
+        setattr(st, k, v)
+    return st
+
+
+def credit_style(**over) -> SubStyle:
+    """The source line: whose footage this is, and from what.
+
+    Under the label and smaller, because it answers a different question. A
+    label tells the viewer where they are and can go away once read; a credit
+    is a condition of use and stays up for as long as the material it names is
+    on screen. Same corner, so the two read as one block rather than as two
+    annotations competing across the frame.
+    """
+    st = SubStyle(name="Credit", alignment=9, size=26, margin_v=286,
+                  plate_opacity=0.70)
     for k, v in over.items():
         setattr(st, k, v)
     return st
@@ -270,6 +290,20 @@ def labels_from_shots(shots: list[dict], *, hold: float = 3.0,
     return cues
 
 
+def credits_from_shots(shots: list[dict], *,
+                       style_name: str = "Credit") -> list[Cue]:
+    """One cue per shot that carries a `credit`, held for the whole shot.
+
+    Unlike a label, this does not time out. A credit that disappears halfway
+    through the material it credits has been shown rather than given, and for
+    the one shot in this reel that is neither ours nor public domain
+    (`SOURCES.md`) the on-screen attribution is the terms, not a courtesy.
+    """
+    return [Cue(s["t_start"], s["t_end"], (s.get("credit") or "").strip(),
+                style=style_name)
+            for s in shots if (s.get("credit") or "").strip()]
+
+
 def check_wrap(cues: list[Cue], style: SubStyle | None = None,
                play_w: int = PLAY_W) -> list[Cue]:
     """Return the cues that will not fit on one line.
@@ -288,7 +322,9 @@ def check_wrap(cues: list[Cue], style: SubStyle | None = None,
 def write_tracks(out_dir: Path, cues: list[Cue], *, stem: str = "subtitles",
                  style: SubStyle | None = None,
                  labels: list[Cue] | None = None,
-                 label_st: SubStyle | None = None) -> tuple[Path, Path]:
+                 label_st: SubStyle | None = None,
+                 credits: list[Cue] | None = None,
+                 credit_st: SubStyle | None = None) -> tuple[Path, Path]:
     """Write both the burn-in source and the sidecar. Returns (ass, srt).
 
     Labels join the captions in the one `.ass`, so burn-in stays a single
@@ -305,6 +341,9 @@ def write_tracks(out_dir: Path, cues: list[Cue], *, stem: str = "subtitles",
     if labels:
         styles.append(label_st or label_style())
         events = sorted(events + labels, key=lambda c: c.t_start)
+    if credits:
+        styles.append(credit_st or credit_style())
+        events = sorted(events + credits, key=lambda c: c.t_start)
     ass.write_text(build_ass(events, styles), encoding="utf-8")
     srt.write_text(build_srt(cues), encoding="utf-8")
     return ass, srt

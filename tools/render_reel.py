@@ -52,7 +52,7 @@ def main() -> int:
                     help="one caption per narration block, as P1 did, instead "
                          "of cutting blocks into single-line captions at word "
                          "timings")
-    ap.add_argument("--plate", type=float, default=0.55,
+    ap.add_argument("--plate", type=float, default=0.80,
                     help="opacity of the box behind the caption; 0 falls back "
                          "to the plain outline style (default: 0.55)")
     ap.add_argument("--no-labels", action="store_true",
@@ -115,10 +115,15 @@ def main() -> int:
                                     segment=not args.no_segment)
         labels = ([] if args.no_labels
                   else subs.labels_from_shots(doc["shots"], hold=args.label_hold))
+        credit_cues = ([] if args.no_labels
+                       else subs.credits_from_shots(doc["shots"]))
         ass, srt = subs.write_tracks(out_path.parent, cues, stem=out_path.stem,
-                                     style=style, labels=labels)
+                                     style=style, labels=labels,
+                                     credits=credit_cues)
         if labels:
             print(f"labels: {len(labels)} corner tags, {args.label_hold:.1f}s each")
+        if credit_cues:
+            print(f"credits: {len(credit_cues)} source lines, held for the shot")
         # A wrapped caption stacks two plates and puts a dark bar through the
         # text, so this is a defect report, not a style note.
         for c in subs.check_wrap(cues, style, out_w):

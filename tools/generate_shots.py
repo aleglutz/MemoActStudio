@@ -151,6 +151,7 @@ def main() -> int:
                          n_frames=n_frames, max_chunk=args.max_chunk,
                          cues=[sh.cue for sh in script_shots],
                          labels=[p.label for p in picks],
+                         credits=[p.credit for p in picks],
                          media_ins=[p.media_in for p in picks],
                          speeds=[p.speed for p in picks])
     print("wrote", path)

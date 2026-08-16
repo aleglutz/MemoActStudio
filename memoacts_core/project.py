@@ -244,6 +244,7 @@ def write_outputs(out_dir: Path, *, lang: str, fps: int, narration: str,
                   max_chunk: int,
                   cues: list[float | None] | None = None,
                   labels: list[str] | None = None,
+                  credits: list[str] | None = None,
                   media_ins: list[float | None] | None = None,
                   speeds: list[float | None] | None = None) -> Path:
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -252,6 +253,7 @@ def write_outputs(out_dir: Path, *, lang: str, fps: int, narration: str,
 
     cues = cues or [None] * len(blocks)
     labels = labels or [""] * len(blocks)
+    credits = credits or [""] * len(blocks)
     media_ins = media_ins or [None] * len(blocks)
     speeds = speeds or [None] * len(blocks)
     shots = []
@@ -291,6 +293,8 @@ def write_outputs(out_dir: Path, *, lang: str, fps: int, narration: str,
             # Burnt into the corner, so it is screen text and gets the same
             # treatment as the caption: written verbatim, never normalised.
             "label": labels[i - 1],
+            # Held for the whole shot, unlike the label — see subs.credit_style.
+            "credit": credits[i - 1],
             # Footage only. `media_in` is where in the fragment this shot
             # starts and `speed` its playback rate; both are null for a still,
             # and the renderer ignores them there.

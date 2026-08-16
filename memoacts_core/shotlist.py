@@ -10,7 +10,7 @@ Format — a header row, then one row per shot you want to say something about.
 Every column except `shot` is optional, blank cells mean "leave the default",
 and a row starting with `#` is a comment:
 
-    shot,media,in,motion,rate,anchor,speed,focus,label,effects,notes
+    shot,media,in,motion,rate,anchor,speed,focus,label,credit,effects,notes
     1,Berlin.jpg,,zoom_in,0.05,,,,Berlin,archive_soft,opening
     0:21,MBK_KAPFILM_FINAL.mp4,2:14,static,,,0.4,,,,Tempelhof arrival in slow motion
     0:41,Reims-Signing.jpg,,zoom_in,,,,0.44 0.62 0.30,,,push in to the signature
@@ -114,6 +114,7 @@ class ShotEdit:
     speed: float | None = None         # footage playback rate; 1.0 = as shot
     focus: str = ""                    # raw; parsed in apply_shot_list so a bad
     label: str = ""                    # value can warn with its row's key
+    credit: str = ""                   # source line, held for the whole shot
     effects: str = ""
     notes: str = ""
 
@@ -133,6 +134,7 @@ class ResolvedShot:
     speed: float | None = None
     focus: tuple[float, float, float] | None = None
     label: str = ""
+    credit: str = ""
     effects: str = ""
 
     @property
@@ -165,6 +167,7 @@ def read_shot_list(path: Path) -> list[ShotEdit]:
                 anchor=row.get("anchor", ""),
                 focus=row.get("focus", ""),
                 label=row.get("label", ""),
+                credit=row.get("credit", ""),
                 effects=row.get("effects", ""),
                 notes=row.get("notes", ""),
             )
@@ -269,6 +272,7 @@ def apply_shot_list(shots: list[ScriptShot], edits: list[ShotEdit],
         target.rate = edit.rate if edit.rate is not None else target.rate
         target.anchor = edit.anchor or target.anchor
         target.label = edit.label or target.label
+        target.credit = edit.credit or target.credit
         if edit.speed is not None:
             if edit.speed <= 0:
                 warnings.append(f"shots.csv: shot {edit.key} speed "
@@ -293,7 +297,8 @@ def write_template(path: Path, shots: list[ScriptShot]) -> Path:
     with path.open("w", newline="", encoding="utf-8") as fh:
         w = csv.writer(fh)
         w.writerow(["shot", "media", "in", "motion", "rate", "anchor",
-                    "speed", "focus", "label", "effects", "notes"])
+                    "speed", "focus", "label", "credit", "effects",
+                    "notes"])
         for i, s in enumerate(shots, 1):
             cue = ("" if s.cue is None
                    else f"{int(s.cue) // 60}:{int(s.cue) % 60:02d}")

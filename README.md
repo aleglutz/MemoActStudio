@@ -132,7 +132,7 @@ python tools/render_reel.py --project projects/legends_of_surrender
 ```
 
 Writes `out/reel.mp4` at 1080×1920, 30 fps, with the `.ass` and `.srt` tracks
-beside it. Useful flags: `--no-subs`, `--sub-size 56`, `--plate 0.55`
+beside it. Useful flags: `--no-subs`, `--sub-size 56`, `--plate 0.80`
 (subtitle plate opacity), `--on-upscale warn|error|allow`, `--crf 19`.
 
 ## 7. Re-recording the narration
