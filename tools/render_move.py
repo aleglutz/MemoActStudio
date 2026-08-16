@@ -14,9 +14,13 @@ Writes `<project>/composites/<name>.mp4`.
 The model is a sheet of paper on a scanner bed, not a camera window over an
 image. A key places the *page*: `cx`,`cy` are where its centre sits on the
 frame in frame fractions, and `s` is its width as a fraction of the source's
-own pixels — `s = 1.0` is one page pixel per output pixel, so anything above it
-is enlargement and is refused by default. The page may be smaller than the
-frame; then the bed shows around it, which is the point. A page whose edge
+own pixels — `s = 1.0` is one page pixel per output pixel, and above that the
+page is magnified, which is reported at every key rather than refused: a scan
+too small for the framing a shot needs is an editorial fact, not an error, and
+the project's rule is that enlargement is never *silent* (UPSCALE.md).
+
+A page smaller than the frame leaves its edge, and the bed, in shot. The tool
+says which keys do that, because usually it is a mistake. A page whose edge
 never leaves the frame reads as a photograph of a document, and a page whose
 edge crosses the frame reads as a document being handled.
 
@@ -130,8 +134,11 @@ def main() -> int:
     ap.add_argument("--bed", default=",".join(str(v) for v in BED),
                     help="R,G,B of the surface the page lies on")
     ap.add_argument("--ease", default="cosine", choices=["cosine", "linear"])
-    ap.add_argument("--on-upscale", default="error",
-                    choices=["warn", "error", "allow"])
+    ap.add_argument("--on-upscale", default="warn",
+                    choices=["warn", "error", "allow"],
+                    help="a path may magnify a page past its own pixels; this "
+                         "says whether that stops the render. Default warn: it "
+                         "is reported and recorded, never silent")
     args = ap.parse_args()
 
     if not args.image:
@@ -163,6 +170,7 @@ def main() -> int:
         if args.on_upscale == "warn":
             print(f"  WARNING {msg}")
 
+    gaps: list[float] = []
     for t, cx, cy, s, page in keys:
         W, H = pages[page - 1].size
         pw, ph = int(round(W * s)), int(round(H * s))
@@ -171,7 +179,14 @@ def main() -> int:
                   and cy * OUT_H - ph / 2 <= 0 and cy * OUT_H + ph / 2 >= OUT_H)
         print(f"  key t={t:.3f}  page {page}  centre {cx:.3f},{cy:.3f}  "
               f"s={s:.2f} -> {pw}x{ph} px  "
-              f"{'full bleed' if covers else 'bed visible'}")
+              f"{'full bleed' if covers else 'EDGE IN FRAME'}")
+        if not covers:
+            gaps.append(t)
+
+    if gaps:
+        print("  WARNING the page leaves the frame at t=" +
+              ", ".join(f"{t:.3f}" for t in gaps) +
+              " and the bed shows there; raise s at those keys to cover it")
 
     def frames():
         cache: dict[tuple[int, int], Image.Image] = {}
