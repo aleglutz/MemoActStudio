@@ -199,8 +199,22 @@ def apply_shot_list(shots: list[ScriptShot], edits: list[ShotEdit],
     resolved = [ResolvedShot() for _ in shots]
     warnings: list[str] = []
 
-    by_cue: dict[float, int] = {
-        s.cue: i for i, s in enumerate(shots) if s.cue is not None}
+    # A cue is a key, so a repeated one is an ambiguous key. Built by hand
+    # rather than as a comprehension because a dict comprehension keeps the
+    # LAST duplicate silently: a block pasted twice into script.md moved its
+    # shot's media to the copy at the end of the reel and left the real block
+    # on a cycled default, with nothing printed anywhere.
+    by_cue: dict[float, int] = {}
+    for i, s in enumerate(shots):
+        if s.cue is None:
+            continue
+        if s.cue in by_cue:
+            warnings.append(
+                f"script.md: cue {int(s.cue) // 60}:{int(s.cue) % 60:02d} "
+                f"opens more than one block (blocks {by_cue[s.cue] + 1} and "
+                f"{i + 1}); shots.csv can only reach the first")
+            continue
+        by_cue[s.cue] = i
 
     for edit in edits:
         idx: int | None = None
