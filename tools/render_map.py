@@ -53,6 +53,10 @@ RELIEF_LAT = (30.0, 75.0)
 
 #: 1440x2560, not 1080x1920: a plate made at exactly output size has no
 #: headroom and cannot move — the trap the stacked composites hit.
+#: `--scale` multiplies both, which is how far a shot can push in: at 1440 wide
+#: the reel can reach 1.33x, and a map that travels from a country to a town
+#: needs more than that. Rebound in main(), so every helper below reads the
+#: chosen size rather than being handed it.
 OUT_W, OUT_H = 1440, 2560
 LON_MIN, LON_MAX = -11.0, 47.0
 LAT_MIN, LAT_MAX = 34.0, 71.0
@@ -350,8 +354,75 @@ def stagger(n: int, t: float, *, fill: float, fade: float) -> list[float]:
     return [_ease((t - i * step) / fade if fade > 0 else 1.0) for i in range(n)]
 
 
+def parse_marker(spec: str) -> tuple[float, float, str]:
+    """`lon,lat[,label]` -> (lon, lat, label). Decimal degrees, east/north +."""
+    parts = [p.strip() for p in spec.split(",")]
+    if len(parts) < 2:
+        raise SystemExit(f"marker {spec!r}: expected lon,lat[,label]")
+    try:
+        lon, lat = float(parts[0]), float(parts[1])
+    except ValueError:
+        raise SystemExit(f"marker {spec!r}: lon and lat must be decimal degrees")
+    return lon, lat, ",".join(parts[2:]).strip()
+
+
+def draw_markers(img: np.ndarray, view,
+                 markers: list[tuple[float, float, str]]) -> np.ndarray:
+    """Pin a place the narration names but the geodata does not carry.
+
+    Natural Earth 1:50m is country outlines: there is no Reims in it, and at
+    this scale there is no terrain feature that says "here" either. So a town
+    is drawn rather than found — a dot, and its name in the reel's own caption
+    face so the map speaks in the same voice as the subtitles.
+
+    Sized as a fraction of the plate, which means the pin *grows* as a shot
+    pushes into it. That is the intended reading: the closer the camera gets,
+    the more the label asserts itself.
+    """
+    if not markers:
+        return img
+    from PIL import ImageFont
+
+    im = Image.fromarray(np.clip(img, 0, 255).astype(np.uint8))
+    d = ImageDraw.Draw(im)
+    r = max(4, OUT_W // 200)
+    try:
+        font = ImageFont.truetype(
+            str(ROOT / "assets" / "fonts" / "ShareTechMono-Regular.ttf"),
+            max(14, OUT_W // 40))
+    except OSError:
+        font = ImageFont.load_default()
+
+    dark = tuple(int(v) for v in SEA_DEEP)
+    light = tuple(int(v) for v in COAST_RGB)
+    for lon, lat, label in markers:
+        x, y = to_pixels(np.array([project(lon, lat)], dtype=np.float64), view)[0]
+        # Ring first, then the dot: over a pale wash the dot alone disappears.
+        d.ellipse([x - r * 2.6, y - r * 2.6, x + r * 2.6, y + r * 2.6],
+                  outline=dark, width=max(2, r // 2))
+        d.ellipse([x - r * 2.0, y - r * 2.0, x + r * 2.0, y + r * 2.0],
+                  outline=light, width=max(2, r // 2))
+        d.ellipse([x - r, y - r, x + r, y + r], fill=light, outline=dark)
+        if label:
+            d.text((x + r * 3.6, y - r * 1.6), label, font=font, fill=light,
+                   stroke_width=max(2, r // 2), stroke_fill=dark)
+    return np.asarray(im, dtype=np.float32)
+
+
+def marker_focus(view, lon: float, lat: float, width: float) -> str:
+    """The `focus` value shots.csv needs to end a push-in on this marker.
+
+    Printed rather than left to be measured off the finished plate by eye: the
+    shot list wants fractions of the source, and getting them from the same
+    projection that drew the dot is the only way they agree exactly.
+    """
+    x, y = to_pixels(np.array([project(lon, lat)], dtype=np.float64), view)[0]
+    return f"{x / OUT_W:.3f} {y / OUT_H:.3f} {width:.3f}"
+
+
 def draw(features: list[dict], highlight: list[str], dest: Path,
-         context: float = 2.6, relief_path: Path = DEFAULT_RELIEF) -> Path:
+         context: float = 2.6, relief_path: Path = DEFAULT_RELIEF,
+         markers: list[tuple[float, float, str]] | None = None) -> Path:
     """The finished plate as a single image — every wash at full strength."""
     feats = [(name_of(f["properties"]), projected_rings(f)) for f in features]
     feats = [(n, p) for n, p in feats if p]
@@ -359,9 +430,14 @@ def draw(features: list[dict], highlight: list[str], dest: Path,
     relief = sample_relief(view, Image.open(relief_path).convert("L"))
     washes = _washes(feats, highlight, view, relief)
     img = compose(_plate(feats, view, relief), washes, [1.0] * len(washes))
+    img = draw_markers(img, view, markers or [])
 
     dest.parent.mkdir(parents=True, exist_ok=True)
     Image.fromarray(np.clip(img, 0, 255).astype(np.uint8)).save(dest)
+    for lon, lat, label in markers or []:
+        print(f"  marker {label or '(unnamed)'} at {lon},{lat} -> "
+              f"shots.csv focus \"{marker_focus(view, lon, lat, 1 / 2.6)}\" "
+              f"(third number is the end width; smaller pushes in further)")
     return dest
 
 
@@ -435,10 +511,30 @@ def main() -> int:
     ap.add_argument("--already", nargs="*", default=[],
                     help="countries already washed in the first frame, carried "
                          "over from an earlier map shot")
+    ap.add_argument("--marker", action="append", default=[],
+                    help="lon,lat[,label] — pin a town the geodata has no "
+                         "record of; repeatable. Stills only")
+    ap.add_argument("--scale", type=float, default=1.0,
+                    help="multiply the plate size (default 1440x2560). A shot "
+                         "can push in by the plate's own factor over the 1080 "
+                         "output, so 2.0 buys a 2.67x move instead of 1.33x")
     args = ap.parse_args()
 
+    if args.scale != 1.0:
+        # Rebound rather than threaded through: every helper here reads these
+        # as module state, and a second size argument on each would be a wider
+        # change than the feature deserves.
+        global OUT_W, OUT_H
+        OUT_W, OUT_H = int(OUT_W * args.scale) // 2 * 2, \
+            int(OUT_H * args.scale) // 2 * 2
+        print(f"plate {OUT_W}x{OUT_H} "
+              f"(reach {OUT_W / 1080:.2f}x over a 1080-wide output)")
+
+    markers = [parse_marker(m) for m in args.marker]
     data = json.loads(args.geojson.read_text(encoding="utf-8"))
     if args.frames:
+        if markers:
+            print("markers are drawn on stills only; ignoring --marker")
         dest = sequence(data["features"], args.highlight,
                         args.out / f"{args.name}.mp4", frames=args.frames,
                         fps=args.fps, fill=args.fill, fade=args.fade,
@@ -449,7 +545,8 @@ def main() -> int:
               f"already={args.already or '(none)'}")
         return 0
     dest = draw(data["features"], args.highlight,
-                args.out / f"{args.name}.png", args.context, args.relief)
+                args.out / f"{args.name}.png", args.context, args.relief,
+                markers)
     print(f"wrote {dest}  highlight={args.highlight or '(none)'}")
     return 0
 
