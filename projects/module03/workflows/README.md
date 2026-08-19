@@ -155,11 +155,28 @@ green. 1068×800 at twenty steps is the floor.
 So the model is demoted instead. `tools/module03_colorize.py` keeps the archival
 frame's L channel untouched and takes only a/b from the generation: no edge, no
 face and no grain can move, and the model drops from author to colour
-suggestion. The chroma is blurred four pixels, because colour is low-frequency
-anyway and the generation does not land pixel-on-pixel with its source — it
-moved things while redrawing, and unblurred a/b smears a shoulder board's red
-onto the collar beside it. Where the model recomposed a frame outright, that
-bleed is visible and no blur hides it. That is the method's honest limit.
+suggestion.
+
+The chroma still has to be conditioned, because the generation does not land
+pixel-on-pixel with its source. The default is a **guided filter** that fits the
+chroma to the *document's* own luminance, so colour breaks where the film says
+an edge is rather than where the generation thought one was. The alternative,
+`--method blur`, is a plain Gaussian that hides misregistration by smearing
+everything; it is kept because the comparison teaches something.
+
+Guided wins clearly where the generation stayed roughly registered. On frame 120
+the plain blur left a pink cast over Keitel's face and over the document in his
+hands; the guided version returns natural skin and white paper. **It does not fix
+a colour that landed on the wrong object.** On frame 660 the model recomposed the
+crowd, put red where men's backs are, and the guided filter renders that wrong
+colour with crisper edges rather than removing it. Bleeding is fixable,
+misplacement is not, and that is the method's honest limit — worth showing
+rather than cropping around.
+
+> There is no separate half-resolution "clip" graph. One existed and was deleted:
+> it ran 536×400 at ten steps, and both settings were later shown not to
+> colourise at all. A graph in the repository that silently produces a neutral
+> frame is worse than no graph.
 
 **The flicker is worst where the image carries least.** Nothing in the pipeline
 enforces temporal consistency, so each frame decides its own palette. Measured
