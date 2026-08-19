@@ -28,6 +28,13 @@ Per SPEC.md §0: these never block an implementation decision now.
 - [x] ~~Documented offline install: model directory copied from USB; 16 participants must not download simultaneously over museum Wi-Fi.~~ **Retired** — two provisioned machines, not sixteen personal ones. Superseded by the pre-seeding item above.
 - [x] ~~Armenian narration alignment.~~ **Dropped** — Armenian left project scope entirely (v3.1).
 
+## Attention backends — silent wrong output (added 2026-08-19)
+
+- [ ] ⚠ **Do not put `--use-sage-attention` in the rented machines' launch command, and check it is absent from any image cloned off this dev box.** On this machine, ComfyUI started with that flag renders **pure black** from Qwen-Image-Edit — 2-4 KB PNGs, zero luminance variance — while the job reports `success`. Nine consecutive runs were void before the pattern was spotted; every void run carried the flag and every good one did not. There is no error, no warning and no clue in the log.
+  - The danger is not the black frame, which is obvious once looked at. It is that the flag is a *four-fold speedup* — 42 s a frame against 156 s — so a provisioning pass that benchmarks the machines will find it and keep it, and a student whose graph returns black will reasonably blame their own prompt.
+  - Scope is unverified beyond Qwen-Image-Edit on this GPU. ESRGAN upscaling and Stable Audio were unaffected in the same session. Before September, either test each model the workshop uses under the flag, or leave it off and accept the slower figure.
+  - Detection is cheap and belongs in the verification pass: a rendered frame whose luminance standard deviation is ~0 is not an image. `docs/WORKSHOP_MACHINE_SETUP.md`'s end-to-end check should assert it.
+
 ## Environment parity
 
 - [ ] Log of behavioural differences between local ComfyUI and Comfy Cloud (SPEC.md §0). **Now the most load-bearing section in this file**, since Cloud is the students' delivery target rather than just a validation surface. Recorded so far, both 2026-07-28, both in `GAPS.md`:

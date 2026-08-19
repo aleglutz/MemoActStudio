@@ -117,12 +117,37 @@ Qwen-Image-Edit (Apache-2.0) as an instruction editor, one frame per submission.
 returns only ControlNet *Recolor* preprocessors, which are not colourisers. So
 this level runs locally, and its Cloud version is a still, not a clip.
 
-Two fabrications stack here, and only one of them is obvious. The first is that
-colour is invented. The second is in the prompt itself: it *tells* the model
-which colours are correct — olive-brown tunics, gold shoulder boards, field
-grey. That is a historical claim, typed by the operator, laundered through a
-model, and delivered as if the film had recorded it.
+**Asked to colourise, the model does not colourise — it redraws.** At denoise 1.0
+frame 300 came back as a different man: a new face, re-invented medals, no film
+grain, the room re-lit, delivered as a plausible modern photograph standing
+where a document had been. That frame is kept as the first half of the level.
 
-Per-frame editing has no temporal consistency, so a thirty-second render
-flickers: each frame decides its own colours. The flicker is not a defect to
-apologise for. It is the argument, visible.
+**And there is no setting between the document and the colour.** At denoise 0.6,
+0.4 and 0.25 the archival frame survives intact — exactly what was wanted — but
+almost no colour arrives; the instruction barely applies. Colour needs full
+denoise, and full denoise is what makes it redraw. Dropping resolution fails the
+same way: below roughly a megapixel the edit is not applied and the frame
+returns near-neutral. Ten or six steps do not converge and the whole image goes
+green. 1068×800 at twenty steps is the floor.
+
+So the model is demoted instead. `tools/module03_colorize.py` keeps the archival
+frame's L channel untouched and takes only a/b from the generation: no edge, no
+face and no grain can move, and the model drops from author to colour
+suggestion. The chroma is blurred four pixels, because colour is low-frequency
+anyway and the generation does not land pixel-on-pixel with its source — it
+moved things while redrawing, and unblurred a/b smears a shoulder board's red
+onto the collar beside it. Where the model recomposed a frame outright, that
+bleed is visible and no blur hides it. That is the method's honest limit.
+
+**The flicker is worst where the image carries least.** Nothing in the pipeline
+enforces temporal consistency, so each frame decides its own palette. Measured
+across twenty consecutive frames, against the source's own frame-to-frame noise
+as the floor: the tunic swings 4×, the face 4.6× — and the blank plaster wall
+**17.6×**. Where there is nothing to colour, there is nothing to anchor the
+invention, and the model is least stable exactly where it is most free. That is
+not a defect to apologise for; it is the argument, visible and measurable.
+
+**Cost.** 117–156 s per frame warm on a 3090 Ti, which is why the clip is twenty
+frames shown at 10 fps rather than thirty seconds. See `HARDENING.md` before
+trusting any faster figure: `--use-sage-attention` quadruples the speed and
+renders black.
