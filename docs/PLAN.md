@@ -1,7 +1,7 @@
 # Work plan — reel dynamics and legibility
 
 Written 2026-08-10 after the first full render of `legends_of_surrender`.
-Supersedes the "next task" list in `HANDOFF.md`.
+Supersedes the "next task" list in `archive/handoffs/20260728_HANDOFF.md`.
 
 Five things came out of watching it: subtitles are unreadable and too long,
 there is no way to add, drop or reorder a shot, the reel is static, the maps
