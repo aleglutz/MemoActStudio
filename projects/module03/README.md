@@ -102,16 +102,28 @@ the thing they are being shown.
 |---|---|---|
 | `out/L1_quotes.mp4` | 30 s | Three document quotes, libass — the production path |
 | `out/L2_sound.mp4` | 30 s | The same footage with a manufactured soundtrack |
-| `out/L3_ab.mp4` | 10 s | Native beside Remacri-restored, side by side |
-| `out/L3_restored.mp4` | 10 s | The restored clip alone |
-| `stills/L3_ab_00014.png` | — | 1:1 face crop: eyebrows and nostril rebuilt out of nothing |
+| `out/L3_ab_zoom.mp4` | 10 s | **The one to screen** — same region at 3×, native beside restored |
+| `out/L3_split.mp4` | 10 s | One frame, seam down the middle: left untouched, right restored |
+| `out/L3_restored.mp4` | 10 s | The restored clip alone, full frame |
+| `stills/L3_models_close_00014.png` | — | lanczos ‖ Remacri ‖ NMKD-Siax at 1:1 — where the choice is visible |
+| `stills/L3_ab_00014.png` | — | 1:1 face: eyebrows and nostril rebuilt out of nothing recorded |
 | `out/L4_ab.mp4` | 6 s | Three panels: the film, the redraw, the disciplined colourisation |
-| `stills/L4_ab_*.png` | — | The same three panels on three frames, at full size |
+| `stills/L4_ab_*.png` | — | The same three panels at full size, on three frames |
 
-Levels 3 and 4 are shown slowed — level 3 is ten seconds of real time, level 4 is
-twenty frames at 10 fps, two thirds of a second stretched to two. Say so on
-screen. A slowed clip that is not announced is its own small fabrication, and
-this module is the wrong place to commit one.
+`out/L3_ab.mp4` (two full frames side by side) is kept but is the weakest of the
+three: at projection size the difference is below what an audience can see.
+Screen the zoom.
+
+Two things to say out loud while screening, because the clips cannot say them:
+
+- **Levels 3 and 4 are slowed.** Level 3 is ten seconds of real time; level 4 is
+  twenty frames at 10 fps, two thirds of a second stretched to two. An
+  unannounced slow-motion is its own small fabrication, and this is the wrong
+  module in which to commit one.
+- **Restoration removes the grain**, and the grain is the film. At 3× the
+  restored side has smoother cloth and cleaner buttons because the medium's own
+  texture has been taken out and replaced with something more photographic. That
+  is a decision about what the record looks like, not a repair.
 
 ## Rebuilding
 
