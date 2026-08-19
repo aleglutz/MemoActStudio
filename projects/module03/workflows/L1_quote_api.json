@@ -1,0 +1,49 @@
+{
+  "1": {
+    "class_type": "VHS_LoadVideo",
+    "inputs": {
+      "video": "module03_master_30s.mp4",
+      "force_rate": 0,
+      "custom_width": 0,
+      "custom_height": 0,
+      "frame_load_cap": 216,
+      "skip_first_frames": 24,
+      "select_every_nth": 1
+    }
+  },
+  "2": {
+    "class_type": "DrawText+",
+    "inputs": {
+      "img_composite": ["1", 0],
+      "text": "This Act is drawn up in the English,\nRussian and German languages.",
+      "font": "ShareTechMono-Regular.ttf",
+      "size": 34,
+      "color": "white",
+      "background_color": "#00000055",
+      "shadow_distance": 2,
+      "shadow_blur": 2,
+      "shadow_color": "black",
+      "horizontal_align": "center",
+      "vertical_align": "bottom",
+      "offset_x": 0,
+      "offset_y": -60,
+      "direction": "ltr"
+    }
+  },
+  "3": {
+    "class_type": "VHS_VideoCombine",
+    "inputs": {
+      "images": ["2", 0],
+      "frame_rate": 30,
+      "loop_count": 0,
+      "filename_prefix": "module03/L1/quote1",
+      "format": "video/h264-mp4",
+      "pix_fmt": "yuv420p",
+      "crf": 18,
+      "save_metadata": true,
+      "trim_to_audio": false,
+      "pingpong": false,
+      "save_output": true
+    }
+  }
+}

@@ -1,0 +1,75 @@
+{
+  "1": {
+    "class_type": "VHS_LoadVideo",
+    "inputs": {
+      "video": "module03_master_30s.mp4",
+      "force_rate": 0,
+      "custom_width": 0,
+      "custom_height": 0,
+      "frame_load_cap": 1,
+      "skip_first_frames": 0,
+      "select_every_nth": 1
+    }
+  },
+  "10": {
+    "class_type": "UNETLoader",
+    "inputs": { "unet_name": "qwen_image_edit_fp8_e4m3fn.safetensors", "weight_dtype": "default" }
+  },
+  "11": {
+    "class_type": "ModelSamplingAuraFlow",
+    "inputs": { "model": ["10", 0], "shift": 3.0 }
+  },
+  "12": {
+    "class_type": "CLIPLoader",
+    "inputs": { "clip_name": "qwen_2.5_vl_7b_fp8_scaled.safetensors", "type": "qwen_image", "device": "default" }
+  },
+  "13": {
+    "class_type": "VAELoader",
+    "inputs": { "vae_name": "qwen_image_vae.safetensors" }
+  },
+  "20": {
+    "class_type": "TextEncodeQwenImageEdit",
+    "inputs": {
+      "clip": ["12", 0],
+      "vae": ["13", 0],
+      "image": ["1", 0],
+      "prompt": "Colourise this black and white 1945 documentary film frame. Keep every shape, face, uniform, insignia and object exactly where it is and change nothing but colour. Soviet officers in olive-brown tunics with gold shoulder boards and red collar tabs; German officers in field grey and dark navy; dark wood panelling, pale plaster walls, warm tungsten lamplight, white paper on the table. Muted, desaturated, period photographic colour."
+    }
+  },
+  "21": {
+    "class_type": "TextEncodeQwenImageEdit",
+    "inputs": {
+      "clip": ["12", 0],
+      "vae": ["13", 0],
+      "image": ["1", 0],
+      "prompt": "saturated, garish, neon, modern digital look, altered faces, added objects"
+    }
+  },
+  "22": {
+    "class_type": "VAEEncode",
+    "inputs": { "pixels": ["1", 0], "vae": ["13", 0] }
+  },
+  "23": {
+    "class_type": "KSampler",
+    "inputs": {
+      "model": ["11", 0],
+      "seed": 70519,
+      "steps": 20,
+      "cfg": 2.5,
+      "sampler_name": "euler",
+      "scheduler": "simple",
+      "positive": ["20", 0],
+      "negative": ["21", 0],
+      "latent_image": ["22", 0],
+      "denoise": 1.0
+    }
+  },
+  "24": {
+    "class_type": "VAEDecode",
+    "inputs": { "samples": ["23", 0], "vae": ["13", 0] }
+  },
+  "25": {
+    "class_type": "SaveImage",
+    "inputs": { "images": ["24", 0], "filename_prefix": "module03/L4/f00000" }
+  }
+}
