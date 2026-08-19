@@ -88,30 +88,34 @@ inputs, and the carefully-set levels above all collapse together.
 
 ## 3. Level 3 — restoration
 
-The server needs two flags or it will not survive the run (`workflows/README.md`
-explains why):
+The film is 1068×800 and this level doubles it to 2136×1600. That enlargement is
+the point of the level, so nothing here shrinks it back.
+
+Start the server with two flags, or it will not survive the run
+(`workflows/README.md` says why):
 
 ```
-python -I ComfyUI/main.py --windows-standalone-build \
-       --disable-pinned-memory --cache-none
+python -I ComfyUI/main.py --windows-standalone-build        --disable-pinned-memory --cache-none
 ```
 
-Then, ~30 minutes on a 3090 Ti:
+Then, about fifteen minutes on a 3090 Ti for ten seconds of film:
 
 ```
-python tools/module03_render.py \
-       projects/module03/workflows/L3_restore_api.json \
-       --frames 900 --chunk 8 --prefix module03/L3/
+python tools/module03_render.py        projects/module03/workflows/L3_restore_api.json        --frames 300 --chunk 8 --prefix module03/L3/        --server http://127.0.0.1:8189
 ```
 
-Frames land in `<ComfyUI>/output/module03/L3/`, sorted by name, and assemble
-with:
+Frames land in `<ComfyUI>/output/module03/L3/`, already in the right order by
+filename. Count them before encoding — 300 is right, and anything short means a
+run failed quietly.
 
 ```
-ffmpeg -framerate 30 -pattern_type glob -i "<ComfyUI>/output/module03/L3/*.png" \
-       -c:v libx264 -crf 16 -preset medium -pix_fmt yuv420p \
-       projects/module03/out/L3_restored.mp4
+ffmpeg -framerate 30 -pattern_type glob -i "<ComfyUI>/output/module03/L3/*.png"        -c:v libx264 -crf 16 -preset medium -pix_fmt yuv420p        projects/module03/out/L3_restored.mp4
 ```
 
-Check the frame count before encoding. 900 is right; anything short means a
-chunk failed quietly.
+For the comparison, the original has to be enlarged too — otherwise you are
+comparing sizes instead of methods. Enlarge it with lanczos, which invents
+nothing, and that becomes the honest baseline:
+
+```
+ffmpeg -i sources/master_30s.mp4 -t 10        -vf "scale=2136:1600:flags=lanczos"        -c:v libx264 -crf 16 -preset medium -pix_fmt yuv420p -an        out/L3_native_2x.mp4
+```

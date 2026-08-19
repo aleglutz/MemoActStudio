@@ -76,60 +76,69 @@ recorded in the mix recipe so both the keepers and the rejects can be reproduced
 ## L3 — `L3_restore_api.json` · upscale / restoration
 
 `VHS_LoadVideo → UpscaleModelLoader → ImageUpscaleWithModel → ImageScaleBy →
-SaveImage`. Eight frames per submission.
+SaveImage`. Eight frames per run.
 
-Chunked because one 4272×3200 float32 intermediate is 164 MB and a 900-frame
-batch is not a thing any machine holds. Eight is not a guess — thirty ran fine
-cold and then failed ninety frames in, and the retry at eight took the whole
-server down with a segfault inside the upscale node. The allocation is on the
-*host*, not the card, and two things were eating the host: this build pins
-24.5 GB for dynamic VRAM, and the node cache holds every chunk's output. So the
-server runs with `--disable-pinned-memory --cache-none` (which restored 54 GB of
-54 free) and `tools/module03_render.py` calls `/free` between chunks. Chunking
-bounds one chunk's peak; only the `/free` bounds their sum.
+**What it makes.** The film is 1068×800. This doubles it, to 2136×1600. Remacri
+is a 4× model, so it runs at 4× — the size it was trained for — and then a plain
+lanczos reduction brings the result down to 2×. The reduction invents nothing;
+it is ordinary arithmetic.
 
-`--cache-none` fixes a second thing that had been silently wrong: with caching
-on, re-submitting an identical graph is a cache hit, and a cache hit skips
-`SaveImage` — so the first chunk of a re-run writes no files at all and the gap
-only shows up as a frame count that is thirty short.
+> An earlier version reduced all the way back to 1068×800. That was pointless.
+> The reason to run an upscaler is to get more pixels. Give them back and all
+> you keep are the model's side effects.
 
-Measured: ~2.2 s/frame warm on a 3090 Ti, so the full thirty seconds is about
-half an hour.
+**Why only eight frames at a time.** Inside the chain each frame briefly exists
+at 4272×3200, which is 164 MB. Thirty of those at once is 4.9 GB in one block,
+and the computer could not find it: the first attempt failed part-way through,
+and the retry killed the whole ComfyUI process. The memory is ordinary system
+RAM, not the graphics card. Two things were using it up — this build reserves
+24.5 GB for itself, and ComfyUI keeps every finished frame in a cache. Start the
+server with `--disable-pinned-memory --cache-none` and 54 GB of the 60 come
+back. `tools/module03_render.py` also clears memory between runs.
 
-The 4× result is scaled back to native size, so nothing is enlarged past what
-the film holds — the project's "never silently upscale" rule is about silence,
-not abstinence (`docs/UPSCALE.md`). What changes is texture, and texture is
-invented.
+> `--cache-none` fixes a second, quieter problem. With the cache on, sending the
+> same graph twice counts as a repeat, and a repeat skips saving the file. The
+> only symptom is a folder with fewer frames in it than you asked for.
 
-**The model choice is the content of this level — but only at 1:1.** Four 4×
-models were run on the same face and measured for high-frequency energy, with
-plain lanczos as the floor because it invents nothing:
+Cost: about 3 seconds a frame on a 3090 Ti, so ten seconds of film takes roughly
+fifteen minutes.
 
-| | at 4×, 1:1 | after the scale-back to 1068×800 |
+**What an upscaler actually does to archival film.** Two things, and only one of
+them is what people expect. It sharpens edges — buttons, insignia, the line of a
+cap. And it removes the grain, because grain looks like noise to it. The grain
+is the film. Taking it out and replacing it with smooth skin and clean cloth is
+a decision about what the record should look like. It is not a repair.
+
+**Which model.** Four 4× models were run on the same face and measured for how
+much fine detail they add. Plain lanczos is the baseline because it adds none —
+it only makes the existing pixels bigger. Measured on the frame as delivered, at
+2136×1600:
+
+| | detail added | over baseline |
 |---|---|---|
-| lanczos / untouched | 1.14 | 4.45 |
-| `4x_foolhardy_Remacri` | 1.39 | 4.48 |
-| `4xlsdirplus_v1` | 1.36 | 4.41 |
-| `4x-UltraSharp` | 1.55 | 4.51 |
-| `4x_NMKD-Siax_200k` | **4.26** | 4.68 |
+| lanczos (baseline) | 2.27 | — |
+| `4x_foolhardy_Remacri` | 2.34 | +3 % |
+| `4xlsdirplus_v1` | 2.35 | +4 % |
+| `4x-UltraSharp` | 2.51 | +11 % |
+| `4x_NMKD-Siax_200k` | **3.19** | **+41 %** |
 
-At 1:1 the spread runs from +22 % over the floor to +274 %, and it is plainly
-visible: `stills/L3_models_close_00014.png` shows NMKD-Siax manufacturing grain
-across a forehead that has none, hardening the cap into a crunchy edge and
-thickening an eyebrow, where Remacri resolves the brow line and leaves the skin
-alone. This is what `docs/UPSCALE.md` describes in prose, now on screen.
+`stills/L3_models_close_00014.png` shows what the numbers mean. NMKD-Siax paints
+speckled grain across a cap and a forehead that have none, and turns an eyebrow
+into a thick dark bar. Remacri brings out the brow line and leaves the skin
+alone. This is what `docs/UPSCALE.md` decided in writing; here it is on screen.
 
-**And at delivery size that spread collapses to a few percent.** Scaled back to
-1068×800, every model lands within about one percent of the untouched frame by
-this measure; only NMKD-Siax registers at all, at +5 %. The metric is a mean
-gradient and it is crude — the visible character, a simultaneous smoothing and
-edge-hardening, partly cancels within it and does survive the downscale. But the
-direction is clear enough to say out loud: **the choice that decides everything
-at 1:1 is nearly invisible at the size the reel ships.** Which is the more
-uncomfortable lesson of the two, because it means the wrong upscaler leaves
-almost no trace to argue with — and `4x-UltraSharp` and `4x_NMKD-Siax`, the two
-`docs/UPSCALE.md` disqualifies for archival faces, are among the models Comfy
-Cloud carries, while **Remacri is not on Cloud at all**.
+> The gap depends on how much of the enlargement you keep. An earlier version of
+> this level shrank the result back to the original 1068×800, and there every
+> model landed within about one percent of the untouched frame — the invention
+> was still there, just too small to see. Keep the pixels and the choice becomes
+> visible. Give them back and a bad upscaler leaves nothing anyone can point at.
+
+**The part worth saying out loud in the seminar.** These faces are about twenty
+pixels tall in the original. No model can recover a face that small — it can
+only make one up. Everything above is a choice about how much invention to
+accept, and the honest option is the one Comfy Cloud does not offer: **Remacri
+is not on Cloud**, while `4x-UltraSharp` and `4x_NMKD-Siax` — the two
+`docs/UPSCALE.md` rejects for archival faces — are.
 
 ## L4 — `L4_colorize_api.json` · colourisation
 
