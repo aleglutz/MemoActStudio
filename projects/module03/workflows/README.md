@@ -34,25 +34,44 @@ Compare the two on screen; the comparison *is* the lesson.
 > On this machine ffmpeg's `drawtext` segfaults (broken fontconfig), so the
 > libass filter is not merely preferred, it is the only text path that runs.
 
-## L2 — Comfy Cloud template `audio_stable_audio_3_medium` · sound
+## L2 — `L2_sfx_api.json` · sound
 
-Not a local graph: Stable Audio 3 Medium, open weights, run on Cloud from the
-stock template, one job per layer. Cost is independent of frame count, which is
-what makes this the one level a room of thirty students can actually run.
+`CheckpointLoaderSimple + CLIPLoader → CLIPTextEncode ×2 → EmptyLatentAudio →
+KSampler → VAEDecodeAudio → SaveAudio`. Stable Audio Open 1.0, open weights,
+trained largely on Freesound's CC0 library — which is why it is a sound-effects
+model and not a music model, and why `SURVEY.md` §6b adopted it.
 
-The footage is silent — not quiet, *silent*: its AAC track measures −91 dB mean
-and max end to end, every sample in one histogram bin. So nothing here is being
+Cost does not scale with frame count: each layer took **6 s of GPU** regardless
+of whether it was asked for 12 seconds of audio or 32. That is what makes this
+the one level a room of thirty students can run at once.
+
+**Two obstacles, both worth knowing before a seminar.** The weights are behind a
+licence gate on Hugging Face, so a student needs an account and an accepted
+licence — except that the model itself is mirrored ungated at
+`Comfy-Org/stable-audio-open-1.0_repackaged`, and only the T5 text encoder has
+to come from the gated Stability repo. And the repackaged checkpoint carries the
+diffusion model and the VAE but **no text encoder**, so `CheckpointLoaderSimple`
+returns `CLIP = None` and the graph fails at the first `CLIPTextEncode` with a
+message that blames the checkpoint. T5 is loaded separately, by `CLIPLoader` with
+type `stable_audio`.
+
+**The footage is silent — not quiet, silent.** Its AAC track measures −91 dB mean
+*and* max end to end, every sample in one histogram bin. So nothing here is
 restored. Every sound in the result is manufactured, and manufactured sound is
 the least-flagged fabrication in museum practice, because it registers as
 atmosphere rather than as content. Nobody captions a room tone.
 
-`use_reprompt` is set false on purpose: with it on, an LLM rewrites the prompt
-before the audio model sees it, and a teaching artifact should run the words
-that are written down.
+Four layers are generated and mixed in ffmpeg — bed, paper, press cameras, chair
+and footsteps — because nothing places a sound at a timecode inside the graph.
+That mix is the level's honest admission: the model makes material, an editor
+still decides when the shutter fires.
 
-`ElevenLabsTextToSoundEffects` is also on Cloud and is better at discrete foley
-hits. It is a partner API, so under SPEC §5 it is admissible as a demonstration
-and never inside the pack — and it must be named on screen when shown.
+**Judging takes ears, and a spectrogram is only evidence.** The first `cameras`
+take came back with horizontal harmonic bands — a tonal hum rather than shutter
+clacks — and was rejected on that reading and re-rolled; of three new seeds the
+one with spaced, isolated transients was kept and the suspiciously metronomic one
+was not. The same pass replaced a `bed` that was flat broadband hiss. Seeds are
+recorded in the mix recipe so both the keepers and the rejects can be reproduced.
 
 ## L3 — `L3_restore_api.json` · upscale / restoration
 
