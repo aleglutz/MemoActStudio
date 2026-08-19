@@ -101,13 +101,35 @@ the film holds — the project's "never silently upscale" rule is about silence,
 not abstinence (`docs/UPSCALE.md`). What changes is texture, and texture is
 invented.
 
-**The model choice is the content of this level.** `docs/UPSCALE.md` measured
-five 4× models and picked `4x_foolhardy_Remacri` because it invents least while
-still recovering real detail; it disqualified `4x-UltraSharp` and
-`4x_NMKD-Siax` for archival faces, which they rework into waxy invented
-features. Those two are among the models Comfy Cloud carries — and **Remacri is
-not on Cloud at all**. The honest tool is the one the students cannot reach by
-default. Say that out loud rather than around it.
+**The model choice is the content of this level — but only at 1:1.** Four 4×
+models were run on the same face and measured for high-frequency energy, with
+plain lanczos as the floor because it invents nothing:
+
+| | at 4×, 1:1 | after the scale-back to 1068×800 |
+|---|---|---|
+| lanczos / untouched | 1.14 | 4.45 |
+| `4x_foolhardy_Remacri` | 1.39 | 4.48 |
+| `4xlsdirplus_v1` | 1.36 | 4.41 |
+| `4x-UltraSharp` | 1.55 | 4.51 |
+| `4x_NMKD-Siax_200k` | **4.26** | 4.68 |
+
+At 1:1 the spread runs from +22 % over the floor to +274 %, and it is plainly
+visible: `stills/L3_models_close_00014.png` shows NMKD-Siax manufacturing grain
+across a forehead that has none, hardening the cap into a crunchy edge and
+thickening an eyebrow, where Remacri resolves the brow line and leaves the skin
+alone. This is what `docs/UPSCALE.md` describes in prose, now on screen.
+
+**And at delivery size that spread collapses to a few percent.** Scaled back to
+1068×800, every model lands within about one percent of the untouched frame by
+this measure; only NMKD-Siax registers at all, at +5 %. The metric is a mean
+gradient and it is crude — the visible character, a simultaneous smoothing and
+edge-hardening, partly cancels within it and does survive the downscale. But the
+direction is clear enough to say out loud: **the choice that decides everything
+at 1:1 is nearly invisible at the size the reel ships.** Which is the more
+uncomfortable lesson of the two, because it means the wrong upscaler leaves
+almost no trace to argue with — and `4x-UltraSharp` and `4x_NMKD-Siax`, the two
+`docs/UPSCALE.md` disqualifies for archival faces, are among the models Comfy
+Cloud carries, while **Remacri is not on Cloud at all**.
 
 ## L4 — `L4_colorize_api.json` · colourisation
 
