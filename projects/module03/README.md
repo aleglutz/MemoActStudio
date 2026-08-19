@@ -46,7 +46,7 @@ under rising intervention rather than four unrelated clips.
 |---|---|---|---|
 | 1 | Quotes in frame | CPU | Nothing to the image; words from a document |
 | 2 | Sound for silent film | 6 s GPU per layer | A soundtrack that never existed |
-| 3 | Upscale / restoration | ~30 min GPU | Texture no camera recorded |
+| 3 | Upscale / restoration | ~15 min GPU per 10 s | Twice the pixels, and texture no camera recorded |
 | 4 | Colourisation | ~20 s GPU per frame | Colour, and — unguarded — the whole image |
 
 `workflows/README.md` is the technical companion: what each graph is made of,
@@ -67,10 +67,15 @@ atmosphere rather than as content, which is exactly what makes it worth showing
 early. Judging the takes needs ears — one generated "press camera" layer came
 back a tonal hum and had to be re-rolled.
 
-**Level 3.** `docs/UPSCALE.md` had already measured five upscalers and picked
-Remacri as the one that invents least. Comfy Cloud does not carry Remacri; it
-carries two of the models that document disqualifies for archival faces. The
-honest tool is the one the students cannot reach by default.
+**Level 3.** This doubles the film, 1068×800 to 2136×1600, and keeps the
+enlargement — an upscaler that hands its pixels back has done nothing but leave
+side effects. Two things change in the picture, and only one is the one people
+expect. Edges get sharper: buttons, braid, the line of a cap. And the grain
+disappears, because to the model grain looks like noise. The grain is the film.
+Replacing it with smooth cloth is a decision about how the record should look,
+not a repair. Which model you pick decides how much gets invented — `UPSCALE.md`
+measured five of them and chose Remacri, and Comfy Cloud does not carry Remacri.
+It carries two of the ones that document rejects.
 
 **Level 4.** Asked to colourise, Qwen-Image-Edit did not colourise. It redrew:
 a different face, re-invented medals, no film grain, the room re-lit — a
@@ -100,30 +105,24 @@ the thing they are being shown.
 
 | File | | |
 |---|---|---|
-| `out/L1_quotes.mp4` | 30 s | Three document quotes, libass — the production path |
-| `out/L2_sound.mp4` | 30 s | The same footage with a manufactured soundtrack |
-| `out/L3_ab_zoom.mp4` | 10 s | **The one to screen** — same region at 3×, native beside restored |
-| `out/L3_split.mp4` | 10 s | One frame, seam down the middle: left untouched, right restored |
-| `out/L3_restored.mp4` | 10 s | The restored clip alone, full frame |
-| `stills/L3_models_close_00014.png` | — | lanczos ‖ Remacri ‖ NMKD-Siax at 1:1 — where the choice is visible |
-| `stills/L3_ab_00014.png` | — | 1:1 face: eyebrows and nostril rebuilt out of nothing recorded |
-| `out/L4_ab.mp4` | 6 s | Three panels: the film, the redraw, the disciplined colourisation |
+| `out/L1_quotes.mp4` | 30 s | Three quotes from the document, over the footage |
+| `out/L2_sound.mp4` | 30 s | The same footage with a soundtrack that was made up |
+| `out/L3_ab_zoom.mp4` | 10 s | **Screen this one.** Same patch of frame, plain enlargement on the left, Remacri on the right |
+| `out/L3_split.mp4` | 10 s | One frame cut down the middle: left plain, right restored |
+| `out/L3_restored.mp4` | 10 s | The restored clip on its own, 2136×1600 |
+| `stills/L3_models_close_00014.png` | — | Plain ‖ Remacri ‖ NMKD-Siax on one face — where the model choice shows |
+| `out/L4_ab.mp4` | 6 s | Three panels: the film, the model's redraw, the restrained version |
 | `stills/L4_ab_*.png` | — | The same three panels at full size, on three frames |
 
-`out/L3_ab.mp4` (two full frames side by side) is kept but is the weakest of the
-three: at projection size the difference is below what an audience can see.
-Screen the zoom.
+Two things to say out loud, because the clips cannot say them:
 
-Two things to say out loud while screening, because the clips cannot say them:
-
-- **Levels 3 and 4 are slowed.** Level 3 is ten seconds of real time; level 4 is
-  twenty frames at 10 fps, two thirds of a second stretched to two. An
-  unannounced slow-motion is its own small fabrication, and this is the wrong
-  module in which to commit one.
-- **Restoration removes the grain**, and the grain is the film. At 3× the
-  restored side has smoother cloth and cleaner buttons because the medium's own
-  texture has been taken out and replaced with something more photographic. That
-  is a decision about what the record looks like, not a repair.
+- **Levels 3 and 4 are slowed down.** Level 3 is ten seconds of real time. Level
+  4 is twenty frames played at ten a second — two thirds of a second stretched
+  to two. Slow motion nobody announces is its own small fake, and this is the
+  wrong module to commit one in.
+- **Level 3 is twice the size of the others.** That is the point of it, but it
+  means it will not sit in a row with levels 1, 2 and 4 without being scaled for
+  the screen.
 
 ## Rebuilding
 
