@@ -96,6 +96,23 @@ So two of the four are genuinely hands-on, and they are the first two. Levels 3
 and 4 are screened, with a single frame handed over so the students still touch
 the thing they are being shown.
 
+## What to put on screen
+
+| File | | |
+|---|---|---|
+| `out/L1_quotes.mp4` | 30 s | Three document quotes, libass — the production path |
+| `out/L2_sound.mp4` | 30 s | The same footage with a manufactured soundtrack |
+| `out/L3_ab.mp4` | 10 s | Native beside Remacri-restored, side by side |
+| `out/L3_restored.mp4` | 10 s | The restored clip alone |
+| `stills/L3_ab_00014.png` | — | 1:1 face crop: eyebrows and nostril rebuilt out of nothing |
+| `out/L4_ab.mp4` | 6 s | Three panels: the film, the redraw, the disciplined colourisation |
+| `stills/L4_ab_*.png` | — | The same three panels on three frames, at full size |
+
+Levels 3 and 4 are shown slowed — level 3 is ten seconds of real time, level 4 is
+twenty frames at 10 fps, two thirds of a second stretched to two. Say so on
+screen. A slowed clip that is not announced is its own small fabrication, and
+this module is the wrong place to commit one.
+
 ## Rebuilding
 
 None of the media is in git. `REBUILD.md` regenerates all of it from the one
