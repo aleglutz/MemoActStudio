@@ -22,7 +22,12 @@ import time
 import urllib.error
 import urllib.request
 
-SERVER = "http://127.0.0.1:8188"
+SERVER = "http://127.0.0.1:8188"  # overridden by --server
+
+
+def set_server(url):
+    global SERVER
+    SERVER = url.rstrip("/")
 
 
 def post_prompt(graph):
@@ -79,7 +84,15 @@ def main():
     ap.add_argument("--loader-node", default="1", help="node holding skip_first_frames")
     ap.add_argument("--save-node", default="5", help="node holding filename_prefix")
     ap.add_argument("--prefix", required=True, help="output prefix, chunk id appended")
+    ap.add_argument(
+        "--server",
+        default=SERVER,
+        help="ComfyUI to submit to. A second instance on another port lets this "
+        "run with --disable-pinned-memory --cache-none without disturbing "
+        "whichever server the user already has open on 8188.",
+    )
     args = ap.parse_args()
+    set_server(args.server)
 
     base = json.load(open(args.workflow, encoding="utf-8"))
     started = time.time()

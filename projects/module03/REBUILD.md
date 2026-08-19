@@ -49,6 +49,43 @@ is unaffected and is the project's own subtitle path anyway.
 The course-facing version of the same idea is `workflows/L1_quote_api.json`,
 run per quote through the graph rather than per file.
 
+## 2b. Level 2 — sound
+
+Weights, once each:
+
+```
+# ungated
+curl -L -o <ComfyUI>/models/checkpoints/stable-audio-open-1.0.safetensors   https://huggingface.co/Comfy-Org/stable-audio-open-1.0_repackaged/resolve/main/stable-audio-open-1.0.safetensors
+
+# gated -- accept the licence at huggingface.co/stabilityai/stable-audio-open-1.0
+# first, then authenticate. The `hf` CLI will not run on the embedded Python
+# (it imports venv, which the embeddable distribution omits); call login directly:
+#   python -c "import huggingface_hub; huggingface_hub.login()"
+curl -L -H "Authorization: Bearer $HF_TOKEN"   -o <ComfyUI>/models/text_encoders/t5_base.safetensors   https://huggingface.co/stabilityai/stable-audio-open-1.0/resolve/main/text_encoder/model.safetensors
+```
+
+Four layers, through `workflows/L2_sfx_api.json` with these seeds and lengths —
+the two marked *kept* replaced first takes that were rejected on their
+spectrograms (a tonal hum where shutter clacks belonged, and a flat-hiss bed):
+
+| layer | seconds | seed | |
+|---|---|---|---|
+| bed | 32 | 550919 | kept, second take |
+| paper | 14 | 220805 | |
+| cameras | 16 | 880431 | kept, third seed |
+| steps | 12 | 440108 | |
+
+Then the mix — placement and level are editorial, not generated:
+
+```
+ffmpeg -i bed.flac -i paper.flac -i cameras.flac -i steps.flac -filter_complex " [0:a]atrim=0:30,asetpts=PTS-STARTPTS,volume=2.2[bed]; [1:a]atrim=0:5,asetpts=PTS-STARTPTS,volume=0.55,adelay=3400|3400[p1]; [1:a]atrim=6:12,asetpts=PTS-STARTPTS,volume=0.45,adelay=15200|15200[p2]; [2:a]atrim=0:13,asetpts=PTS-STARTPTS,volume=0.30,adelay=17000|17000[cam]; [3:a]atrim=0:6,asetpts=PTS-STARTPTS,volume=0.22,adelay=11000|11000[st]; [bed][p1][p2][cam][st]amix=inputs=5:normalize=0:duration=first, loudnorm=I=-20:TP=-2:LRA=11,atrim=0:30,asetpts=PTS-STARTPTS[out]"  -map "[out]" -ar 48000 -ac 2 sources/L2_mix.wav
+
+ffmpeg -i sources/master_30s.mp4 -i sources/L2_mix.wav -map 0:v -map 1:a        -c:v copy -c:a aac -b:a 192k -shortest out/L2_sound.mp4
+```
+
+`normalize=0` matters: `amix` otherwise divides every input by the number of
+inputs, and the carefully-set levels above all collapse together.
+
 ## 3. Level 3 — restoration
 
 The server needs two flags or it will not survive the run (`workflows/README.md`
