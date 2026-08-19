@@ -2,7 +2,7 @@
 
 **For:** Claude Code
 **Project:** MemoActs 2026 · Phase 7 "How do wars end?" + Online Intensive curriculum
-**Date:** 2026-07-28 · supersedes v3 (2026-07-24), which superseded v2, the v2.1 review patch, and the PoC-target addendum (originals archived in `docs/archive/`)
+**Date:** 2026-07-28 · supersedes v3 (2026-07-24), which superseded v2, the v2.1 review patch, and the PoC-target addendum (originals archived in `archive/spec/`)
 **Language:** English (repo language; course instruction language is English)
 
 **Changelog v3 → v3.1 (roadmap correction, 2026-07-28):** three scope decisions by the project owner —

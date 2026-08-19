@@ -1,6 +1,6 @@
 # Stacked 9:16 frames — tool and verification report
 
-Answers `HANDOFF_comfy_threeband.md`. Built and run on the local ComfyUI
+Answers `archive/handoffs/20260805_HANDOFF_comfy_threeband.md`. Built and run on the local ComfyUI
 2026-08-10; every claim below is from an executed graph, not from reading docs.
 
 ## Install

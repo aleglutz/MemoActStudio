@@ -32,3 +32,8 @@ projects/*/index.json
 
 # Finder metadata, created by simply opening a folder on macOS.
 .DS_Store
+
+# Reel exports dropped at the projects/ root rather than inside a project, where
+# none of the rules above can see them. A 64 MB copy of out/reel.mp4 sat here
+# untracked and one `git add .` from the history.
+projects/*.mp4

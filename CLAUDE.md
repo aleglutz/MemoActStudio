@@ -51,8 +51,11 @@ Not P1: the custom node pack, six effect families, video fragments, per-shot GUI
 | `ALIGNERS.md` | Aligner evaluation. Decided: stable-ts primary, behind an `Aligner` interface |
 | `GAPS.md` | Every compromise forced by stock nodes in P1 — this is the P2 backlog |
 | `HARDENING.md` | Deferred portability items (much reduced — students are on Cloud, not local) |
-| `projects/demo_en/` | Working fixture (4 synthetic stills, 13.8 s) — pipeline mechanics only |
-| `projects/sidur/` | Reference material only — **not** a dev or acceptance fixture (SPEC v3.1) |
+| `README.md` | The CLI path, cold start to rendered reel. Start here to *run* something |
+| `docs/` | Working documents: `PLAN.md` (current task list), `P1_GRAPH.md` + `PARTICIPANT_GRAPH_RECIPE.md` (August intensive), `WORKSHOP_MACHINE_SETUP.md` (September), `SHOTS_SCHEMA.md`, `THREEBAND_TOOL.md`, `UPSCALE.md`, `EDITING.md`, `CONTINUE_ON_MAC.md` |
+| `archive/` | Superseded documents, kept for their reasoning. Not authoritative, not maintained — see `archive/README.md` |
+| `projects/legends_of_surrender/` | **The live project** — English reel "Signed After Midnight" for Museum Berlin-Karlshorst. Media is unversioned; `REBUILD.md` regenerates it |
+| `projects/demo_en/` | Working fixture (4 shots, 13.8 s) — pipeline mechanics only. Its stills are unversioned and are **not** currently on disk |
 
 ## Non-negotiables
 
