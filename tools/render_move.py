@@ -126,6 +126,36 @@ def at(keys, t: float, ease) -> tuple[float, float, float, int]:
     return prev[1], prev[2], prev[3], prev[4]
 
 
+def scale_at(keys, t: float, page: int, ease) -> float:
+    """Width fraction at `t`, read only from the keys that belong to `page`.
+
+    A page change is a cut in scale, never a ramp. The two scans of the act are
+    1024 px and 1860 px wide for the same sheet of paper, so their `s` values
+    differ by the ratio of the scans and by nothing the paper does; a ramp
+    between them swells or shrinks the sheet across a turn.
+
+    Keeping the two scales apart is also what lets a turn happen in the middle
+    of a move. Otherwise a turn needs a key at each end simply to pin the scale
+    — and under `--ease cosine` a key is a full stop. On the act that stop
+    landed mid-page, with nothing to look at, and the sheet arrived, settled,
+    turned, and started again from rest: the gesture read as the page being
+    laid down twice.
+    """
+    own = [k for k in keys if k[4] == page]
+    if not own:                       # no key claims this page; fall back
+        return at(keys, t, ease)[2]
+    if t <= own[0][0]:
+        return own[0][3]
+    prev = own[0]
+    for nxt in own[1:]:
+        if t <= nxt[0]:
+            span = nxt[0] - prev[0]
+            k = ease((t - prev[0]) / span) if span > 0 else 1.0
+            return prev[3] + (nxt[3] - prev[3]) * k
+        prev = nxt
+    return prev[3]
+
+
 def parse_turn(spec: str) -> tuple[float, float, int]:
     """`t0,t1,page` -> the page is turned over between t0 and t1, revealing it."""
     try:
@@ -323,6 +353,21 @@ def main() -> int:
     for t0, t1, page in turns:
         print(f"  turn  {t0:.3f}-{t1:.3f} -> page {page} "
               f"({(t1 - t0) * args.frames / args.fps:.2f} s)")
+        # A turn no longer needs a key of its own, so the key-by-key check
+        # above cannot see where the sheet is while it folds. Check the two
+        # ends here, for both sheets: this is the one moment two pages are on
+        # screen at once, and either of them showing an edge is a hole.
+        for tt in (t0, t1 - 1e-6):
+            cx, cy, _, was = at(keys, tt, ease)
+            for pg in {was, page}:
+                W, H = pages[pg - 1].size
+                s = scale_at(keys, tt, pg, ease)
+                pw, ph = int(round(W * s)), int(round(H * s))
+                covers = (cx * OUT_W - pw / 2 <= 0 and cx * OUT_W + pw / 2 >= OUT_W
+                          and cy * OUT_H - ph / 2 <= 0 and cy * OUT_H + ph / 2 >= OUT_H)
+                if not covers:
+                    print(f"  WARNING page {pg} shows an edge at t={tt:.3f}, "
+                          f"inside the turn")
 
     def compose(src: Image.Image, cx: float, cy: float, s: float, cache) -> Image.Image:
         pw = max(1, int(round(src.size[0] * s)))
@@ -341,7 +386,7 @@ def main() -> int:
 
     def still(t: float) -> Image.Image:
         """The sheet as it stands at an instant — not necessarily a frame."""
-        cx, cy, s, page = at(keys, t, ease)
+        cx, cy, _, page = at(keys, t, ease)
         # A turn owns the page on both sides of itself: before it ends the
         # sheet on top is the one being turned, after it the one revealed.
         for t0, t1, to in turns:
@@ -349,18 +394,18 @@ def main() -> int:
                 page = to
         for t0, t1, to in turns:
             if t0 <= t < t1:
-                before = at(keys, max(t0 - 1e-6, 0.0), ease)
-                from_page, s_out = before[3], before[2]
-                s_in = at(keys, t1, ease)[2]
-                # Each sheet keeps its own scale through the turn. They
-                # differ because the scans do — 1024px against 1860px for
-                # the same sheet of paper — so interpolating between them
-                # would shrink the page being turned while it turns, which
-                # is the one thing paper does not do.
-                return fold(compose(pages[from_page - 1], cx, cy, s_out, cache),
-                            compose(pages[to - 1], cx, cy, s_in, cache_b),
+                from_page = at(keys, max(t0 - 1e-6, 0.0), ease)[3]
+                # Each sheet keeps its own scale — through the turn and on
+                # both sides of it (scale_at). The path, meanwhile, is not
+                # interrupted: both sheets sit at the centre the move has
+                # reached, so the page can turn while the sheet is travelling.
+                return fold(compose(pages[from_page - 1], cx, cy,
+                                    scale_at(keys, t, from_page, ease), cache),
+                            compose(pages[to - 1], cx, cy,
+                                    scale_at(keys, t, to, ease), cache_b),
                             (t - t0) / (t1 - t0))
-        return compose(pages[page - 1], cx, cy, s, cache)
+        return compose(pages[page - 1], cx, cy,
+                       scale_at(keys, t, page, ease), cache)
 
     def travel(t0: float, t1: float) -> float:
         """How far the sheet moves across the frame between two instants, px."""

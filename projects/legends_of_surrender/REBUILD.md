@@ -83,8 +83,6 @@ every `s` by the upscale factor; the framing does not move.
         --key 0.000:0.500,0.950,2.60,1 --key 0.035:0.500,0.950,2.60 \
         --key 0.122:-0.231,0.950,2.60 --key 0.166:-0.231,0.950,2.60 \
         --key 0.279:1.231,0.863,2.60  --key 0.314:1.231,0.863,2.60 \
-        --key 0.384:0.550,0.780,2.60 \
-        --key 0.414:0.550,0.780,1.43 \
         --key 0.528:-0.066,0.204,1.43 --key 0.567:-0.066,0.204,1.43 \
         --key 0.672:0.796,0.309,1.43  --key 0.715:0.796,0.309,1.43 \
         --key 0.942:0.328,0.929,1.43  --key 1.000:0.328,0.929,1.43 \
@@ -92,19 +90,28 @@ every `s` by the upscale factor; the framing does not move.
 
 | time | | speed |
 |---|---|---|
-| 0.0–0.4 s | held on the head of page 1 | |
-| 0.4–1.4 s | the sheet goes left | 790 px/s |
-| 1.4–1.9 s | **held on the "10" in blue pencil**, top right | |
-| 1.9–3.2 s | back right and down, a whip | 1220 px/s |
-| 3.2–3.6 s | **held on the tape and punch holes** at the left margin | |
-| 3.6–4.4 s | one more shift left, to mid-page | 840 px/s |
-| **4.4–4.75 s** | **the page is turned over** — 0.34 s, and page 3 is underneath | |
-| 4.75–6.05 s | down to de Lattre de Tassigny, bottom right | 990 px/s |
-| 6.05–6.5 s | held | |
-| 6.5–7.7 s | left to Spaatz, bottom left | 790 px/s |
-| 7.7–8.2 s | held | |
-| 8.2–10.8 s | the long rise to Keitel's autograph | 500 px/s |
-| 10.8–11.5 s | held on it | |
+| 0.0–0.44 s | held on the head of page 1 | |
+| 0.44–1.53 s | the sheet goes left | 725 px/s |
+| 1.53–2.09 s | **held on the "10" in blue pencil**, top right | |
+| 2.09–3.51 s | back right and down, a whip | 1 120 px/s |
+| 3.51–3.95 s | **held on the tape and punch holes** at the left margin | |
+| **3.95–6.64 s** | one long move down to de Lattre de Tassigny, bottom right — **the sheet turns over on the way**, at 4.83–5.20 s | 700 px/s |
+| 6.64–7.13 s | held | |
+| 7.13–8.45 s | left to Spaatz, bottom left | 720 px/s |
+| 8.45–8.99 s | held | |
+| 8.99–11.84 s | the long rise to Keitel's autograph | 455 px/s |
+| 11.84–12.57 s | held on it | |
+
+**The turn has no keys of its own, and that is the point.** It used to need a
+pair — one to end page 1's scale, one to start page 3's — and under
+`--ease cosine` a key is a full stop. So the sheet arrived at mid-page, where
+there is nothing to look at, settled, turned, and started again from rest: two
+placements around one page, which is not what a hand does. `render_move` takes
+each sheet's scale from that sheet's own keys now (`scale_at`), so a page change
+is a cut in scale and needs no key to pin it. The turn happens inside a single
+move, and the sheet never stops between the tape and the signature. Measured on
+the render, frame to frame: 0 px through the twelve frames of the old turn,
+31–37 px through the new one.
 
 The two detail beats are the reason the sequence reads as someone handling a
 document rather than a camera executing a move: a pencilled "10" that some
@@ -124,9 +131,11 @@ clamped so the sheet still covers the frame.
 between two scans says "another page"; it does not say a hand. What says a hand
 is the crease: a seam crossing the frame, the lifted part of the sheet mirrored
 back over itself and foreshortened, its underside darkening as it leans, and a
-shadow thrown on the page it uncovers. Each sheet keeps its own scale through
-the turn — they differ only because the scans do, and interpolating between them
-would shrink the page while it turns, which is the one thing paper does not do.
+shadow thrown on the page it uncovers. Each sheet keeps its own scale — through
+the turn and on both sides of it. They differ only because the scans do, 1024 px
+against 1860 px for the same sheet of paper, so a ramp between the two `s`
+values would swell or shrink the page while it is being handled, which is the
+one thing paper does not do.
 
 The clip is 377 frames against the 371 the two shots consume, so the settle
 lands at the end of the second shot rather than after it. **If the narration is
@@ -135,6 +144,16 @@ re-recorded**, read the new shot lengths from `generated/report.txt`, set
 from the 1:26 shot's **frame count**, not its seconds: 186 frames at 30 fps is
 `in = 6.200`. The report's 6.22 s would put the seek 0.6 of a frame past the
 boundary, and the seam would repeat or drop one.
+
+**Then re-run `tools/generate_shots.py`.** `render_reel` reads
+`generated/shots.json`, never `shots.csv` — the CSV is the edit decision and the
+JSON is what was compiled from it, which is the whole reason they are separate
+(SPEC §4). Editing the CSV and rendering without recompiling leaves the old
+in-point in force, and the two shots then read overlapping stretches of one
+clip: with `in` still at 5.420 against a 186-frame first shot, the reel replayed
+23 frames — 0.77 s of the sheet travelling — starting seven frames after the
+turn, and the page appeared to be laid into the frame twice. The alignment is
+deterministic: recompiling costs about a minute and moves no cue.
 
 ## The cold open — S00, 4.80 s
 
