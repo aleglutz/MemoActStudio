@@ -134,7 +134,7 @@ re-recorded**, read the new shot lengths from `generated/report.txt`, set
 `--frames` to their sum plus six, and update `in` on the 1:32 row of
 `shots.csv`.
 
-## The cold open — S00, 6.40 s
+## The cold open — S00, 4.80 s
 
 Not in `shots.csv`, and deliberately so: the reel is cut to a recorded
 narration and every cue in it is measured from that recording, so a shot
@@ -163,20 +163,20 @@ measured off the image by eye, exactly as `render_map.py` prints its `focus`.
 above the wordmark moves every anchor under it.
 
     python tools/render_move.py --project projects/legends_of_surrender \
-        --image hook_page.png --name S00_hook --frames 192 --ease cosine \
-        --shutter 0.5 \
+        --image hook_page.png --name S00_hook --frames 144 --ease cosine \
+        --shutter 0.5 --subframes 96 \
         --caption-from projects/legends_of_surrender/script.md \
-        --key 0.000:0.504,0.814,1.00 --key 0.110:0.504,0.814,1.00 \
-        --key 0.393:-2.833,1.627,1.00 --key 0.518:-2.833,1.627,1.00 \
-        --key 0.801:-0.989,0.179,1.00 --key 1.000:-0.989,0.179,1.00
+        --key 0.000:0.504,0.814,1.00 --key 0.125:0.504,0.814,1.00 \
+        --key 0.333:-2.833,1.627,1.00 --key 0.500:-2.833,1.627,1.00 \
+        --key 0.729:-0.989,0.179,1.00 --key 1.000:-0.989,0.179,1.00
 
 | time | | |
 |---|---|---|
-| 0.0–0.7 s | held on **M E M O A C T S**, typed among the working notes | |
-| 0.7–2.5 s | up and right across the header | 2 170 px/s |
-| 2.5–3.3 s | held on the pencilled **67** in the corner | *"Six-seven is dead."* |
-| 3.3–5.1 s | back down and left | 1 890 px/s |
-| 5.1–6.4 s | held on **8, 9** in the enumeration | *"Let's talk eight-nine."* |
+| 0.0–0.6 s | held on **M E M O A C T S**, typed among the working notes | |
+| 0.6–1.6 s | up and right across the header | 3 930 px/s |
+| 1.6–2.4 s | held on the pencilled **67** in the corner | *"Six-seven is dead."* |
+| 2.4–3.5 s | back down and left | 3 110 px/s |
+| 3.5–4.8 s | held on **8, 9** in the enumeration | *"Let's talk eight-nine."* |
 
 Four things about it are load-bearing:
 
@@ -191,22 +191,27 @@ Four things about it are load-bearing:
   the ceiling — at 4.2 the **8** is against the left edge of the frame and the
   comma after the **9** is sliced by the right one.
 - **`--shutter 0.5`** is what makes the whips read as speed rather than as a
-  stutter: at 2 170 px/s the sheet crosses a tenth of the frame between frames.
-  It is off by default, so `S12_ru_page_move` above still renders identically.
+  stutter: at 3 930 px/s the sheet crosses an eighth of the frame between
+  frames. It is off by default, so `S12_ru_page_move` above still renders
+  identically. `--subframes 96` goes with it — the samples are spaced one per
+  pixel and a half, so a whip this fast asks for 87 of them and the default
+  ceiling of 48 would leave the smear as a row of ghosts, which is the artefact
+  the shutter exists to remove.
 - **The two lines come out of `script.md`**, from a `> **HOOK**` blockquote that
   the script parser drops — the hook has no recorded audio, so it cannot be a
   shot without shifting every cue after it, but screen text is verbatim script
   text and never a string typed into a command line. `--caption-from` puts one
   line on each hold, filling from the last hold backwards, and takes the timing
-  from the move itself; re-time the move and the lines follow. They sit *below*
-  the beat rather than across the middle as the reel's captions do, because a
-  page move aims the camera at its subject and the middle of the frame is
-  therefore always occupied.
+  from the move itself; re-time the move and the lines follow — as they did when
+  the cold open lost 1.6 s. They carry no styling of their own: the reel's
+  caption sits below the middle of the frame (`subs.SubStyle`) precisely so it
+  clears the beat a page move aims at, and a cold open captioned differently
+  would read as another film.
 
 The clip runs mute: the two lines are on screen, but the read is not recorded.
 When it is, the words are already in `script.md` to align against.
 
-## The whole reel — 20 shots behind the hook, 171.23 s
+## The whole reel — 20 shots behind the hook, 169.63 s
 
     python tools/assemble_reel.py \
         --clip projects/legends_of_surrender/composites/S00_hook.mp4 \
@@ -216,17 +221,17 @@ When it is, the words are already in `script.md` to align against.
         --subs projects/legends_of_surrender/out/reel.srt \
         --out projects/legends_of_surrender/out/reel_with_hook.mp4
 
-5 137 frames — 192 and 4 945, joined without re-encoding a single one, because
+5 089 frames — 144 and 4 945, joined without re-encoding a single one, because
 both clips come out of `memoacts_core.render.encode` and so already agree on
 codec, size, pixel format and rate.
 
-**The narration is delayed, not re-cut.** It is padded with 6.400 s of digital
+**The narration is delayed, not re-cut.** It is padded with 4.800 s of digital
 silence and encoded once from `narration.wav`; the reel's own AAC is not
 touched, which would have cost the recording a second generation of lossy
 encoding, and AAC's encoder priming would have shifted the whole thing by a
 frame or two besides. Verified rather than assumed: the head of the assembly
 is silent to a peak of exactly 0, and the recording correlates against its own
-master at **0 samples** of drift from 6.400 s — so all twenty measured cues sit
+master at **0 samples** of drift from 4.800 s — so all twenty measured cues sit
 where they did.
 
 The delay is not typed in. `--narration-at` defaults to the length of the clips
@@ -234,6 +239,6 @@ ahead of the reel, read off the files, so it cannot disagree with what was
 actually joined.
 
 `reel_with_hook.srt` is written beside the video: the hook's two lines, then
-every reel cue moved on by 6.400 s. **That file is what the hook's line is
+every reel cue moved on by 4.800 s. **That file is what the hook's line is
 recorded against** — the timings on screen are already fixed by the move, so
 the read fits the cut rather than the cut being re-fitted to the read.

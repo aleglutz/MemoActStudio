@@ -48,12 +48,15 @@ class SubStyle:
     #: a track can carry captions and labels in one file and one libass pass.
     name: str = "Default"
     #: ASS numpad alignment: 1–3 bottom, 4–6 middle, 7–9 top; 1/4/7 left,
-    #: 2/5/8 centre, 3/6/9 right. 5 puts the caption across the middle of the
-    #: frame rather than along the bottom: this reel is 9:16 and its subjects
-    #: — a signature, a face, a map — sit centre-frame, so a caption at the
-    #: bottom asks the eye to travel away from the picture and back for every
-    #: cue. Middle alignment ignores margin_v.
-    alignment: int = 5
+    #: 2/5/8 centre, 3/6/9 right. 2 is bottom-centre, and `margin_v` then puts
+    #: the caption where it actually belongs, which is neither place the two
+    #: obvious answers offer. Along the foot of the frame it asks the eye to
+    #: travel away from the picture and back for every cue — this reel is 9:16
+    #: and its subjects, a signature, a face, a map, sit centre-frame. Across
+    #: the middle (alignment 5, which ignores margin_v) it lands *on* them, and
+    #: on a page move it always will, because there the camera is aimed at its
+    #: subject by construction. So: below the middle, clear of both.
+    alignment: int = 2
     font: str = "Share Tech Mono"
     #: 56, up from P1's 44. Affordable only because a caption is now one short
     #: line rather than a whole narration block: at 56 the usable width holds
@@ -67,7 +70,12 @@ class SubStyle:
     shadow_depth: float = 2.0
     margin_l: int = 60
     margin_r: int = 60
-    margin_v: int = 0
+    #: 670 from the foot puts the line's own centre at y = 1217 of 1920, which
+    #: is halfway between the two positions this reel has actually been cut
+    #: with: dead centre, and the 420 the cold open used. One position for the
+    #: whole reel, hook included — a caption that moves between a title beat and
+    #: the reel proper reads as two different films.
+    margin_v: int = 670
     bold: bool = False
 
     #: Plate behind the text. White captions over a pale document are

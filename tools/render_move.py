@@ -199,11 +199,9 @@ def captions(args, keys) -> Path:
     what a cold open is built to arrive at, and a clip whose opening hold is a
     title card should not have a line over it.
     """
-    # The reel captions across the middle of the frame, because its subjects sit
-    # centre-frame and a caption at the foot makes the eye travel. A move is the
-    # opposite case: the camera *aims* at the beat, so the middle is occupied by
-    # construction and a centred caption lands on the one thing being shown.
-    style = subs.SubStyle(alignment=2, margin_v=420)
+    # No styling of its own: the reel's caption sits below the middle of the
+    # frame precisely so that it clears the beat a page move aims at, and a
+    # cold open that captioned itself differently would read as another film.
     lines = parse_hook(args.caption_from)
     if not lines:
         raise SystemExit(f"{args.caption_from}: no HOOK block to caption with")
@@ -218,7 +216,7 @@ def captions(args, keys) -> Path:
     for c in cues:
         print(f"  caption {c.t_start:5.2f}-{c.t_end:5.2f} s  {c.text!r}")
     ass, _ = subs.write_tracks(args.project / "composites", cues,
-                               stem=args.name, style=style)
+                               stem=args.name)
     return ass
 
 
