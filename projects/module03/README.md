@@ -101,6 +101,10 @@ So two of the four are genuinely hands-on, and they are the first two. Levels 3
 and 4 are screened, with a single frame handed over so the students still touch
 the thing they are being shown.
 
+`CLOUD.md` is the survey behind that table: which nodes and models Cloud
+actually carries, what a run costs, and one of our own assumptions that the
+billing record contradicts.
+
 ## What to put on screen
 
 | File | | |
@@ -128,3 +132,12 @@ Two things to say out loud, because the clips cannot say them:
 
 None of the media is in git. `REBUILD.md` regenerates all of it from the one
 archival file.
+
+## Nothing in `out/` or `stills/` is deleted
+
+Not the superseded renders, not the ones no longer named in any document. A
+render made before a decision is what makes the decision visible in a seminar —
+the earlier level-3 comparison is the argument for keeping the enlargement, and
+the raw redraw is the whole point of level 4. Tidiness is worth nothing against
+that. When something is superseded, put the new file beside it and say here
+which one is current.

@@ -44,6 +44,11 @@ confirmed present on Cloud (`SURVEY.md §2.1`).
 > a large source. **Do not raise it to 60** — that lands at 44–49 s and dies.
 > Contention makes this worse, so if several people render at once, expect
 > failures even at safe sizes and stagger the submissions.
+>
+> **Questioned 2026-08-20.** The billing feed records single jobs consuming
+> 165, 254 and 359 GPU-seconds, which a 44-second kill cannot produce. The
+> failures above were real, so this stands until one deliberate long job
+> settles it — see `projects/module03/CLOUD.md`.
 
 > **⚠ Your uploaded filename will change.** Comfy Cloud stores every upload under
 > a long hexadecimal (SHA-256) name — upload `01_big.png` and it becomes something
