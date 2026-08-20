@@ -79,7 +79,7 @@ every `s` by the upscale factor; the framing does not move.
     python tools/render_move.py --project projects/legends_of_surrender \
         --image GIoS_Wehrmacht_Signed_Ru_p1.jpg \
         --image GIoS_Wehrmacht_Signed_Ru.jpg \
-        --name S12_ru_page_move --frames 344 --ease cosine \
+        --name S12_ru_page_move --frames 377 --ease cosine \
         --key 0.000:0.500,0.950,2.60,1 --key 0.035:0.500,0.950,2.60 \
         --key 0.122:-0.231,0.950,2.60 --key 0.166:-0.231,0.950,2.60 \
         --key 0.279:1.231,0.863,2.60  --key 0.314:1.231,0.863,2.60 \
@@ -128,11 +128,13 @@ shadow thrown on the page it uncovers. Each sheet keeps its own scale through
 the turn — they differ only because the scans do, and interpolating between them
 would shrink the page while it turns, which is the one thing paper does not do.
 
-The clip is 344 frames against the 338 the two shots consume, so the settle
+The clip is 377 frames against the 371 the two shots consume, so the settle
 lands at the end of the second shot rather than after it. **If the narration is
 re-recorded**, read the new shot lengths from `generated/report.txt`, set
-`--frames` to their sum plus six, and update `in` on the 1:32 row of
-`shots.csv`.
+`--frames` to their sum plus six, and set `in` on the 1:32 row of `shots.csv`
+from the 1:26 shot's **frame count**, not its seconds: 186 frames at 30 fps is
+`in = 6.200`. The report's 6.22 s would put the seek 0.6 of a frame past the
+boundary, and the seam would repeat or drop one.
 
 ## The cold open — S00, 4.80 s
 
@@ -198,8 +200,8 @@ Four things about it are load-bearing:
   ceiling of 48 would leave the smear as a row of ghosts, which is the artefact
   the shutter exists to remove.
 - **The two lines come out of `script.md`**, from a `> **HOOK**` blockquote that
-  the script parser drops — the hook has no recorded audio, so it cannot be a
-  shot without shifting every cue after it, but screen text is verbatim script
+  the script parser drops — the hook is not in `narration.wav`, so it cannot
+  be a shot without shifting every cue after it, but screen text is verbatim script
   text and never a string typed into a command line. `--caption-from` puts one
   line on each hold, filling from the last hold backwards, and takes the timing
   from the move itself; re-time the move and the lines follow — as they did when
@@ -208,35 +210,65 @@ Four things about it are load-bearing:
   clears the beat a page move aims at, and a cold open captioned differently
   would read as another film.
 
-The clip runs mute: the two lines are on screen, but the read is not recorded.
-When it is, the words are already in `script.md` to align against.
+The clip itself is mute; the read arrives at assembly, off the head of
+`voiceover.wav`. Measured against the holds it was fitted to, it runs a little
+ahead of the type:
 
-## The whole reel — 20 shots behind the hook, 169.63 s
+| | on screen | spoken |
+|---|---|---|
+| "Six-seven is dead." | 1.598-2.400 | 1.300-3.100 |
+| "Let's talk eight-nine." | 3.499-4.800 | 3.140-4.070 |
+
+Both lines start about 0.3 s before their caption, and *dead* carries 0.7 s past
+its own. Re-time the move rather than the cue if that wants closing: the lines
+take their timing from the holds (`--caption-from`), so nothing else has to be
+touched.
+
+## The recording — one take, two files
+
+The hook and the reel are read in one pass, and the take is exported whole:
+`voiceover.wav`, 168.968 s. Everything downstream of alignment means the *reel's*
+narration by `narration.wav`, and a file that opens with two lines the reel does
+not contain would push every cue in it out by the length of the hook. So the
+take is cut once, at the length of the hook clip:
+
+    ffmpeg -ss 4.8 -i voiceover.wav -c copy narration.wav
+
+`-c copy` on PCM is a sample-exact cut, not a re-encode — same MD5 as
+`-af atrim=start=4.8`, checked both ways. 4.800 s falls inside the 1.31 s of
+silence between the last hook word (4.070 s) and the first reel word (5.380 s),
+so neither side loses a syllable and the reel's read keeps a 0.58 s lead-in.
+
+**`voiceover.wav` is the master and the only thing muxed.** `narration.wav`
+exists for alignment, and for the working copy of the reel that `render_reel`
+lays it under; the finished file takes its audio from the whole take, encoded
+once.
+
+## The whole reel — 20 shots behind the hook, 168.97 s
 
     python tools/assemble_reel.py \
         --clip projects/legends_of_surrender/composites/S00_hook.mp4 \
         --clip projects/legends_of_surrender/out/reel.mp4 \
-        --narration projects/legends_of_surrender/narration.wav \
+        --narration projects/legends_of_surrender/voiceover.wav \
+        --narration-under 1 \
         --subs projects/legends_of_surrender/composites/S00_hook.srt \
         --subs projects/legends_of_surrender/out/reel.srt \
         --out projects/legends_of_surrender/out/reel_with_hook.mp4
 
-5 089 frames — 144 and 4 945, joined without re-encoding a single one, because
+5 069 frames — 144 and 4 925, joined without re-encoding a single one, because
 both clips come out of `memoacts_core.render.encode` and so already agree on
 codec, size, pixel format and rate.
 
-**The narration is delayed, not re-cut.** It is padded with 4.800 s of digital
-silence and encoded once from `narration.wav`; the reel's own AAC is not
-touched, which would have cost the recording a second generation of lossy
-encoding, and AAC's encoder priming would have shifted the whole thing by a
-frame or two besides. Verified rather than assumed: the head of the assembly
-is silent to a peak of exactly 0, and the recording correlates against its own
-master at **0 samples** of drift from 4.800 s — so all twenty measured cues sit
-where they did.
+**The narration is neither delayed nor re-cut.** `--narration-under 1` says it
+runs from the first clip, so the delay computes to zero, `adelay` is never
+added, and the take is encoded to AAC exactly once, straight from the WAV
+master. Nothing is padded and nothing is spliced — which is what keeps the
+hook's read where the microphone put it relative to the reel's, the one
+relationship a two-file mux would have had to reconstruct by hand.
 
-The delay is not typed in. `--narration-at` defaults to the length of the clips
-ahead of the reel, read off the files, so it cannot disagree with what was
-actually joined.
+The delay is not typed in either way. `--narration-at` defaults to the length of
+the clips ahead of whichever clip the narration runs under, read off the files,
+so it cannot disagree with what was actually joined.
 
 `reel_with_hook.srt` is written beside the video: the hook's two lines, then
 every reel cue moved on by 4.800 s. **That file is what the hook's line is

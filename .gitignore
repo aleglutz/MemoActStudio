@@ -9,6 +9,15 @@ projects/*/video/
 projects/*/sources/
 projects/*/composites/
 projects/*/narration.*
+projects/*/voiceover.*
+# Superseded takes and the Audacity project they came out of. The rules
+# above stop at the project root, and a 60 MB .aup3 sat in archive/ one
+# `git add .` from the history. Prose in archive/ stays versioned — that
+# is what the folder is for.
+projects/*/archive/*.wav
+projects/*/archive/*.mp3
+projects/*/archive/*.mp4
+projects/*/archive/*.aup3
 projects/*/out/
 projects/*/generated/
 projects/*/maps/

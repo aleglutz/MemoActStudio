@@ -1,8 +1,8 @@
 # Signed After Midnight
 
-> **HOOK** — S00, the cold open. It is not in the narration recording, so it
-> is not a shot: the cues below are measured from that recording and a block
-> without audio would shift every one of them. It is spoken over the two holds
+> **HOOK** — S00, the cold open. It is read at the head of `voiceover.wav` but
+> not in `narration.wav`, so it is not a shot: the cues below are measured from
+> that file, and two blocks it does not contain would shift every one of them. It is spoken over the two holds
 > of `S00_hook.mp4`, the pencilled 67 and the enumeration.
 > "Six-seven is dead."
 > "Let's talk eight-nine."
