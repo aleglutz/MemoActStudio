@@ -19,6 +19,14 @@ Not P1: the custom node pack, six effect families, video fragments, per-shot GUI
 - **`projects/sidur` is not a dev fixture.** A new English script + narration is awaited from the project owner; until then `projects/demo_en` is the only working fixture.
 - **Two audiences, two environments** (SPEC §0): August online intensive — 30 students, 8 lessons, **Comfy Cloud**, overview-level; September offline workshop — 16 of those students, **local ComfyUI on two rented machines**, practical/production.
 - **The September workshop teaches `comfyui-memoacts` itself.** So **P2 has a hard September deadline** — P1 and P2 both have weeks, not months. P1 must be *finished, not polished*: there is no longer slack in P2 to absorb P1 overrun. Module priority for the September cut is in SPEC §0; `nodes_layers.py` (six effect families) is the designated first cut.
+**The command line is not the teaching surface (2026-08-21).** In the owner's
+words: *CLI-first is my own setup. I cannot and do not want to teach it to
+anyone.* `tools/` and `README.md` remain the author's scaffolding and the
+reference implementation of every step — they stay, they keep working, and the
+interface may call the same `memoacts_core` functions. But nothing a student
+sees, types or is examined on is a terminal command. The brief for what replaces
+it is `docs/INTERFACE_BRIEF.md`.
+
 - Stretch goal — teaching students to build their own tools from the pack as a worked example — is a **golden achievement, never a requirement**. Its only actionable consequence now: write the pack legibly from the first commit, since that is cheap early and expensive to retrofit. No separate teaching version, no tutorial content in scope.
 
 ## Priority principle
@@ -53,7 +61,7 @@ Not P1: the custom node pack, six effect families, video fragments, per-shot GUI
 | `HARDENING.md` | Deferred portability items (much reduced — students are on Cloud, not local) |
 | `README.md` | The CLI path, cold start to rendered reel. Start here to *run* something |
 | `HANDOFF.md` | Where the last session stopped and what the next one does first. Rewritten, not appended to; superseded versions go to `archive/handoffs/` |
-| `docs/` | Working documents: `PLAN.md` (current task list), `P1_GRAPH.md` + `PARTICIPANT_GRAPH_RECIPE.md` (August intensive), `WORKSHOP_MACHINE_SETUP.md` (September), `SHOTS_SCHEMA.md`, `THREEBAND_TOOL.md`, `UPSCALE.md`, `EDITING.md` |
+| `docs/` | Working documents: `PLAN.md` (current task list), `P1_GRAPH.md` + `PARTICIPANT_GRAPH_RECIPE.md` (August intensive), `WORKSHOP_MACHINE_SETUP.md` (September), `SHOTS_SCHEMA.md`, `THREEBAND_TOOL.md`, `UPSCALE.md`, `EDITING.md`, `INTERFACE_BRIEF.md` (the brief for the student-facing interface — paste it to open that session) |
 | `archive/` | Superseded documents, kept for their reasoning. Not authoritative, not maintained — see `archive/README.md` |
 | `projects/legends_of_surrender/` | **The live project** — English reel "Signed After Midnight" for Museum Berlin-Karlshorst. Media is unversioned; `REBUILD.md` regenerates it |
 | `projects/demo_en/` | Working fixture (4 shots, 13.8 s) — pipeline mechanics only. Its stills are unversioned but are on disk, in `sources/images/` |
