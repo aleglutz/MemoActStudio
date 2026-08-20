@@ -15,7 +15,7 @@ python tools/generate_shots.py --project projects/<name> --lang en --max-chunk 3
 python tools/run_p1_local.py --project projects/<name> --export-all cloud_graphs
 ```
 
-- all `images/*` used by shots
+- all `sources/images/*` used by shots
 - `generated/report.txt` open in a text editor (you'll paste from `generated/crops/`)
 - narration is NOT uploaded — audio is muxed after download (step 6)
 

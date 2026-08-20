@@ -229,9 +229,34 @@ def resolve_shot_images(shots: list[ScriptShot], images: list[Path]
     return picked, warnings
 
 
-#: Folders a shot's media may live in, in search order. Stills sit in images/,
-#: stacked frames in composites/, drawn plates in maps/, footage in video/.
-MEDIA_DIRS = ("images", "composites", "maps", "video")
+#: The one folder a shot's media lives in: <project>/sources/. Everything the
+#: shot list can name is under it — stills in images/, stacked frames and page
+#: moves in composites/, drawn plates in maps/, footage in videos/ — whether a
+#: person brought it or a tool made it. What separates sources/ from
+#: generated/ is not who produced a file but whether the edit can point at it:
+#: generated/ holds the compiler's own output, shots.json and its report, and
+#: can be deleted at any time.
+#:
+#: Search order, for the older tables that carry a bare filename.
+SOURCES_DIR = "sources"
+#: Where render_move and render_bands put what they build.
+COMPOSITES = f"{SOURCES_DIR}/composites"
+
+
+def find_narration(project: Path) -> Path | None:
+    """The reel's recording. `sources/` first, then the project root.
+
+    It belongs in sources/ — it is the largest thing the edit points at — but
+    the older fixtures keep it beside script.md, and a project that still does
+    must go on rendering.
+    """
+    for folder in (SOURCES_DIR, "."):
+        hit = sorted((project / folder).glob("narration.*"))
+        if hit:
+            return hit[0]
+    return None
+MEDIA_DIRS = tuple(f"{SOURCES_DIR}/{d}"
+                   for d in ("images", "composites", "maps", "videos"))
 
 
 def resolve_media(project: Path, shot: dict) -> Path:
@@ -253,7 +278,7 @@ def resolve_media(project: Path, shot: dict) -> Path:
         cand = project / folder / name
         if cand.exists():
             return cand
-    return project / "images" / name          # report the conventional path
+    return project / MEDIA_DIRS[0] / name     # report the conventional path
 
 
 def apply_shot_lead(spans: list[Span], lead_ms: int) -> list[Span]:

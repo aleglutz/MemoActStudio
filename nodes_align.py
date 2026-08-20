@@ -16,7 +16,7 @@ from comfy_api.latest import io
 from .memoacts_core import SCHEMA_VERSION
 from .memoacts_core.align import StableTsAligner, proportional_spans
 from .memoacts_core.normalize import normalize_block
-from .memoacts_core.project import (apply_shot_lead, list_images,
+from .memoacts_core.project import (MEDIA_DIRS, apply_shot_lead, list_images,
                                     parse_script_shots, resolve_shot_images)
 from .memoacts_core.schedule import default_motion, frames_for
 from .nodes_types import Shots
@@ -106,9 +106,9 @@ class MemoActsAlignShots(io.ComfyNode):
         if narration is None:
             raise ValueError(f"no narration.* audio file in {project}")
 
-        images = list_images(project / "images")
+        images = list_images(project / MEDIA_DIRS[0])
         if not images:
-            raise ValueError(f"no images in {project / 'images'}")
+            raise ValueError(f"no images in {project / MEDIA_DIRS[0]}")
 
         imgs, warns = resolve_shot_images(script_shots, images)
         for w in warns:

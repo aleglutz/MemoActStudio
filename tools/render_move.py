@@ -58,7 +58,7 @@ from PIL import Image
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from memoacts_core import subs  # noqa: E402
-from memoacts_core.project import MEDIA_DIRS, parse_hook  # noqa: E402
+from memoacts_core.project import COMPOSITES, MEDIA_DIRS, parse_hook  # noqa: E402
 from memoacts_core.render import RESAMPLE, encode, load_source  # noqa: E402
 
 OUT_W, OUT_H = 1080, 1920
@@ -245,7 +245,7 @@ def captions(args, keys) -> Path:
             for (t0, t1), text in zip(stops[len(stops) - len(lines):], lines)]
     for c in cues:
         print(f"  caption {c.t_start:5.2f}-{c.t_end:5.2f} s  {c.text!r}")
-    ass, _ = subs.write_tracks(args.project / "composites", cues,
+    ass, _ = subs.write_tracks(args.project / COMPOSITES, cues,
                                stem=args.name)
     return ass
 
@@ -436,7 +436,7 @@ def main() -> int:
                 sub = np.asarray(still(lo + (hi - lo) * j / (n - 1)), dtype=np.float32)
                 acc = sub if acc is None else acc + sub
             yield Image.fromarray(np.clip(acc / n, 0, 255).astype(np.uint8))
-    dest = args.project / "composites" / f"{args.name}.mp4"
+    dest = args.project / COMPOSITES / f"{args.name}.mp4"
     dest.parent.mkdir(parents=True, exist_ok=True)
     ass = captions(args, keys) if args.caption_from else None
     encode(frames(), dest, args.fps, crf=args.crf, ass=ass,

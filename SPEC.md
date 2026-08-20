@@ -204,12 +204,25 @@ Still recommended (not enforced) on-disk layout for tidiness:
 
 ```
 projects/<name>/
-  narration.mp3
   script.md          # + script.<lang>.md per language, block-matched
-  images/            # stills, arbitrary formats — EXIF/CMYK/alpha handled
-  video/             # optional footage fragments
-  shots.json         # emitted by alignment, re-ingestible after hand edits
+  shots.csv          # the edit decision, read after the script's own refs
+  sources/           # everything a shot may name, whoever made it
+    narration.mp3
+    images/          # stills, arbitrary formats — EXIF/CMYK/alpha handled
+    videos/          # optional footage fragments
+    composites/      # page moves, stacked frames
+    maps/            # drawn plates
+  generated/         # shots.json, emitted by alignment and re-ingestible
+  out/               # the render
+  archive/           # superseded
 ```
+
+The `sources/` boundary is drawn by *what the edit can point at*, not by who
+made the file: a map plate the tool drew and a scan a person found are the same
+kind of thing to a shot list. `generated/` is the compiler's own output and may
+be deleted at any time. One search path, `memoacts_core.project.MEDIA_DIRS`,
+names the four folders — the tuple used to be written out twice and the copies
+disagreed.
 
 `script.md` supports **two layouts** (extended 2026-08-05 for `projects/legends_of_surrender`, whose script is a storyboard):
 
@@ -218,7 +231,7 @@ projects/<name>/
 
 The layout is detected from the file — a script containing shot headings uses the second, everything else keeps v1 behaviour exactly.
 
-Both layouts read `[[asset.jpg]]` references and **strip them from the narration**, so a filename written into the text can never be spoken or burnt into a subtitle. A referenced file becomes that shot's still; a shot naming nothing falls back to cycling `images/` alphabetically, preserving the zero-input default of §5.2. A named file that is missing is a warning and a fallback, never a failed run — storyboards are written before assets are gathered.
+Both layouts read `[[asset.jpg]]` references and **strip them from the narration**, so a filename written into the text can never be spoken or burnt into a subtitle. A referenced file becomes that shot's still; a shot naming nothing falls back to cycling `sources/images/` alphabetically, preserving the zero-input default of §5.2. A named file that is missing is a warning and a fallback, never a failed run — storyboards are written before assets are gathered.
 
 **Silent shots** (a heading with directions but no narration — `legends_of_surrender` S15 is one) are kept, not dropped: they hold screen time without a line. Alignment gives them the pause between their neighbours, which is exactly right when the narrator pauses there — and collapses them to a single frame when they do not, which is worth checking in the shot report.
 

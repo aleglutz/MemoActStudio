@@ -63,15 +63,29 @@ Media is never versioned, so it arrives separately:
 
 ```
 projects/legends_of_surrender/
-    images/         stills
-    video/          MBK_KAPFILM_FINAL.mp4
-    narration.wav   the read
-    sources/        masters and originals (ignored by git)
+    script.md            the text — ground truth
+    shots.csv            the edit decision
+    REBUILD.md           how every generated file is remade
+    sources/             everything the edit points at (never versioned)
+        SOURCES.md       provenance and rights
+        narration.wav    the read
+        images/          stills
+        videos/          MBK_KAPFILM_FINAL.mp4
+        composites/      page moves and stacked frames
+        maps/            drawn plates
+    generated/           shots.json + report.txt — delete and remake at will
+    out/                 the finished reel
+    archive/             superseded, kept for its reasoning
 ```
 
-**Exactly one `narration.*` file** belongs in the project folder. The generator
-looks for `narration.mp3` first and otherwise takes whichever `narration.*` it
-finds — two files make the choice arbitrary. Keep the others in `sources/`.
+Three folders and three files: the project root holds the decisions, `sources/`
+holds everything those decisions name, and `generated/` and `out/` hold what a
+command can always make again.
+
+**Exactly one `narration.*` file** belongs in `sources/`. The generator takes
+whichever `narration.*` it finds there, falling back to the project root for
+older fixtures — two files make the choice arbitrary. Keep the others in
+`archive/`.
 
 ## 3. Rebuild the generated clips
 
@@ -80,11 +94,11 @@ rather than copied, so they cannot silently disagree with the images they claim
 to come from. Both must exist before a render.
 
 ```bash
-python tools/render_map.py --out projects/legends_of_surrender/maps \
+python tools/render_map.py --out projects/legends_of_surrender/sources/maps \
     --name map_baltics --frames 360 \
     --highlight Latvia Estonia Lithuania
 
-python tools/render_map.py --out projects/legends_of_surrender/maps \
+python tools/render_map.py --out projects/legends_of_surrender/sources/maps \
     --name map_poland_ukraine --frames 360 \
     --highlight Poland Ukraine --already Latvia Estonia Lithuania
 
@@ -104,7 +118,7 @@ shorter than its shot is an error, not a freeze.
 python tools/generate_shots.py --project projects/legends_of_surrender --lang en
 ```
 
-Reads `script.md` and `narration.wav`; writes `generated/shots.json`,
+Reads `script.md` and `sources/narration.wav`; writes `generated/shots.json`,
 `generated/crops/*.csv` and `generated/report.txt`. Nothing is transcribed —
 the script is ground truth and alignment computes timings only.
 
@@ -137,7 +151,7 @@ beside it. Useful flags: `--no-subs`, `--sub-size 56`, `--plate 0.80`
 
 ## 7. Re-recording the narration
 
-Replace `narration.wav` and re-run steps 4 and 6. Nothing else moves:
+Replace `sources/narration.wav` and re-run steps 4 and 6. Nothing else moves:
 alignment recomputes every shot boundary and every word timing, captions are
 cut at the new word timings, and `shots.csv` is keyed to script cues rather
 than to seconds. No timing is stored anywhere that survives the new read.

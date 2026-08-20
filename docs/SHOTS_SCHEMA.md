@@ -45,7 +45,7 @@ Per shot:
 | `estimated` | bool | true = proportional fallback, not aligned (SPEC §5.1) |
 | `confidence` | float 0–1 | mean word probability from the aligner; 0 when estimated |
 | `had_digits` | bool | block contained digits — read `confidence` with care |
-| `image` | str | media filename; a still in `images/`, `composites/` or `maps/`, or a fragment in `video/` |
+| `image` | str | media filename; resolved against `sources/images/`, `sources/composites/`, `sources/maps/`, `sources/videos/` in that order (`project.MEDIA_DIRS`). `image_path` beside it records where it was actually found, project-relative |
 | `media_in` | float s\|null | *1.4, footage only.* Where in the fragment this shot starts. How much is consumed is not stored: the shot's duration comes from the narration and the footage bends to it. |
 | `speed` | float\|null | *1.4, footage only.* Playback rate; 0.4 is the slow motion SPEC §5.2 asks for. The frame count is unaffected — speed changes how much footage is spent, not how long the shot runs. |
 | `motion` | obj | `{preset, rate, anchor, focus}`; presets: `static, zoom_in, zoom_out, pan_lr, pan_rl, pan_ud, pan_du, square_in, fit`. `square_in` opens as a square inset and pushes in to full-bleed; `fit` shows the media whole at full output width, letterboxed — no crop, so a landscape source is reduced rather than enlarged. Both write `dst_h`; `square_in`'s grows, `fit`'s is constant. Neither uses `rate`. |

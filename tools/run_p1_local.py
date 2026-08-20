@@ -21,6 +21,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
+from memoacts_core.project import MEDIA_DIRS  # noqa: E402
+
 
 def build_chunk_workflow(image_name: str, csvs: dict[str, str], text: str,
                          prefix: str, fps: int) -> dict:
@@ -127,7 +129,7 @@ def main() -> int:
 
     # stage images into ComfyUI input
     for s in doc["shots"]:
-        src = args.project / "images" / s["image"]
+        src = args.project / MEDIA_DIRS[0] / s["image"]
         shutil.copy2(src, args.comfy_root / "input" / s["image"])
 
     seg_dir = args.comfy_root / "output" / run_tag

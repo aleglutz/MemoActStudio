@@ -53,10 +53,33 @@ Not P1: the custom node pack, six effect families, video fragments, per-shot GUI
 | `HARDENING.md` | Deferred portability items (much reduced — students are on Cloud, not local) |
 | `README.md` | The CLI path, cold start to rendered reel. Start here to *run* something |
 | `HANDOFF.md` | Where the last session stopped and what the next one does first. Rewritten, not appended to; superseded versions go to `archive/handoffs/` |
-| `docs/` | Working documents: `PLAN.md` (current task list), `P1_GRAPH.md` + `PARTICIPANT_GRAPH_RECIPE.md` (August intensive), `WORKSHOP_MACHINE_SETUP.md` (September), `SHOTS_SCHEMA.md`, `THREEBAND_TOOL.md`, `UPSCALE.md`, `EDITING.md`, `CONTINUE_ON_MAC.md` + `CONTINUE_ON_PC.md` (moving the work between the two machines) |
+| `docs/` | Working documents: `PLAN.md` (current task list), `P1_GRAPH.md` + `PARTICIPANT_GRAPH_RECIPE.md` (August intensive), `WORKSHOP_MACHINE_SETUP.md` (September), `SHOTS_SCHEMA.md`, `THREEBAND_TOOL.md`, `UPSCALE.md`, `EDITING.md` |
 | `archive/` | Superseded documents, kept for their reasoning. Not authoritative, not maintained — see `archive/README.md` |
 | `projects/legends_of_surrender/` | **The live project** — English reel "Signed After Midnight" for Museum Berlin-Karlshorst. Media is unversioned; `REBUILD.md` regenerates it |
-| `projects/demo_en/` | Working fixture (4 shots, 13.8 s) — pipeline mechanics only. Its stills are unversioned and are **not** currently on disk |
+| `projects/demo_en/` | Working fixture (4 shots, 13.8 s) — pipeline mechanics only. Its stills are unversioned but are on disk, in `sources/images/` |
+
+## Project layout
+
+Every project is four folders and three files, and the boundary is drawn by
+*what the edit can point at*, not by who made the file:
+
+```
+projects/<name>/
+  script.md     the text — ground truth
+  shots.csv     the edit decision
+  REBUILD.md    how every generated file is remade
+  sources/      everything shots.csv may name: SOURCES.md, narration.wav,
+                images/ videos/ composites/ maps/ — a plate the tool drew and
+                a scan a person found are the same kind of thing to a shot
+  generated/    the compiler's own output, shots.json + report.txt. Deletable
+  out/          the finished reel
+  archive/      superseded, kept for its reasoning. Nothing is deleted from it
+```
+
+`memoacts_core.project.MEDIA_DIRS` is the only place that names the search
+order. Prose inside `sources/` and `archive/` stays in git; the media beside it
+does not — see `.gitignore`, which ignores their *contents* rather than the
+folders precisely so the `.md` files survive.
 
 ## Non-negotiables
 

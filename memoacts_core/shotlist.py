@@ -51,7 +51,7 @@ import re
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from .project import ScriptShot
+from .project import MEDIA_DIRS, ScriptShot
 
 #: Media that is a still. Anything else with a known video extension is footage.
 IMAGE_EXTS = {".jpg", ".jpeg", ".png", ".webp", ".tif", ".tiff", ".bmp"}
@@ -240,10 +240,12 @@ def apply_shot_list(shots: list[ScriptShot], edits: list[ShotEdit],
         target = resolved[idx]
         if edit.media:
             found = None
-            # composites/ holds stacked frames built outside the renderer (the
-            # two- and three-band device). To a shot they are ordinary stills,
-            # so they resolve the same way as anything in images/.
-            for folder in ("images", "composites", "maps", "video"):
+            # composites/ holds stacked frames and page moves built outside
+            # the renderer. To a shot they are ordinary stills, so they resolve
+            # the same way as anything in images/ — one search order, named
+            # once in project.MEDIA_DIRS rather than repeated here, which is
+            # how this list came to disagree with that one.
+            for folder in MEDIA_DIRS:
                 cand = project / folder / edit.media
                 if cand.exists():
                     found = cand
@@ -251,7 +253,7 @@ def apply_shot_list(shots: list[ScriptShot], edits: list[ShotEdit],
             if found is None:
                 warnings.append(
                     f"shots.csv: shot {edit.key} names {edit.media!r}, "
-                    f"which is in none of images/, composites/, maps/, video/")
+                    f"which is in none of {', '.join(MEDIA_DIRS)}")
             else:
                 target.media = found
                 target.media_in = edit.media_in

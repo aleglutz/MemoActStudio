@@ -17,7 +17,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from memoacts_core.align import StableTsAligner, proportional_spans
 from memoacts_core.normalize import normalize_block
-from memoacts_core.project import (apply_shot_lead, list_images,
+from memoacts_core.project import (MEDIA_DIRS, apply_shot_lead, find_narration,
+                                   list_images,
                                    parse_script_shots, resolve_shot_images,
                                    write_outputs)
 from memoacts_core.schedule import (FOCUSABLE, Motion, compute, default_motion,
@@ -45,14 +46,12 @@ def main() -> int:
     args = ap.parse_args()
 
     proj = args.project
-    narration = proj / "narration.mp3"
-    if not narration.exists():
-        narration = next(iter(proj.glob("narration.*")), None)
-        if narration is None:
-            print("no narration.* in", proj); return 1
+    narration = find_narration(proj)
+    if narration is None:
+        print(f"no narration.* in {proj / 'sources'} or {proj}"); return 1
     script_shots = parse_script_shots(proj / "script.md")
     blocks = [s.text for s in script_shots]
-    images = list_images(proj / "images")
+    images = list_images(proj / MEDIA_DIRS[0])
     if not script_shots:
         print("script.md has no shots"); return 1
     if not images:
@@ -81,7 +80,7 @@ def main() -> int:
     named = sum(1 for s in script_shots if s.assets)
     silent = [s.label or f"shot {i}" for i, s in enumerate(script_shots, 1) if s.silent]
     print(f"{len(script_shots)} shots — {named} with a storyboard image, "
-          f"{len(script_shots) - named} cycled from images/")
+          f"{len(script_shots) - named} cycled from {MEDIA_DIRS[0]}/")
     if silent:
         # Silent shots get their duration from the pause between neighbours; if
         # the narrator did not pause, they collapse to a single frame.
@@ -144,7 +143,10 @@ def main() -> int:
         schedules.append(compute(src_w, src_h, nf, mot))
 
     out = args.out or proj / "generated"
-    path = write_outputs(out, lang=args.lang, fps=args.fps, narration=narration.name,
+    # Project-relative, like image_path. A bare filename stopped resolving the
+    # moment the recording moved into sources/.
+    rel = narration.relative_to(proj).as_posix()
+    path = write_outputs(out, lang=args.lang, fps=args.fps, narration=rel,
                          duration=duration, lead_ms=args.lead_ms, blocks=blocks,
                          norm_blocks=normed, digit_flags=flags, spans=spans,
                          images=imgs, motions=motions, schedules=schedules,

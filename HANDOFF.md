@@ -1,94 +1,62 @@
-# HANDOFF — session state as of 2026-08-19 (supersedes the 2026-07-28 version)
+# HANDOFF — session state as of 2026-08-20 (supersedes the 2026-08-19 version)
 
-Read `CLAUDE.md` and `SPEC.md` first, as always. This file is the delta: what a
-fortnight on a MacBook changed, where the reel stands, and what is still open.
-The July version described the close of P1 and the building of the node layer;
-none of that changed. What changed is that `legends_of_surrender` went from a
-first rough render to a reel with a real narration under it.
+Read `CLAUDE.md` and `SPEC.md` first, as always. This file is the delta. The
+August-19 version described a reel cut to a narration that did not yet include
+the cold open; since then the read was re-recorded in one pass, the cold open
+was cut to it, and the repository was reorganised around a single `sources/`
+folder. Nothing in P1's Cloud story changed.
 
 ## The short version
 
-The reel is **20 shots, 164.82 s, 4 945 frames**, cut to a recorded English
-narration, and every generated asset in it is rebuilt from the repository by
-`projects/legends_of_surrender/REBUILD.md`. The last commit is `e2290b1`.
+`legends_of_surrender` is **20 shots behind a 4.80 s cold open — 168.97 s,
+5 069 frames** — cut to a recorded English narration that carries the hook and
+the reel in one take. Every generated asset is rebuilt from the repository by
+`projects/legends_of_surrender/REBUILD.md`; nothing in `out/`, `generated/` or
+`sources/` travels between machines.
+
+To render it from a clean checkout, follow `README.md` §0–§6. The whole chain
+was run end to end after the reorganisation and the alignment report came back
+byte-identical, so the move changed no timing anywhere.
 
 ## What changed
 
-**The narration is real.** A recorded read replaced the Kokoro scratch track, so
-`confidence` in the report is meaningful for the first time (0.63–0.91, nothing
-`[ESTIMATED]`). Two things were learned the expensive way and are now guarded:
+**The narration is one take, split once.** `sources/voiceover.wav` (168.968 s)
+holds the hook and the reel. `sources/narration.wav` is its tail from 4.800 s,
+cut with `-c copy` — sample-exact on PCM, verified against an `atrim` of the
+same point. The cut lands inside the 1.31 s of silence between the last hook
+word and the first reel word. Everything downstream of alignment means the
+*reel's* narration by `narration.wav`; the finished file takes its audio from
+the whole take, encoded once, with `--narration-under 1`.
 
-- The read arrived as raw ADTS `.aac`, whose duration is *estimated from the
-  bitrate* — 168.12 s against the 164.82 s actually in the file. That figure
-  sets the last shot's end. It is converted to WAV, and `align.audio_duration`
-  now prefers the audio stream's own duration and refuses rather than guesses.
-- `torchaudio.info` was removed in torchaudio 2.9. The length is read with
-  ffprobe now, which also removes torchaudio from the repository entirely.
+**The cold open is cut to the read, not to a feel.** The take was measured on
+its own envelope in 50 ms buckets: speech at 1.20–2.60 and 2.95–4.45. The move
+was refitted so each line is on screen from just before its first syllable to
+just after its last. The 0.30 s the reader left between the sentences is the
+whole budget for the second whip, which is why it runs at 9 250 px/s.
 
-**The script's cues are measured, not guessed.** The re-recorded script arrived
-with its cue timecodes stripped and one block split in two, so every row of
-`shots.csv` matched nothing and every shot silently fell back to a cycled image.
-Alignment does not need `shots.csv`, so it ran first and the cues were written
-from the measured block starts. A duplicated cue is now a warning rather than a
-silent reroute — a dict comprehension had been keeping the *last* of a repeated
-key.
+**One caption height for the reel, and it is set by the 67.** `margin_v` 530,
+plate 0.68 — both in `subs.SubStyle`, which `render_reel` no longer overrides
+with a default of its own. The pencilled 67 is the only subject in the reel
+whose extent can be measured (ink to y = 1259 of 1920), so it decides.
 
-**The maps speak the reel's own language.** `render_map.py` gained `--marker`
-(a pinned town, since Natural Earth 1:50m has no Reims), `--scale` (a plate with
-room to push into), and `--palette`. The palette is sampled from the reel's own
-document scans rather than chosen: paper 239–249 / 221–240 / 198–215, warm by
-about +38 red over blue; ink from 69,49,43 to 132,101,89; signatures blue-black.
-All three plates run on `ink` — land from the page, water from the signatures.
+**The act turns page on the move.** `render_move` takes each sheet's scale from
+that sheet's own keys (`scale_at`), so a page change is a cut in scale and a
+turn needs no keys of its own. The sheet runs from the tape at the punch holes
+to de Lattre de Tassigny's signature in one gesture.
 
-**Stacked frames come from this repository now.** `render_bands.py` gained
-`--still` and `--mono`, so `S01-02_two-band` and `S18_three-cities_bw` no longer
-depend on Olm-DragCrop, whose licence forbids redistribution and which blocked
-imaging the September machines (`SURVEY.md §3`).
+**One `sources/` folder per project.** See `CLAUDE.md` § Project layout. The
+search order lives once, in `memoacts_core.project.MEDIA_DIRS`; it used to be
+written out twice and the copies had drifted apart.
 
-**1:26–1:38 is one gesture across two shots.** `tools/render_move.py` is new: a
-page is placed on the frame by keys of `t:cx,cy,s`, `--turn` folds a sheet over
-with a crease instead of swapping the image, and the two shots read consecutive
-parts of one clip through `shots.csv`'s `in` column. The choreography was
-measured off a reference reel rather than described from it — 28 segments in
-40 s, median 1.05 s, 374 px/s median while moving, no zoom anywhere, and 27 text
-lines filling the height.
+## What is open
 
-**The caption track was re-styled.** Captions moved to the middle of the frame
-(this is 9:16 and the subjects sit centre-frame), the plate went 0.55 → 0.80 for
-the black-and-white material, and a `credit` column was added: unlike a label it
-holds for the whole shot, because for the one shot that is neither ours nor
-public domain the on-screen attribution is a condition of use.
-
-**Two ffmpeg breakages, both environmental.** ffmpeg 8 stopped accepting quoted
-filter values, so the subtitle path is escaped instead — which is also the form
-Windows drive colons need. And Homebrew's core ffmpeg no longer ships libass at
-all; `README.md` points at the `homebrew-ffmpeg` tap. Neither affects this
-machine, whose ffmpeg has always carried libass.
-
-## Where it runs
-
-Windows uses ComfyUI's embedded Python, as `CLAUDE.md` says. The Mac used a
-`.venv` and is not part of the pipeline. Nothing in the reel path needs ComfyUI,
-torch or a GPU except alignment, which needs stable-ts.
-
-`docs/CONTINUE_ON_PC.md` records the move itself: what had to travel
-(`narration.wav` and two images — everything else is in git or rebuilt) and what
-to check before spending a render.
-
-## Open, in rough order of cost
-
-- **`docs/PLAN.md` is stale.** Dated 2026-08-10, it marks A1/A2 done and does
-  not know that C1, C2 and C3 landed. Item **B** — several shots per narration
-  block — is genuinely still open, and it is still the thing that would buy the
-  most pacing.
-- **Rights.** The Loznitsa frame at 1:58 is quoted with an on-screen credit but
-  **not cleared**. `New_York_May-8_1945.jpg` has no `SOURCES.md` entry at all,
-  which by that file's own rule means unchecked. The grant makes provenance a
-  deliverable.
-- **Upscaling the act scans** is planned on this machine. When it happens,
-  divide every `s` in the page-move command by the upscale factor; the framing
-  does not move. `UPSCALE.md` §"when not to upscale" applies to the signatures.
-- **September.** The workshop teaches `comfyui-memoacts`, the deadline is hard,
-  and the rented machines are still unspecified (`HARDENING.md`). The seminar-
-  scale Cloud concurrency test and the facilitator recovery procedure
-  (`GAPS.md`) remain August-intensive blockers, not P2 work.
+- **`docs/PLAN.md` is from 2026-08-10** and most of it is done — subtitles,
+  `shots.csv`, animated maps, moving bands all landed. It has not been re-read
+  against the current state. Do that before trusting it as a task list.
+- **The MemoActStudio interface has not been started.** The cleanup above was
+  the preparation for it.
+- **`New_York_May-8_1945.jpg` still has no `SOURCES.md` entry**, and its rights
+  are unchecked. Carried over from the previous handoff, still true.
+- **`projects/demo_en`** renders but has not been run since the reorganisation.
+  Its stills are in `sources/images/` now, and its narration is still at the
+  project root, which `find_narration` handles.

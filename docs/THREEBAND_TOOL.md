@@ -69,7 +69,7 @@ exercised; `batch_size` driven from the clip's frame count is the obvious first
 attempt.
 
 **5. Against the ffmpeg reference — geometry exact, content one row off.**
-Compared with `composites/S14_three-band.png`:
+Compared with `archive/S14_three-band.png` (the shot is retired):
 
 | | |
 |---|---|
@@ -84,7 +84,7 @@ crop by eye, which is the point of the tool.
 
 **Two-band geometry: the workflow is right and the reference is wrong.**
 `twoband_9x16_api.json` produces 957 + 6 + 957 as the task specifies.
-`composites/S01-02_two-band.png` is 956 + 6 + 956 **with a 2 px black bar at the
+`sources/composites/S01-02_two-band.png` is 956 + 6 + 956 **with a 2 px black bar at the
 bottom** — row 1917 still carries image, rows 1918–1919 are pure black. That is
 a rounding slip in `stitch.sh`. Do not treat that file as the reference for the
 two-band geometry.

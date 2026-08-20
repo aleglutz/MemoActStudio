@@ -15,7 +15,7 @@ from pathlib import Path
 
 from comfy_api.latest import io, ui
 
-from .memoacts_core.project import resolve_media
+from .memoacts_core.project import MEDIA_DIRS, resolve_media
 from .memoacts_core.schedule import PRESETS, Motion, compute
 from .nodes_types import Shots
 
@@ -86,7 +86,7 @@ class MemoActsSetImage(io.ComfyNode):
     @classmethod
     def execute(cls, shots, shot_id, image_filename):
         out = copy.deepcopy(shots)
-        target = Path(out["project_dir"]) / "images" / image_filename
+        target = Path(out["project_dir"]) / MEDIA_DIRS[0] / image_filename
         if not target.exists():
             raise ValueError(f"no such image: {target}")
         for s in out["doc"]["shots"]:

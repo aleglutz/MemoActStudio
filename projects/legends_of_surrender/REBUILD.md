@@ -1,7 +1,7 @@
 # Rebuilding this project's generated media
 
 Media is never versioned, and everything below is an *output*: it is rebuilt
-from `images/` plus `assets/geo/`, not copied between machines. A copied output
+from `sources/` plus `assets/geo/`, not copied between machines. A copied output
 can silently disagree with the inputs it claims to come from, which is why the
 commands live here rather than the files living in git.
 
@@ -10,15 +10,15 @@ Nothing here needs ComfyUI, torch or a GPU — only Pillow, numpy and ffmpeg.
 
 ## Map plates — palette `ink` (SOURCES: sampled from the act scans)
 
-    python tools/render_map.py --out projects/legends_of_surrender/maps \
+    python tools/render_map.py --out projects/legends_of_surrender/sources/maps \
         --name map_baltics --frames 360 --palette ink \
         --highlight Latvia Estonia Lithuania
 
-    python tools/render_map.py --out projects/legends_of_surrender/maps \
+    python tools/render_map.py --out projects/legends_of_surrender/sources/maps \
         --name map_poland_ukraine --frames 360 --palette ink \
         --highlight Poland Ukraine --already Latvia Estonia Lithuania
 
-    python tools/render_map.py --out projects/legends_of_surrender/maps \
+    python tools/render_map.py --out projects/legends_of_surrender/sources/maps \
         --name map_france_reims --highlight France --context 1.5 --scale 2 \
         --palette ink --marker "4.0317,49.2583,Reims"
 
@@ -174,8 +174,8 @@ type has **no clean edge**, carrying a halo and losing whole parts of a stroke
 where the ribbon skipped.
 
     python tools/render_page.py \
-        --page projects/legends_of_surrender/hook_page.md \
-        --out projects/legends_of_surrender/composites/hook_page.png \
+        --page projects/legends_of_surrender/sources/hook_page.md \
+        --out projects/legends_of_surrender/sources/composites/hook_page.png \
         --anchor "M E M O A C T S" --anchor "8, 9" --anchor pencil
 
 It prints the three `render_move.py` keys below rather than leaving them to be
@@ -259,7 +259,7 @@ narration by `narration.wav`, and a file that opens with two lines the reel does
 not contain would push every cue in it out by the length of the hook. So the
 take is cut once, at the length of the hook clip:
 
-    ffmpeg -ss 4.8 -i voiceover.wav -c copy narration.wav
+    ffmpeg -ss 4.8 -i sources/voiceover.wav -c copy sources/narration.wav
 
 `-c copy` on PCM is a sample-exact cut, not a re-encode — same MD5 as
 `-af atrim=start=4.8`, checked both ways. 4.800 s falls inside the 1.31 s of
@@ -274,11 +274,11 @@ once.
 ## The whole reel — 20 shots behind the hook, 168.97 s
 
     python tools/assemble_reel.py \
-        --clip projects/legends_of_surrender/composites/S00_hook.mp4 \
+        --clip projects/legends_of_surrender/sources/composites/S00_hook.mp4 \
         --clip projects/legends_of_surrender/out/reel.mp4 \
-        --narration projects/legends_of_surrender/voiceover.wav \
+        --narration projects/legends_of_surrender/sources/voiceover.wav \
         --narration-under 1 \
-        --subs projects/legends_of_surrender/composites/S00_hook.srt \
+        --subs projects/legends_of_surrender/sources/composites/S00_hook.srt \
         --subs projects/legends_of_surrender/out/reel.srt \
         --out projects/legends_of_surrender/out/reel_with_hook.mp4
 

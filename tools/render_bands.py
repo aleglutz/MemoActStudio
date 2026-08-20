@@ -41,7 +41,7 @@ from PIL import Image
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from memoacts_core.project import MEDIA_DIRS  # noqa: E402
+from memoacts_core.project import COMPOSITES, MEDIA_DIRS  # noqa: E402
 from memoacts_core.render import RESAMPLE, encode, load_source  # noqa: E402
 from memoacts_core.schedule import Motion, PRESETS, compute  # noqa: E402
 
@@ -147,7 +147,7 @@ def main() -> int:
         # band at a time — and so a colour band added later cannot be missed.
         return frame.convert("L").convert("RGB") if args.mono else frame
 
-    dest_dir = args.project / "composites"
+    dest_dir = args.project / COMPOSITES
     dest_dir.mkdir(parents=True, exist_ok=True)
 
     if args.still:

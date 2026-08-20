@@ -4,7 +4,7 @@
         [--out <path.mp4>] [--no-subs] [--crf 19]
         [--on-upscale warn|error|allow] [--shots <shots.json>]
 
-Reads  <project>/generated/shots.json, <project>/images/, <project>/narration.*
+Reads  <project>/generated/shots.json and <project>/sources/
 Writes <project>/out/reel.mp4 plus the .ass/.srt subtitle tracks beside it.
 
 This is the whole pipeline downstream of alignment, in one pass: crop rects ->
@@ -30,7 +30,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from PIL import Image  # noqa: E402
 
 from memoacts_core import subs  # noqa: E402
-from memoacts_core.project import resolve_media  # noqa: E402
+from memoacts_core.project import find_narration, resolve_media  # noqa: E402
 from memoacts_core.effects import PRESETS, preset  # noqa: E402
 from memoacts_core.render import ShotRender, render_reel  # noqa: E402
 from memoacts_core.schedule import Motion, compute  # noqa: E402
@@ -80,7 +80,7 @@ def main() -> int:
 
     narration = proj / doc.get("narration", "")
     if not narration.exists():
-        narration = next(iter(proj.glob("narration.*")), None)
+        narration = find_narration(proj)
         if narration is None:
             print(f"no narration.* in {proj}")
             return 1

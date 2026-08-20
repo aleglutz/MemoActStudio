@@ -4,30 +4,31 @@ __pycache__/
 # Project media is never versioned — a single archival video is larger than the
 # entire codebase. Scripts and generated tables stay in git; the assets they
 # point at live on disk and travel by other means.
-projects/*/images/
-projects/*/video/
-projects/*/sources/
-projects/*/composites/
+#
+# Everything a shot can point at lives in <project>/sources/ — images, videos,
+# composites, map plates — and so does the prose that says where it came from.
+# The rules therefore ignore the *contents* of sources/ rather than the folder:
+# a rule on the folder itself would put SOURCES.md and hook_page.md beyond the
+# reach of any negation, and those are source in the sense that matters.
+projects/*/sources/**
+!projects/*/sources/**/
+!projects/*/sources/**/*.md
+
+# Superseded takes and the Audacity project they came out of. The rules above
+# stop at sources/, and a 60 MB .aup3 sat in archive/ one `git add .` from the
+# history. Prose in archive/ stays versioned — that is what the folder is for.
+projects/*/archive/**
+!projects/*/archive/**/
+!projects/*/archive/**/*.md
+!projects/*/archive/**/*.json
+
+# The recording, the compiler's own output, and the finished reel.
 projects/*/narration.*
 projects/*/voiceover.*
-# Superseded takes and the Audacity project they came out of. The rules
-# above stop at the project root, and a 60 MB .aup3 sat in archive/ one
-# `git add .` from the history. Prose in archive/ stays versioned — that
-# is what the folder is for.
-projects/*/archive/*.wav
-projects/*/archive/*.mp3
-projects/*/archive/*.mp4
-projects/*/archive/*.aup3
 projects/*/out/
 projects/*/generated/
-projects/*/maps/
 projects/*/cloud_graphs/
 projects/*/reel_p1.mp4
-
-# Reference material gathered per project. Not versioned for the same reason as
-# the media: it is large, it is not source, and some of it arrives with names
-# longer than Windows will index.
-projects/*/refs/
 
 # The FreeCut workspace lives outside the repo (docs/EDITING.md). These rules
 # are a guard in case the app is ever re-pointed at a project folder again.
