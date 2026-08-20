@@ -57,7 +57,8 @@ from PIL import Image
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from memoacts_core.project import MEDIA_DIRS  # noqa: E402
+from memoacts_core import subs  # noqa: E402
+from memoacts_core.project import MEDIA_DIRS, parse_hook  # noqa: E402
 from memoacts_core.render import RESAMPLE, encode, load_source  # noqa: E402
 
 OUT_W, OUT_H = 1080, 1920
@@ -180,6 +181,47 @@ def fold(a: Image.Image, b: Image.Image, u: float) -> Image.Image:
     return Image.fromarray(np.clip(out, 0, 255).astype(np.uint8))
 
 
+def holds(keys) -> list[tuple[float, float]]:
+    """Where the camera stops: two consecutive keys that ask for the same frame.
+
+    The move already carries the timing, so a caption written for a beat does
+    not need one of its own — and cannot drift from one. Re-time the move and
+    the line follows it.
+    """
+    return [(a[0], b[0]) for a, b in zip(keys, keys[1:])
+            if (a[1], a[2], a[3]) == (b[1], b[2], b[3]) and b[0] > a[0]]
+
+
+def captions(args, keys) -> Path:
+    """Write the clip's .ass from the script's HOOK block. -> the file.
+
+    The lines fill the holds from the *last* one backwards. The last hold is
+    what a cold open is built to arrive at, and a clip whose opening hold is a
+    title card should not have a line over it.
+    """
+    # The reel captions across the middle of the frame, because its subjects sit
+    # centre-frame and a caption at the foot makes the eye travel. A move is the
+    # opposite case: the camera *aims* at the beat, so the middle is occupied by
+    # construction and a centred caption lands on the one thing being shown.
+    style = subs.SubStyle(alignment=2, margin_v=420)
+    lines = parse_hook(args.caption_from)
+    if not lines:
+        raise SystemExit(f"{args.caption_from}: no HOOK block to caption with")
+    stops = holds(keys)
+    if len(stops) < len(lines):
+        raise SystemExit(
+            f"{args.name}: the HOOK block has {len(lines)} lines and the move "
+            f"has {len(stops)} holds to put them on")
+    duration = args.frames / args.fps
+    cues = [subs.Cue(t0 * duration, t1 * duration, text)
+            for (t0, t1), text in zip(stops[len(stops) - len(lines):], lines)]
+    for c in cues:
+        print(f"  caption {c.t_start:5.2f}-{c.t_end:5.2f} s  {c.text!r}")
+    ass, _ = subs.write_tracks(args.project / "composites", cues,
+                               stem=args.name, style=style)
+    return ass
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--project", type=Path, required=True)
@@ -207,6 +249,10 @@ def main() -> int:
                     help="ceiling on the samples accumulated per frame; the "
                          "number actually taken follows how far the sheet "
                          "moves during the exposure")
+    ap.add_argument("--caption-from", type=Path,
+                    help="a script.md whose HOOK block supplies the captions; "
+                         "one line per hold, filled from the last hold back, "
+                         "because the last hold is what the clip is about")
     ap.add_argument("--on-upscale", default="warn",
                     choices=["warn", "error", "allow"],
                     help="a path may magnify a page past its own pixels; this "
@@ -349,7 +395,8 @@ def main() -> int:
             yield Image.fromarray(np.clip(acc / n, 0, 255).astype(np.uint8))
     dest = args.project / "composites" / f"{args.name}.mp4"
     dest.parent.mkdir(parents=True, exist_ok=True)
-    encode(frames(), dest, args.fps, crf=args.crf,
+    ass = captions(args, keys) if args.caption_from else None
+    encode(frames(), dest, args.fps, crf=args.crf, ass=ass,
            out_w=OUT_W, out_h=OUT_H, max_mbps=None)
     print(f"wrote {dest}  {args.frames} frames "
           f"({args.frames / args.fps:.2f} s)")

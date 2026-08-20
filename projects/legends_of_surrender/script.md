@@ -1,5 +1,12 @@
 # Signed After Midnight
 
+> **HOOK** — S00, the cold open. It is not in the narration recording, so it
+> is not a shot: the cues below are measured from that recording and a block
+> without audio would shift every one of them. It is spoken over the two holds
+> of `S00_hook.mp4`, the pencilled 67 and the enumeration.
+> "Six-seven is dead."
+> "Let's talk eight-nine."
+
 **0:00** — The 8th of May. And the 9th. Both mark the end of the war in Europe.
 
 **0:06** — One long day here, in the former Wehrmacht engineers' school in Berlin-Karlshorst, opened a fork that still runs across Europe.

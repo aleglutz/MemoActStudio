@@ -23,6 +23,10 @@ _ASSET_REF_RE = re.compile(r"\[\[([^\]]+)\]\]")
 _CUE_RE = re.compile(
     r"^\s*\*{0,2}(?:(\d{1,2}):)?(\d{1,2}):(\d{2})\*{0,2}\s*(?:[—–-]+\s*)?")
 
+#: A blockquote line, and screen text quoted inside one -- see `parse_hook`.
+_QUOTE_RE = re.compile(r"^\s*>\s?(.*)$")
+_QUOTED_RE = re.compile(r'^["“](.+)["”]$')
+
 #: Markdown emphasis. It is markup for the eye, never speech, and would
 #: otherwise be aligned and burnt into the subtitle as literal asterisks.
 _EMPHASIS_RE = re.compile(r"\*{1,3}(?=\S)(.+?)(?<=\S)\*{1,3}", re.S)
@@ -146,6 +150,40 @@ def parse_script_shots(path: Path) -> list[ScriptShot]:
 def parse_script(path: Path) -> list[str]:
     """Narration text per shot (SPEC §4). See `parse_script_shots` for layouts."""
     return [s.text for s in parse_script_shots(path)]
+
+
+def parse_hook(path: Path) -> list[str]:
+    """The cold open's lines, in order, from the script's HOOK block.
+
+    The hook cannot be a shot. The reel is cut to a recorded narration and every
+    cue in it is measured from that recording; a block the aligner has no audio
+    for would shift all twenty of them. It belongs in the script all the same,
+    because screen text is verbatim script text and never a string typed into a
+    command line (SPEC, non-negotiable).
+
+    So it is written as a blockquote, which `parse_script_shots` drops, and the
+    lines that reach the screen are quoted inside it. The unquoted lines are the
+    note saying why the block is there:
+
+        > **HOOK** — S00, the cold open. Not in the narration recording.
+        > "Six-seven is dead."
+        > "Let's talk eight-nine."
+    """
+    lines: list[str] = []
+    inside = False
+    for raw in path.read_text(encoding="utf-8").splitlines():
+        m = _QUOTE_RE.match(raw)
+        if m is None:
+            inside = False                      # the block ended
+            continue
+        body = m.group(1).strip()
+        if "**HOOK**" in body.upper() or body.upper().startswith("HOOK"):
+            inside = True
+            continue
+        quoted = _QUOTED_RE.match(body)
+        if inside and quoted:
+            lines.append(_clean(quoted.group(1)))
+    return lines
 
 
 def list_images(images_dir: Path) -> list[Path]:
