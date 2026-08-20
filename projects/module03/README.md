@@ -101,9 +101,11 @@ So two of the four are genuinely hands-on, and they are the first two. Levels 3
 and 4 are screened, with a single frame handed over so the students still touch
 the thing they are being shown.
 
-`CLOUD.md` is the survey behind that table: which nodes and models Cloud
-actually carries, what a run costs, and one of our own assumptions that the
-billing record contradicts.
+`HANDOUT.md` is what the participants get: the two exercises node by node, the
+two mistakes they will actually make, and what each one proves. `CLOUD.md` is
+the survey behind the table above — which nodes and models Cloud actually
+carries, what a run costs, and one of our own assumptions that the billing
+record contradicts.
 
 ## What to put on screen
 

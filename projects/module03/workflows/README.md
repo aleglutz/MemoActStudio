@@ -24,7 +24,10 @@ place to say why the rule exists before three later levels start inventing.
 one string over one frame range, so three quotes are three runs concatenated,
 and moving a caption by half a second means editing `skip_first_frames` and
 re-rendering that range. `background_color` draws no real plate, so a caption
-over a bright frame has only its shadow to survive on. This is `GAPS.md` #3 from
+over a bright frame has only its shadow to survive on — which on this footage
+never happens: the caption strip is measured at 14–65 of 255 across the whole
+cut, so the limitation is real and invisible here. That is worth saying out
+loud, because it is how a tool passes a test it should fail. This is `GAPS.md` #3 from
 the inside: it is the argument for `nodes_subs.py` and libass, not a detail.
 
 The production path renders the same three quotes properly — `../quotes.ass`

@@ -64,16 +64,35 @@ curl -L -o <ComfyUI>/models/checkpoints/stable-audio-open-1.0.safetensors   http
 curl -L -H "Authorization: Bearer $HF_TOKEN"   -o <ComfyUI>/models/text_encoders/t5_base.safetensors   https://huggingface.co/stabilityai/stable-audio-open-1.0/resolve/main/text_encoder/model.safetensors
 ```
 
-Four layers, through `workflows/L2_sfx_api.json` with these seeds and lengths —
-the two marked *kept* replaced first takes that were rejected on their
-spectrograms (a tonal hum where shutter clacks belonged, and a flat-hiss bed):
+Four layers, through `workflows/L2_sfx_api.json`. The graph carries only the
+bed's first prompt; the other three, and the two rewrites, were typed at run
+time and are recorded here — without them this section regenerates nothing.
 
-| layer | seconds | seed | |
+| layer | seconds | seed | prompt |
 |---|---|---|---|
-| bed | 32 | 550919 | kept, second take |
-| paper | 14 | 220805 | |
-| cameras | 16 | 880431 | kept, third seed |
-| steps | 12 | 440108 | |
+| bed | 32 | 550919 | Ambience of a crowded hall: many men murmuring quietly at a distance, low indistinct voices, occasional cough and chair creak, reverberant, no music. |
+| paper | 14 | 220805 | A single sheet of stiff dry paper lifted from a wooden table, held, turned over, and set down again. Close, dry, detailed, in a quiet room. |
+| cameras | 16 | 880431 | Sharp mechanical camera shutter clicks and clacks, film advance ratchet winding, a flashbulb pop, spaced out with silence between them, recorded in a large reverberant room. Dry transient clicks, no continuous tone. |
+| steps | 12 | 440108 | A heavy wooden chair scraping back on a parquet floor, then several slow leather-soled footsteps on parquet in a large echoing room. Close and dry. |
+
+Negative prompt for all four:
+`music, melody, singing, instruments, rhythm, beat, speech, dialogue, narration`.
+
+**Bed and cameras are second attempts, and the prompt changed, not only the
+seed.** The first bed (seed 114509, the graph's own text) was flat broadband
+hiss; the first cameras (seed 330512) was a tonal hum where shutter clacks
+belonged. Both rewrites work by naming what the first version missed — the bed
+gained the men and the coughs, the cameras gained the silence between the
+clicks. The rejects are still on disk and are worth playing beside the keepers.
+
+> **Which file is which.** The rejected first takes are
+> `<ComfyUI>/output/module03/L2/bed_00001.flac` and `.../cameras_00001.flac`;
+> the takes that were mixed are `.../L2alt/bed_s1_00001.flac` and
+> `.../L2alt/cameras_s2_00001.flac`. `paper` and `steps` are the L2 ones. The
+> mix command below names them `bed.flac`, `cameras.flac` and so on — copy or
+> rename the four keepers to those names first. Every generated file carries its
+> own graph in its metadata, so `ffprobe -show_entries format_tags` on any of
+> them recovers prompt and seed.
 
 Then the mix — placement and level are editorial, not generated:
 
