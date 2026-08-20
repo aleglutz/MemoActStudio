@@ -41,12 +41,19 @@ cannot serve both beats in one size, and the camera cannot zoom, because the
 model is a sheet on a bed and paper does not swell. So the enumeration is set
 in display type, as an enumeration on a form would be.
 
-**The sheet is not flat.** A tone with grain sprinkled over it reads as a
-texture swatch; what reads as paper is a surface with a slope -- the cockle of a
-sheet that has been damp, the two creases of a sheet folded to go in a file, the
-fibre, and, under every struck character, the pit the key drove into it. So the
-light is applied last of all, in `raked`, once the type and the pencil are in
-the height field: the shadow inside a letter is the letter's own dent.
+**The sheet is not flat, and the type is not clean.** Both were fitted to the
+act itself rather than imagined -- `S12_ru_page_move.mp4` is the real document
+at this same magnification, and it settles two things an invented paper always
+gets wrong. Archive paper photographs *smooth*: no fibre, no stipple, only the
+swell of the sheet and the ripple inside it, lying in horizontal bands, all of
+it within about two levels of grey. And a struck letter has no clean edge: it
+carries a halo, its weight wanders by the region rather than by the letter, and
+the ribbon skips, so parts of a stroke are simply missing.
+
+The light in `raked` is applied last and lights the sheet's own shape. Nothing
+written on the page is in the height field: a key does dent paper, but the dent
+does not survive being photographed, and drawn in anyway it reads as an emboss
+filter -- which is exactly how an earlier pass of this tool looked.
 
 The pencil is a third layer for the same reason it is on the real act: the
 number in the corner was not typed with the document, it was written on it
@@ -98,12 +105,27 @@ def metrics(path: Path) -> tuple[float, float]:
     cap = face.getbbox("H")
     return 1000 / advance, (cap[3] - cap[1]) / 1000
 
-#: Sampled from the margins of `GIoS_Wehrmacht_Signed_Ru.jpg` -- 246/238/213
-#: with a grain of about seven levels. The same paper the map plates were drawn
-#: from (`render_map.PALETTES["paper"]`), taken from the scan rather than
-#: chosen, so that a page and a plate in one reel are the same sheet.
+#: Sampled from the margins of `GIoS_Wehrmacht_Signed_Ru.jpg` -- 243-247 red,
+#: 234-238 green, 208-211 blue, warm by 35 levels of red over blue. The same
+#: paper the map plates were drawn from (`render_map.PALETTES["paper"]`), taken
+#: from the scan rather than chosen, so that a page and a plate in one reel are
+#: the same sheet.
 PAPER = (246, 237, 212)
-GRAIN = 7.0
+
+#: Measured off `S12_ru_page_move.mp4`, which is the real act at this same
+#: magnification, on three blank patches of margin. Split by feature size, the
+#: scan varies by (levels of grey, standard deviation):
+#:
+#:     coarser than 56 px   2.3 - 2.6      the swell of the sheet
+#:     12 to 56 px          1.8 - 2.4      the ripple inside it
+#:     finer than 12 px     2.1 - 3.1      scanner grain, and that is all
+#:
+#: Which is the whole lesson: archive paper photographs *smooth*. It has no
+#: visible fibre and no stipple — an earlier pass gave this sheet a grain of 9
+#: and it read as plaster. The mid band also runs 1.2 to 1.5 times steeper down
+#: the frame than across it, so the ripple lies in horizontal bands.
+GRAIN = 5.5
+
 
 #: Typescript, from the same scan: a fresh strike, and a worn ribbon.
 INK_FRESH = (58, 44, 38)
@@ -115,20 +137,37 @@ INK_WORN = (124, 98, 86)
 PENCIL = (60, 54, 106)
 PENCIL_WET = (116, 100, 156)
 
-#: Depth, in arbitrary units -- nothing reads the height field except the raking
-#: light below, which reads only its slope, so what matters is the ratio between
-#: these four. A sheet at this magnification is not a flat tone with noise on
-#: it: it waves, it was folded, it has fibre, and every character struck into it
-#: is a dent.
-COCKLE = 0.55        # the slow wave paper takes once it has been damp
-FOLD = 0.42          # the two creases of a sheet folded to go in a file
-CREASE = 0.017       # each crease as a fraction of the sheet's height
-STRAND = 0.15        # fibre, at the scale a scanner resolves it
-DEBOSS = 2.60        # the pit a key drives into the page
-GROOVE = 0.55        # the furrow a pencil ploughs, relative to a key
+#: The sheet's own shape, in arbitrary depth units and in *pixels* -- the sizes
+#: are absolute, not fractions of the sheet, because they were read off a frame
+#: of the act and the camera holds this page at the same 1:1. Both waves are one
+#: pass of value noise; the amplitudes were fitted to the three figures above
+#: rather than chosen, and a run that comes out at (2.1, 1.8, 2.1) is the sheet
+#: agreeing with the scan.
+SWELL = 1.50         # the slow rise and fall of a sheet that has been damp
+SWELL_PX = 220
+RIPPLE = 0.62        # the shorter wave inside a swell
+RIPPLE_PX = 34
+BAND = 1.6           # how far both are drawn out across the sheet
+CREASES = 22         # micro-creases over a 9000x6360 sheet
+CREASE_Z = 0.70      # and how far each lifts the paper
+STAIN = 0.017        # ageing at frame scale, as a fraction of the paper's tone
+STAIN_PX = 190
 LIGHT = 3            # px the light is sampled across -- a low, raking sun
 GLARE = 0.62         # how hard it rakes
 FOXING = 34          # rust specks over a 9000x6360 sheet; 1945 paper has them
+
+#: The type is not printed, it is *struck through a ribbon onto a soft surface*
+#: and then photographed. Nothing about that edge is crisp: in the scan a letter
+#: carries a halo a couple of pixels wide, and its weight wanders — inside one
+#: word some letters are near black and others are grey and broken, in patches
+#: rather than letter by letter. These are the range of that wander.
+#: The halo and the skips are in *pixels*, not in fractions of the type size:
+#: ink spreading into paper is a distance, and so is a gap in a ribbon. Scaled
+#: with the type instead, a display numeral comes out fogged and the same
+#: numeral in body type comes out clean, which is backwards.
+WEAR_INK = (0.60, 1.05)     # strike weight across the sheet, worn to fresh
+WEAR_BLUR = (3.2, 1.2)      # and the halo it spreads into, in px
+SKIP_PX = 10                # how coarsely the ribbon skips
 
 DIRECTIVE = re.compile(r"^\s*<!--\s*(.*?)\s*-->\s*$")
 
@@ -137,9 +176,15 @@ DIRECTIVE = re.compile(r"^\s*<!--\s*(.*?)\s*-->\s*$")
 # paper
 
 
-def _noise(w: int, h: int, cell: float, rng: np.random.Generator) -> np.ndarray:
-    """Value noise at a given feature size, in 0..1."""
-    sw, sh = max(2, int(w / cell)), max(2, int(h / cell))
+def _noise(w: int, h: int, cell: float, rng: np.random.Generator,
+           band: float = 1.0) -> np.ndarray:
+    """Value noise at a given feature size, in 0..1.
+
+    `band` draws the features out across the sheet: at 3.4 a patch is three
+    times wider than it is tall, which is how the ripple lies on the act.
+    """
+    sw = max(2, int(w / (cell * band)))
+    sh = max(2, int(h / cell))
     small = rng.random((sh, sw), dtype=np.float32)
     im = Image.fromarray((small * 255).astype(np.uint8)).resize(
         (w, h), Image.Resampling.BICUBIC)
@@ -155,16 +200,23 @@ def paper(w: int, h: int,
     one pixel would be finer than anything the reel has ever shown and would
     read as digital rather than as paper. It is made coarse and upsampled.
 
-    Nothing here is lit. The light comes last, in `raked`, because by then the
-    type is in the height field too and paper that has been struck is the whole
-    point of the surface.
+    Nothing here is lit. The light comes last, in `raked`, so that what the eye
+    reads as paper is the *sheet's own* shape -- and only that. Type is not in
+    the height field: a typewriter does dent the page, but a dent that small
+    disappears in a scan of it, and drawn in it reads as an emboss effect.
     """
     base = np.array(PAPER, dtype=np.float32)
-    fibre = _noise(w, h, 2.6, rng)                       # the grain itself
-    blotch = _noise(w, h, w / 12, rng)                   # ageing, in patches
-    streak = _noise(w, h, w / 3, rng)
+    fibre = _noise(w, h, 2.6, rng)                       # scanner grain
+    blotch = _noise(w, h, w / 12, rng, BAND)             # ageing, in patches
+    streak = _noise(w, h, w / 3, rng, BAND)
+    # And ageing at the scale of a frame rather than of the sheet. This is what
+    # carries the coarse band of the measurement, not the shape of the paper:
+    # a raking light is a difference, so by construction it says almost nothing
+    # about a wave 200 px across. What varies there is the *stain*.
+    stain = _noise(w, h, STAIN_PX, rng, BAND)
 
     tone = 1.0 - 0.045 * (blotch - 0.5) * 2 - 0.02 * (streak - 0.5) * 2
+    tone -= STAIN * (stain - 0.5) * 2
     ys, xs = np.mgrid[0:h, 0:w].astype(np.float32)
     edge = np.minimum(np.minimum(xs, w - 1 - xs) / (w * 0.14),
                       np.minimum(ys, h - 1 - ys) / (h * 0.14))
@@ -174,28 +226,43 @@ def paper(w: int, h: int,
     sheet += (fibre[:, :, None] - 0.5) * (2 * GRAIN)
     _foxing(sheet, rng)
 
-    # Depth. The cockle is two octaves because a sheet waves broadly and then
-    # ripples inside the wave; the fibre is the same field the ink drinks into,
-    # so a strand that thins a strike also catches the light.
-    z = COCKLE * (_noise(w, h, w / 7, rng) - 0.5)
-    z += 0.4 * COCKLE * (_noise(w, h, w / 19, rng) - 0.5)
-    z += STRAND * (fibre - 0.5)
-    z += 0.5 * STRAND * (_noise(w, h, 9.0, rng) - 0.5)   # and the coarser strands
-    z += _crease(ys, h, h / 3, 1.0) - _crease(ys, h, 2 * h / 3, 0.75)
+    # Depth: a swell, the ripple inside it, and the small creases a sheet picks
+    # up from being handled. Both waves are drawn out sideways, because on the
+    # act they run in horizontal bands -- the sheet was rolled or stacked, not
+    # crumpled. Nothing here is finer than a few dozen pixels; paper that has
+    # been photographed has no texture at grain scale, only shape.
+    z = SWELL * (_noise(w, h, SWELL_PX, rng, BAND) - 0.5)
+    # Two ripples rather than one: a single pass of value noise upsampled from
+    # its grid keeps the grid, and a quilted lattice is not what paper does.
+    z += 0.62 * RIPPLE * (_noise(w, h, RIPPLE_PX, rng, BAND) - 0.5)
+    z += 0.48 * RIPPLE * (_noise(w, h, RIPPLE_PX * 1.6, rng, BAND * 0.9) - 0.5)
+    z += _creases(w, h, rng)
     return np.clip(sheet, 0, 255), fibre, z
 
 
-def _crease(ys: np.ndarray, h: int, at: float, weight: float) -> np.ndarray:
-    """One fold of a sheet folded into thirds, as depth.
+def _creases(w: int, h: int, rng: np.random.Generator) -> np.ndarray:
+    """The short creases a handled sheet carries, as depth.
 
-    Not a line. A crease is a band the width of a fingernail with the paper
-    lifting away on both sides of it, and the lift is most of what the eye sees
-    -- a bare ridge reads as a scanner seam, which is the one thing this must
-    not look like. Hence the trough either side: the derivative of a bell, which
-    is what bending a sheet about a line actually does to it.
+    Not the fold of a sheet put in an envelope -- the act has none of those. It
+    has a couple of dozen short lifts, most of them running with the bands and
+    none of them crossing the page. Drawn small and enlarged, so a crease is
+    soft at the scale the camera sees it: paper creases into a lifted ridge, not
+    into a scratch.
     """
-    d = (ys - at) / (h * CREASE)
-    return FOLD * weight * (1.0 - 2.0 * d * d) * np.exp(-d * d)
+    sw, sh = max(8, w // 4), max(8, h // 4)
+    small = Image.new("L", (sw, sh), 128)
+    draw = ImageDraw.Draw(small)
+    for _ in range(max(3, round(CREASES * w * h / (9000 * 6360)))):
+        x, y = rng.integers(0, sw), rng.integers(0, sh)
+        length = float(rng.uniform(sw / 22, sw / 5))
+        # Mostly along the bands, and never far off them.
+        angle = math.radians(float(rng.normal(0.0, 14.0)) + (180 if rng.random() < 0.5 else 0))
+        lift = int(rng.integers(24, 62)) * (1 if rng.random() < 0.7 else -1)
+        draw.line([(x, y), (x + length * math.cos(angle), y + length * math.sin(angle))],
+                  fill=128 + lift, width=int(rng.integers(1, 4)))
+    small = small.filter(ImageFilter.GaussianBlur(2.2))
+    grown = small.resize((w, h), Image.Resampling.BICUBIC)
+    return CREASE_Z * (np.asarray(grown, dtype=np.float32) / 255.0 - 0.5) * 2
 
 
 def _foxing(sheet: np.ndarray, rng: np.random.Generator) -> None:
@@ -237,12 +304,30 @@ class Typist:
     eye reads as typed, and it costs one paste per character.
     """
 
-    def __init__(self, w: int, h: int, rng: random.Random, face: Path = FONT):
+    def __init__(self, w: int, h: int, rng: random.Random, face: Path = FONT,
+                 wear: np.ndarray | None = None):
         self.mask = Image.new("L", (w, h), 0)
+        self.size = (w, h)
         self.rng = rng
+        self.nrng = np.random.default_rng(rng.randrange(2 ** 32))
+        self.wear = wear
         self.face = face
         self.em_per_advance, self.cap_per_em = metrics(face)
         self._fonts: dict[int, ImageFont.FreeTypeFont] = {}
+
+    def worn(self, x: float, y: float) -> float:
+        """How tired the ribbon is over this part of the sheet, 0 to 1.
+
+        A ribbon does not wear letter by letter, it wears in passes: on the act
+        whole regions come out grey and soft while a neighbouring line is nearly
+        black. So the wander is sampled from a field, not rolled per glyph.
+        """
+        if self.wear is None:
+            return 1.0
+        h, w = self.wear.shape
+        i = min(max(int(y / self.size[1] * h), 0), h - 1)
+        j = min(max(int(x / self.size[0] * w), 0), w - 1)
+        return float(self.wear[i, j])
 
     def font(self, advance: float) -> ImageFont.FreeTypeFont:
         size = max(6, int(round(advance * self.em_per_advance)))
@@ -259,13 +344,21 @@ class Typist:
         for i, ch in enumerate(text):
             if ch == " ":
                 continue
+            worn = self.worn(x + i * advance, y)
             # A weak strike is a key hit softly, not a lighter typeface: same
-            # glyph, less ink. Roughly every fifth, which is what a hand does.
-            ink = 255 if self.rng.random() > 0.18 else self.rng.randint(120, 190)
+            # glyph, less ink. Roughly every sixth, which is what a hand does.
+            # Biased towards a full strike: on the act most letters are near
+            # black and a minority are grey, not the other way about.
+            weight = WEAR_INK[0] + (WEAR_INK[1] - WEAR_INK[0]) * worn ** 0.55
+            weight *= self.rng.uniform(0.86, 1.10)
+            if self.rng.random() < 0.13:
+                weight *= self.rng.uniform(0.55, 0.85)
+            ink = int(255 * min(weight, 1.0))
             glyph = Image.new("L", (tile, tile), 0)
             ImageDraw.Draw(glyph).text((tile // 3, tile // 3), ch, font=font, fill=ink)
             glyph = glyph.rotate(self.rng.uniform(-0.9, 0.9),
                                  Image.Resampling.BICUBIC, center=(tile / 2, tile / 2))
+            glyph = self.press(glyph, advance, worn)
             px = int(round(x + i * advance - tile // 3
                            + self.rng.uniform(-0.035, 0.035) * advance))
             py = int(round(y + wobble * (i / max(len(text) - 1, 1))
@@ -275,6 +368,32 @@ class Typist:
                                                        np.asarray(glyph))), (px, py))
         cap = self.cap_per_em * advance * self.em_per_advance
         return (int(x), int(y), int(x + len(text) * advance), int(y + cap))
+
+    def press(self, glyph: Image.Image, advance: float, worn: float) -> Image.Image:
+        """One character as the paper received it, and the scanner returned it.
+
+        Two things happen to a struck letter and neither leaves a clean edge.
+        The ribbon lays ink into a soft surface, which spreads it — a halo of a
+        couple of pixels at the scale the camera holds this sheet, wider where
+        the ribbon is tired. And the ribbon *skips*: on the act whole parts of a
+        stroke simply are not there. A vector outline gives neither, which is
+        why an unretouched glyph reads as set rather than as typed.
+        """
+        blur = WEAR_BLUR[0] + (WEAR_BLUR[1] - WEAR_BLUR[0]) * worn
+        glyph = glyph.filter(ImageFilter.GaussianBlur(blur * self.rng.uniform(0.8, 1.35)))
+        if self.rng.random() < 0.5 + 0.35 * (1 - worn):
+            # A gap in a stroke is the same size on a display numeral as in
+            # body type. Sized off the glyph instead, it turned the numerals
+            # into lace.
+            n = max(2, glyph.size[0] // SKIP_PX)
+            skip = Image.fromarray(
+                (self.nrng.random((n, n), dtype=np.float32) * 255).astype(np.uint8)
+            ).resize(glyph.size, Image.Resampling.BICUBIC)
+            thin = np.clip(0.55 + 0.85 * np.asarray(skip, np.float32) / 255.0, 0, 1)
+            glyph = Image.fromarray(
+                (np.asarray(glyph, np.float32) * thin).astype(np.uint8))
+        # The halo cost the strike some of its weight; a struck letter keeps it.
+        return glyph.point(lambda v: min(255, int(v * 1.18)))
 
 
 # --------------------------------------------------------------------------
@@ -449,7 +568,10 @@ def main() -> int:
     rng, nrng = random.Random(args.seed), np.random.default_rng(args.seed)
 
     sheet, fibre, z = paper(W, H, nrng)
-    typist = Typist(W, H, rng, face)
+    # Where the ribbon is tired. Coarse and drawn out sideways, like everything
+    # else on this sheet: a typist works across the page, so wear arrives in
+    # passes rather than in spots.
+    typist = Typist(W, H, rng, face, wear=_noise(96, 72, 7.0, nrng, BAND))
 
     y = float(my)
     placed: list[tuple[str, float, float, tuple[int, int, int, int]]] = []
@@ -465,16 +587,16 @@ def main() -> int:
     if y > H - my * 0.5:
         print(f"  WARNING the text runs {int(y - H)} px past the foot of the sheet")
 
-    # Ink: struck, then let into the paper. The blur is the fibre drinking it,
-    # and the fibre field itself thins a strike where the surface is rough.
-    ink = np.asarray(typist.mask.filter(ImageFilter.GaussianBlur(advance * 0.012)),
-                     dtype=np.float32) / 255.0
-    ink = np.clip(np.clip(ink * 1.18, 0, 1) * (0.78 + 0.34 * fibre), 0, 1)
-    worn = _noise(W, H, W / 6, nrng)[:, :, None] * 0.55
+    # Ink. Every glyph already carries its own halo and its own skips, laid on
+    # in `Typist.press`; what is left to do here is let the paper's own texture
+    # thin a strike where the surface took less of it, and pick the colour --
+    # a fresh strike is near black, a tired one browner.
+    ink = np.asarray(typist.mask, dtype=np.float32) / 255.0
+    ink = np.clip(ink * (0.88 + 0.24 * fibre), 0, 1)
+    worn = _noise(W, H, W / 6, nrng, BAND)[:, :, None] * 0.55
     colour = (np.array(INK_FRESH, dtype=np.float32)[None, None, :] * (1 - worn)
               + np.array(INK_WORN, dtype=np.float32)[None, None, :] * worn)
     out = sheet * (1 - ink[:, :, None]) + colour * ink[:, :, None]
-    z -= DEBOSS * ink                     # every character is a pit in the page
 
     pencil_box = None
     if cfg["pencil"]:
@@ -492,11 +614,11 @@ def main() -> int:
         for layer, rgb in ((halo, PENCIL_WET), (core, PENCIL)):
             a = layer[:, :, None]
             out = out * (1 - a) + np.array(rgb, dtype=np.float32)[None, None, :] * a
-        z -= GROOVE * DEBOSS * core        # the hand bore down; the paper gave
 
-    # The light, last of all. Until this line the sheet is a flat tone with
-    # marks on it; the slope of the surface -- fold, cockle, fibre, and the pit
-    # under every struck character -- is what the eye reads as paper.
+    # The light, last of all, and it lights the *sheet* -- its swell, its
+    # ripple, its creases. Nothing that was written on the page is in the height
+    # field: a key does dent paper, but the dent is far too shallow to survive
+    # being photographed, and drawn in anyway it reads as an emboss filter.
     out *= raked(z)[:, :, None]
 
     args.out.parent.mkdir(parents=True, exist_ok=True)

@@ -142,17 +142,33 @@ inserted at the head would move all twenty of them. The hook is built as its
 own clip and joined ahead of the reel at assembly.
 
 The sheet first. It is a markdown file — `hook_page.md`, in git — typed in
-Special Elite onto paper whose tone, grain and folds are sampled from the act
-scans:
+Special Elite onto paper fitted to the act itself. Not sampled by eye: the
+blank margins of `S12_ru_page_move.mp4` were measured by feature size, and the
+sheet is generated to land inside the same three figures (2.3–2.6 levels of
+grey coarser than 56 px, 1.8–2.4 between 12 and 56, 2.1–3.1 finer than that,
+and the middle band 1.2–1.5 times steeper down the frame than across it, so it
+lies in horizontal bands). Two things follow that guessing gets wrong every
+time: archive paper photographs **smooth** — no fibre, no stipple — and its
+type has **no clean edge**, carrying a halo and losing whole parts of a stroke
+where the ribbon skipped.
 
-    python tools/render_page.py         --page projects/legends_of_surrender/hook_page.md         --out projects/legends_of_surrender/composites/hook_page.png         --anchor "M E M O A C T S" --anchor "8, 9" --anchor pencil
+    python tools/render_page.py \
+        --page projects/legends_of_surrender/hook_page.md \
+        --out projects/legends_of_surrender/composites/hook_page.png \
+        --anchor "M E M O A C T S" --anchor "8, 9" --anchor pencil
 
 It prints the three `render_move.py` keys below rather than leaving them to be
 measured off the image by eye, exactly as `render_map.py` prints its `focus`.
 **If the sheet is edited, re-read the keys from that output** — a line added
 above the wordmark moves every anchor under it.
 
-    python tools/render_move.py --project projects/legends_of_surrender         --image hook_page.png --name S00_hook --frames 192 --ease cosine         --shutter 0.5         --caption-from projects/legends_of_surrender/script.md         --key 0.000:0.504,0.816,1.00 --key 0.110:0.504,0.816,1.00         --key 0.393:-2.833,1.627,1.00 --key 0.518:-2.833,1.627,1.00         --key 0.801:-0.983,0.181,1.00 --key 1.000:-0.983,0.181,1.00
+    python tools/render_move.py --project projects/legends_of_surrender \
+        --image hook_page.png --name S00_hook --frames 192 --ease cosine \
+        --shutter 0.5 \
+        --caption-from projects/legends_of_surrender/script.md \
+        --key 0.000:0.504,0.814,1.00 --key 0.110:0.504,0.814,1.00 \
+        --key 0.393:-2.833,1.627,1.00 --key 0.518:-2.833,1.627,1.00 \
+        --key 0.801:-0.989,0.179,1.00 --key 1.000:-0.989,0.179,1.00
 
 | time | | |
 |---|---|---|
