@@ -205,3 +205,35 @@ Four things about it are load-bearing:
 
 The clip runs mute: the two lines are on screen, but the read is not recorded.
 When it is, the words are already in `script.md` to align against.
+
+## The whole reel — 20 shots behind the hook, 171.23 s
+
+    python tools/assemble_reel.py \
+        --clip projects/legends_of_surrender/composites/S00_hook.mp4 \
+        --clip projects/legends_of_surrender/out/reel.mp4 \
+        --narration projects/legends_of_surrender/narration.wav \
+        --subs projects/legends_of_surrender/composites/S00_hook.srt \
+        --subs projects/legends_of_surrender/out/reel.srt \
+        --out projects/legends_of_surrender/out/reel_with_hook.mp4
+
+5 137 frames — 192 and 4 945, joined without re-encoding a single one, because
+both clips come out of `memoacts_core.render.encode` and so already agree on
+codec, size, pixel format and rate.
+
+**The narration is delayed, not re-cut.** It is padded with 6.400 s of digital
+silence and encoded once from `narration.wav`; the reel's own AAC is not
+touched, which would have cost the recording a second generation of lossy
+encoding, and AAC's encoder priming would have shifted the whole thing by a
+frame or two besides. Verified rather than assumed: the head of the assembly
+is silent to a peak of exactly 0, and the recording correlates against its own
+master at **0 samples** of drift from 6.400 s — so all twenty measured cues sit
+where they did.
+
+The delay is not typed in. `--narration-at` defaults to the length of the clips
+ahead of the reel, read off the files, so it cannot disagree with what was
+actually joined.
+
+`reel_with_hook.srt` is written beside the video: the hook's two lines, then
+every reel cue moved on by 6.400 s. **That file is what the hook's line is
+recorded against** — the timings on screen are already fixed by the move, so
+the read fits the cut rather than the cut being re-fitted to the read.
