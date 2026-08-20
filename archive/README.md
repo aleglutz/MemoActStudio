@@ -28,6 +28,12 @@ session starts; these are kept for the reasoning they carry, not the next steps.
 | `20260728_HANDOFF.md` | `docs/PLAN.md`, which says so in its own header; scope decisions merged into `SPEC.md` v3.1 |
 | `20260805_HANDOFF_comfy_threeband.md` | `docs/THREEBAND_TOOL.md`, which answers it. Still cited live by `SURVEY.md` for its §7 fallback (writing our own crop node, should the Olm-DragCrop licence block redistribution) |
 
+## Superseded plans
+
+| File | Superseded by |
+|---|---|
+| `20260810_PLAN.md` | `docs/PLAN.md` (2026-08-21). Finished rather than abandoned — subtitles, `shots.csv`, animated maps and moving bands all landed; the project owner confirmed it complete on 2026-08-20. Kept for the reasoning in its A2 section, which records *why* one caption is one line, and for the deferred-timeline argument in B |
+
 ## Loose reference
 
 | File | What it is |

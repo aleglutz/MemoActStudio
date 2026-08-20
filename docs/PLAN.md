@@ -1,192 +1,352 @@
-# Work plan — reel dynamics and legibility
+# Work plan — the interface students are taught
 
-Written 2026-08-10 after the first full render of `legends_of_surrender`.
-Supersedes the "next task" list in `archive/handoffs/20260728_HANDOFF.md`.
+Written 2026-08-21, from `docs/INTERFACE_BRIEF.md`. Replaces the 2026-08-10
+plan, which the project owner confirmed finished on 2026-08-20 — subtitles,
+`shots.csv`, animated maps and moving bands all landed. It is kept as
+`archive/20260810_PLAN.md` for its reasoning.
 
-Five things came out of watching it: subtitles are unreadable and too long,
-there is no way to add, drop or reorder a shot, the reel is static, the maps
-should animate, and the stacked frames should move. Ordered below by what
-unblocks the most for the least, not by the order they were raised.
+## Context
 
-Effort is in working days on this machine, and assumes nothing else is running.
+The September offline workshop teaches `comfyui-memoacts` itself — 16 students,
+two rented machines, local ComfyUI, practical rather than overview-level. The
+project owner ruled on 2026-08-21 that **the command line is not the teaching
+surface**: `tools/` and `README.md` stay as the author's scaffolding and the
+reference implementation of every step, but nothing a student sees, types or is
+examined on is a terminal command.
 
----
+Definition of done: *a student, on a rented machine, with their own script and
+their own recording, gets a rendered reel inside one session — and can
+afterwards say what each step did and why it exists.* Confirmed 2026-08-21:
+students arrive with **their own script, their own recording and their own
+images** — the full cycle, not a prepared project.
 
-## A. Subtitles — legibility (≈1 day total)
-
-### A1. Semi-transparent plate — DONE
-
-`BorderStyle: 3` (opaque box) instead of `1` (outline + shadow), filled with an
-alpha-carrying colour. `SubStyle.plate_opacity` (default **0.55**),
-`plate_colour`, `plate_pad`; exposed on `MemoActsSubtitles` and as
-`render_reel.py --plate`. `plate_opacity=0` restores the old style exactly.
-
-Three things worth remembering, all of which cost time to find:
-
-- ASS alpha runs **backwards** — `00` is opaque, `FF` transparent. `_ass_colour`
-  now takes an opacity in the human direction and inverts it.
-- Under `BorderStyle: 3` the `Outline` field stops being a stroke width and
-  becomes the **box's padding**; `plate_pad` feeds it.
-- Renderers disagree about whether the box is filled from `OutlineColour` or
-  `BackColour`, so both are set to the plate colour.
-
-Calibrated against the reel's worst frame — shot 10, the signed instrument,
-whose caption band averages **236/255**. At 0.55 the caption is legible there
-and the plate stays unobtrusive over the dark shots (shot 6 averages 25).
-
-One cosmetic artefact remains: the box is drawn **per line**, so a two-line
-caption gets two boxes of different widths and reads as ragged. **A2 removes it**
-by making a caption one line — which is why it is worth doing next rather than
-chasing a full-width band here.
-
-### A2. One line, larger — DONE
-
-Font 44 → **56**, and each block is cut into captions that fit on one line at
-the aligner's word timings. 18 blocks became 79 captions, median 1.9 s.
-
-**One line is a correctness requirement, not a preference.** The plate is drawn
-per line, so stacked lines stack their plates, and where two semi-transparent
-plates overlap the alpha composites twice: measured L=60 against L=116 for a
-single plate, a 20 px bar exactly `2 × plate_pad` tall, straight through the
-text. So the fix for "no wall of text" and the fix for the dark bar are one fix.
-
-Guaranteed rather than tuned: `memoacts_core.caption` measures with the same
-font file libass burns in and packs to a pixel budget, so nothing wraps at any
-size (checked at 50/56/62/68). `subs.check_wrap()` reports any caption that
-would, and `render_reel.py` prints it as a defect.
-
-Sentences are cut first, then over-long ones split evenly. Greedy packing alone
-produced `May. Two dates for the end of` — one caption carrying two thoughts.
-
-### ~~A2 as originally planned~~ — the reasoning, kept
-
-The request is "no more than two lines, ideally one, bigger". That cannot be
-done by setting a font size. The longest block in this script is **32 words /
-175 characters**, which is about five lines at the current 44 px and more at any
-larger size. One line per caption means **one caption is no longer one script
-block** — the block has to be split into several short cues, timed within itself.
-
-The timing for that already exists and is being thrown away. `StableTsAligner`
-computes **word-level** start and end times and then collapses them to block
-boundaries. Keeping them lets a block be cut into cues at real word times rather
-than by guessing proportionally.
-
-Work: retain word timings through `Span`, add a segmenter that packs words into
-cues under a character budget (breaking at punctuation first, then at the last
-space), emit those as the `.ass` events. Bigger font, `margin_v` retuned.
-
-**This also feeds B**, which is why it comes before the editing work.
+Deadline is weeks away. The August online intensive is running right now on
+Comfy Cloud and nothing here touches it.
 
 ---
 
-## B. Add, drop and reorder shots (≈1–2 days)
+## What the survey found — three facts that set the order of work
 
-### The actual problem
+### 1. The node pack is a drifted fork, not a base to extend
 
-Today one narration block is exactly one visual shot. A 14-second block gets one
-still. That is the root of "not enough dynamics" — the cut cannot move faster
-than the writing.
+The 2026-08-20 handoff records that the pack is "already V3, so P2 extends it
+rather than migrating it". That is true of the API and **misleading about
+scope**, and the correction is the most consequential finding behind this plan.
 
-### What to build — not a timeline, yet
+The 14 nodes cover `Align → Set Motion / Set Image → Subtitles → Render` and
+nothing else. `memoacts_core.shotlist` is imported by **zero** node files, so of
+the twelve columns of `shots.csv` exactly three are reachable from the graph.
+Where the two paths overlap they have drifted apart:
 
-Let `shots.csv` carry **more than one row per block**, each with its own start
-offset inside the block:
+| Divergence | Consequence |
+|---|---|
+| `MemoActsAlignShots` calls `aligner.align(...)` with **three** args, omitting `display_blocks` | `Span.words` carry the digits-expanded text, so segmented captions would burn "two thousand and fifteen" onto the screen — against the project's own non-negotiable |
+| Its local `_find_narration` globs `<project>/narration.*` only | A narration in `sources/`, which is where the layout puts it, is not found |
+| Node defaults `margin_v=420`, `plate_opacity=0.55` | `subs.SubStyle` carries 530 / 0.68, and `render_reel.py --plate` says in its own help text that "the two must not drift apart" |
+| No credits, no `focus` setter, no `shots.csv`, no `words`, no `image_path`, no `clamped` / `max_zoom`, nothing written to disk | `MemoActsSetMotion` carefully preserves a `motion.focus` that nothing can set |
+| `MemoActsShotReport` opens media with bare PIL | A video-backed shot reports `IMAGE ERROR` |
 
-    shot,at,media,in,motion,rate,anchor,effects,notes
-    1:35,0.0,Moscow.jpg,,pan_rl,0,,,
-    1:35,4.5,map_russia.png,,zoom_in,0.04,,,flags appear
-    1:35,9.0,S18_three-cities_bw.png,,static,,,,
+**`legends_of_surrender` cannot be rendered from the graph today.** So the first
+item of work is not the table — it is one shared orchestration layer that both
+`tools/` and the nodes call, after which this class of drift cannot recur.
 
-`at` is seconds from the block's own start. Rows without it keep today's
-behaviour, so nothing existing breaks. Dropping a shot is deleting a row;
-reordering is moving one; adding is a new row. Word-level timings from A2 make
-`at` snap to a word boundary rather than landing mid-syllable.
+### 2. The core already has the seams an interface needs
 
-This gives the editing control immediately, in a file that diffs and reviews.
+Zero `print` / `argparse` / `sys.exit` across all ten modules; warnings come
+back as `list[str]` (`resolve_shot_images`, `apply_shot_list`) or through
+`warnings.warn`, which a GUI can capture. What looks missing — progress,
+cancellation, preview — falls out of one signature:
 
-### The timeline strip — deferred, deliberately
+- `render.encode(frames: Iterable[Image], ...)` takes **any** iterable, so a
+  counting wrapper around `reel_frames` gives progress per frame (the total is
+  known: `sum(len(s.schedule.ws) for s in shots)`) and cancellation by raising
+  out of it.
+- `render.shot_frames(shot)` is public and standalone → **single-shot preview**.
+  `next(iter(shot_frames(shot)))` is frame 0, with no ffmpeg at all for a still.
+- `schedule.compute` is pure math → a crop rectangle can be drawn over a
+  thumbnail with nothing rendered.
+- `subs.build_ass` / `cues_from_shots` / `check_wrap` are pure string work → a
+  live caption preview is free.
 
-A drag-and-drop timeline inside ComfyUI is a custom node with a JavaScript
-frontend, canvas interaction, and its own state model — a week at least, and its
-own maintenance. It is worth building **after** the data model above exists,
-because the strip would be a view onto exactly that table. Building the view
-first would mean designing the model through a GUI, which is the expensive
-order.
+The one genuinely opaque step is `StableTsAligner.align()`: a single call into
+stable-whisper, not interruptible, no callback, and on first run it downloads
+the model. An indeterminate progress line is the honest maximum there.
 
-Recorded as a P3 candidate, not September scope.
+### 3. ComfyUI on this machine supplies the rest
+
+Frontend `1.48.7`. Verified present in this install: `registerSidebarTab`,
+`addDOMWidget`, `registerCustomWidget`; custom aiohttp routes through
+`PromptServer.instance.routes` (`comfy-mtb` uses them on this very box); and
+`comfy.utils.ProgressBar.update_absolute(value, total, preview)`, which pushes a
+**live preview image into the running node**, alongside `send_progress_text` for
+a per-node text line.
+
+That settles the brief's central tension in the graph's favour: "one button,
+long running, nothing to look at while it works" is not a property of the graph,
+it is a property of the current nodes. A render node can show frames as they are
+made.
+
+There is no JavaScript anywhere in the repository today — no `WEB_DIRECTORY`, no
+widget, no `pyproject.toml`. The table widget is the only genuinely new surface.
 
 ---
 
-## C. Dynamics
+## The decision: the graph is the spine, the table is a widget inside one node
 
-### C1. Animated maps — flags arriving one by one (≈1 day)
+Five nodes, left to right, on one screen. Each is one sentence a student can
+repeat, which is the *understanding* half of the definition of done:
 
-`render_map.py` already composites a full frame per call, so animation is a loop
-with a per-country alpha ramp: each flag fades in at its own offset, eased, over
-a shot-length sequence. Output a frame sequence or an mp4 that `shots.csv`
-references like any other clip.
+| Node | The sentence | Why it is a node |
+|---|---|---|
+| **MemoActs — Project** | "This is my material." | Names the folder and shows what was found: the narration and its length, the image count, the script's blocks. Holds `script.md` in a multiline widget that loads and saves — the script is ground truth, so it is visible in the graph |
+| **MemoActs — Align** | "My words become timings." | Slow, cached, run once. Its `fingerprint_inputs` is the mtime of `script.md` + the narration only, so editing the shot table never re-runs Whisper |
+| **MemoActs — Shot Table** | "I decide what is seen." | The DOM-widget table. Applies `shots.csv` onto the alignment, writes `generated/shots.json` + `report.txt`, emits SHOTS |
+| **MemoActs — Subtitles** | "The words become captions." | Style, and the visible proof that the script — not a transcription — is what reaches the screen |
+| **MemoActs — Render** | "The reel is made." | Progress bar, live frames, and the finished MP4 playing in the node |
 
-Cheap because the hard part — geometry, relief, flag clipping — is done.
+**Why not a sidebar panel.** It would duplicate project state, split attention
+away from the thing being taught, and cost more code. The graph's job here is
+pedagogical: five nodes is the syllabus.
 
-### C2. Stacked frames that move (≈0.5 day)
+**Why not fine-grained nodes.** Twenty shots by six decisions is 120 widgets. A
+table is the right instrument for a table.
 
-Two blockers, both known:
+**Why not one big node.** A student who cannot point at the step cannot say what
+it did.
 
-- A composite is built at exactly 1080×1920, so `max_zoom` is 1.00 and it cannot
-  move at all. **Fix: build composites at 2160×3840** — change the target size in
-  `threeband_9x16_api.json` and the band heights with it. Then the existing
-  motion system works on them unchanged.
-- More interesting than moving the whole frame: move the **bands
-  independently**. The original storyboard asked for exactly this — *"the two
-  halves slowly diverge upwards and downwards"*. That needs the renderer to
-  composite bands per frame rather than consume a flat PNG, which is a real
-  change to `render.py` and closer to 1.5 days.
+**Alignment is split from composition, deliberately.** Today
+`generate_shots.py` does both in one pass, so a one-character edit to
+`shots.csv` costs a full Whisper run. Splitting them, and letting V3's
+`fingerprint_inputs` cache the alignment, is what makes the edit loop survive a
+workshop rotation.
 
-Start with the oversized composite; decide on independent bands after seeing it.
+The table widget reads and writes **the same `shots.csv` the author edits by
+hand** — one artefact, two doors. `#` comment rows, unknown columns and the
+`notes` field (which in `legends_of_surrender` carries rebuild commands) must
+survive a round trip verbatim, and the first write from the widget keeps a
+`.bak`.
 
-### C3. Video fragments (≈1–1.5 days) — a scope decision, not just work
+---
 
-`nodes_video.py` is marked **"Won't"** for September in SPEC §0. The reel needs
-it: `MBK_KAPFILM_FINAL.mp4` is the only moving footage, and at 1280×800 it fits
-a 636 band at 0.84× with no enlargement — it is the one asset that is *better*
-in the stacked layout than full-frame.
+## What is in scope for the student, decided 2026-08-21
 
-`shots.csv` already parses the `in` timecode and the renderer already refuses
-footage with an explicit message. What is missing is a streaming frame source,
-and the pattern exists — `effects.TextureSource` already streams and loops a
-clip through an ffmpeg pipe.
+Media · motion (preset / rate / anchor) · **focus** · label · credit ·
+**per-shot effects** · notes. Captions styled globally.
 
-Design decision from earlier, still open for confirmation: **the in-point is
-editorial, the out-point is computed from the shot's duration.** Fragment length
-then follows the edit automatically and cannot drift when the narration is
-re-recorded.
+Two consequences, recorded rather than discovered later:
+
+1. **This reverses SPEC §0's "`nodes_layers.py` is the designated first cut".**
+   Deliberate, like the `nodes_video.py` reinstatement of 2026-08-11. SPEC §0
+   is amended, not ignored.
+2. **Effects cost three to four times the render time** (SPEC §5.4: 23 s clean,
+   71 s `archive_soft`, 104 s `newsreel` on demo_en) against a rotation of ~8
+   students per machine. The mitigations are in the plan — single-shot preview,
+   a deliberately short exercise project, and a measured figure from the real
+   rented hardware before the day. If the measurement says no, effects are the
+   second thing cut.
+
+Out of scope for September, stated so it is not rediscovered: maps, bands, page
+moves and page rendering (`render_map`, `render_bands`, `render_move`,
+`render_page`, `rebuild_media`) stay **author-only CLI tools**. Assembly
+(`assemble_reel`) and the P1 Cloud path (`run_p1_local`) likewise.
+
+*Side effect worth banking:* if composites are not taught, the workshop image
+does not need `ComfyUI-Olm-DragCrop`, and the redistribution-licence blocker on
+imaging machine A (`HARDENING.md`, `SURVEY.md §3`) retires without a decision
+having to be made.
+
+---
+
+## The work, ordered by what unblocks the most for the least
+
+Effort is in working days on this machine.
+
+### A. `memoacts_core/pipeline.py` — one orchestration, two doors (≈2 days)
+
+Three functions carrying everything `tools/generate_shots.py` and
+`tools/render_reel.py` do between `argparse` and `print`:
+
+```python
+def align_project(project, *, lang, model, fps, lead_ms,
+                  use_aligner=True, progress=None) -> Alignment
+def compose_project(project, alignment, *, fps, lead_ms,
+                    write=True, progress=None) -> Composition   # doc, warnings, report
+def render_project(project, doc, *, opts, progress=None) -> RenderResult
+```
+
+`progress` is one callable — `progress(stage, done, total, message, preview=None)`
+— defaulting to `None`. The CLIs pass a printer, the nodes pass a `ProgressBar`
+adapter, and nothing in the core learns about either.
+
+`tools/generate_shots.py` and `tools/render_reel.py` are then rewritten as
+argparse plus one call plus printing. They keep every flag and every printed
+line; they remain the reference implementation, and they become *demonstrably*
+the same code path the students run.
+
+Also in A, because they are the same edit:
+
+- `shotlist.write_shot_list(path, edits)` — the round-tripping writer the widget
+  needs, preserving comments and unknown columns. Only `write_template` exists
+  today.
+- `project.write_outputs` grows an `effects` parameter; `SCHEMA_VERSION` → `1.5`,
+  additive (`null` on every shot a 1.4 file has), documented in
+  `docs/SHOTS_SCHEMA.md` in the style of its 1.1–1.4 entries.
+- `render_project` reads per-shot effects from the doc instead of applying one
+  global preset to everything.
+
+**Checkpoint:** `legends_of_surrender` re-renders and its `report.txt` comes
+back byte-identical. The 2026-08-20 reorganisation was verified exactly this
+way.
+
+### B. The five nodes, rebuilt on the spine (≈2 days)
+
+`nodes_align.py`, `nodes_shot.py`, `nodes_subs.py` and `nodes_encode.py` call
+`pipeline`, and every divergence in the table above disappears by construction.
+New: `MemoActsProject`; and the `Shots` payload carries the whole `shots.json`
+document plus its project directory.
+
+- Render gets `ProgressBar` plus a live preview frame every N frames, and the
+  finished MP4 in `ui.PreviewVideo` — already the pattern in `nodes_encode.py`.
+- Align gets `send_progress_text`: model load, then an indeterminate line, which
+  is all that call permits.
+- **`MemoActs — Preview Shot`** — one shot number, renders that shot only, video
+  preview in the node. This is the iteration loop that keeps a four-minute reel
+  render out of a student's edit cycle, and it is why the rotation budget works.
+- Warnings from `resolve_shot_images`, `apply_shot_list` and
+  `warnings.catch_warnings` merge into one panel on the Shot Table node.
+
+**Checkpoint, and the fallback if C runs late:** at the end of B the whole reel
+is renderable from the graph with `shots.csv` edited in Notepad. That is already
+a terminal-free path — not a good one, but a shippable one.
+
+### C. The shot-table widget (≈3 days)
+
+`web/` plus `WEB_DIRECTORY`, and routes under `/memoacts/`:
+
+| Route | Purpose |
+|---|---|
+| `GET /projects`, `POST /project` | list; create the four-folder skeleton |
+| `GET` / `POST /script` | `script.md` load and save |
+| `GET` / `POST /shots` | `shots.csv` as JSON rows, via `read_shot_list` / `write_shot_list` |
+| `GET /media` | media across `MEDIA_DIRS` with pixel size and computed `max_zoom` |
+| `GET /thumb` | cached thumbnail |
+
+The widget: one row per shot; columns media (a picker, not free text — today's
+`MemoActsSetImage` takes an unvalidated string), motion, rate, anchor, label,
+credit, notes; per-row badges for `confidence`, cue drift, `max_zoom`,
+`clamped` / `UPSCALED n×`, and missing media. Selecting a row shows the
+thumbnail and that shot's text.
+
+Media arrives through the file manager, documented in the handout — the ban is
+on the command line, not on Explorer. A drag-and-drop upload route is a
+nice-to-have, not scope.
+
+### D. Focus picker on the thumbnail (≈1.5 days)
+
+Drag a rectangle over the thumbnail; it writes the `focus` triple that
+`shots.csv` already accepts and `schedule.focus_window` already validates.
+`max_zoom` and `clamped` update live as the rectangle moves.
+
+This is `GAPS.md`'s standing request — *"the P2 GUI should surface `max_zoom`
+per shot at selection time, so the warning becomes a choice rather than a
+report"* — and it is the most legible moment in the whole interface: the student
+watches the resolution guard refuse them, on their own photograph.
+
+Reference patterns for an in-node canvas widget are installed on this machine
+(`ComfyUI-Olm-DragCrop`, `comfyui-enricos-nodes`). Read them; do not vendor
+them.
+
+### E. Per-shot effects in the table (≈1 day)
+
+The `effects` column reaches the renderer for the first time (schema 1.5, from
+A), a preset dropdown per row from `sorted(effects.PRESETS)`, and the seven
+effect nodes remain the "build your own look" path for students who get that
+far. The row shows the render-cost multiplier, because that number is a teaching
+point rather than a footnote.
+
+### F. Template workflow, starter project, handout (≈1.5 days)
+
+- `example_workflows/reel_stills.json` — the five nodes, wired, saved as the
+  workflow a student opens.
+- `projects/workshop_starter/` — a deliberately short fixture (30–45 s) that
+  renders inside a rotation slot: `script.md`, three images, a recording.
+- `docs/WORKSHOP_HANDOUT.md`, in the register of
+  `projects/module03/HANDOUT.md`: numbered steps, a table per run, and an
+  explicit **"what you get, and what you don't"** section. That section is where
+  the *understanding* half of the definition of done is actually delivered.
+- `legends_of_surrender` is the worked example shown in the room, not rebuilt
+  there.
+
+### G. Machine A, and the numbers that decide the exercise (≈1 day + owner time)
+
+`docs/WORKSHOP_MACHINE_SETUP.md` §7 already admits that its §6 verifies the core
+library and the CLI, not the nodes students will use. Extend §6 to the node
+path, then execute the document on a clean box for the first time and correct it
+as it fails.
+
+Measure on the actual rented hardware: one clean render, one `archive_soft`
+render, one alignment from cold. Those three numbers decide the exercise
+project's length. **If a render eats a meaningful slice of a rotation slot, cut
+the project's length rather than discovering it live** — the setup document
+already says so; now there is a figure to apply it to.
 
 ---
 
 ## Recommended order
 
-1. ~~**A1** — subtitle plate.~~ Done.
-2. ~~**A2** — word-timed segmentation, bigger single-line captions.~~ Done.
-3. **B** — multiple shots per block. Editing control, and dynamics for free.
-4. **C2** — oversized composites so stacked frames can move.
-5. **C1** — animated maps.
-6. **C3** — video fragments, once the scope call is made.
+1. **A** — the spine. 2 d. Nothing student-facing; everything else depends on it.
+2. **B** — the five nodes. 2 d. **A terminal-free path exists from here.**
+3. **C** — the table widget. 3 d. The interface becomes the thing being taught.
+4. **D** — focus picker. 1.5 d.
+5. **E** — per-shot effects. 1 d.
+6. **F** — template, starter project, handout. 1.5 d.
+7. **G** — machine A and the measurements. 1 d.
 
-A1 through B is roughly three days and addresses legibility, editing and most
-of the pacing. C is another two to three.
+About twelve working days. A and B are four of them and produce something that
+works; C and F are what make it teachable; D and E are what make it *good*, and
+they are the cut order if the calendar closes — D first, then E, which returns
+SPEC §0's original verdict on `nodes_layers.py`.
 
-## What this costs September
+## What this plan does not touch
 
-The September workshop teaches the pack, and the must-have set is already
-complete and verified. Everything above is **beyond** that set. A2, B and C3 all
-touch `memoacts_core`, which is what the workshop teaches — so they improve the
-thing being taught rather than diverting from it, but they are still new code
-that has to be legible and working by then.
+The August intensive. `docs/P1_GRAPH.md`, `docs/PARTICIPANT_GRAPH_RECIPE.md`,
+`projects/module03/`, `tools/run_p1_local.py` and the exported Cloud graphs are
+untouched by every item above. The Cloud path and the local pack share
+`memoacts_core` only through `MEDIA_DIRS` and the P1 crop CSVs, and A preserves
+both.
 
-The one genuinely new commitment is **C3**, which reverses a documented "Won't".
-Worth making deliberately rather than by drift.
+## Still open, carried forward
 
-Unchanged and still outstanding: the seminar-scale Cloud concurrency test and a
-facilitator recovery procedure (`GAPS.md`), the rented-machine specification
-(`HARDENING.md`), and the Olm-DragCrop redistribution licence question
-(`SURVEY.md §3`), which blocks imaging the workshop machines.
+- **Student work isolation** and machine reset between rotations
+  (`HARDENING.md`) — unresolved, and it lands in the same folder tree the
+  Project node creates. Decide before imaging.
+- **Whisper model pre-seeding:** confirm where it caches and that the cache
+  survives imaging under a different user account
+  (`WORKSHOP_MACHINE_SETUP.md` §3.5 ⚠).
+- **`--use-sage-attention`** must be absent from the rented machines' launch
+  command (`HARDENING.md` — it renders silent black frames).
+- **`New_York_May-8_1945.jpg`** still has no `SOURCES.md` entry and its rights
+  are unchecked.
+
+---
+
+## Verification
+
+1. **No regression.** After A,
+   `python tools/render_reel.py --project projects/legends_of_surrender`
+   produces the same 20 shots, 5 069 frames, 168.97 s, and `generated/report.txt`
+   is byte-identical to the file it replaces.
+2. **Parity.** The same project rendered from the graph and from the CLI agrees
+   on frame count, duration and drift, and both reports agree.
+3. **Cold start.** Restart ComfyUI, open `example_workflows/reel_stills.json`,
+   render `projects/demo_en`: 4 shots, 415 frames, 13.833 s, and the one
+   expected `03_small.png` enlargement warning, which is correct behaviour.
+4. **Round trip.** Open `legends_of_surrender`'s `shots.csv` in the widget and
+   save it unedited; `git diff` is empty — comments, quoting and the rebuild
+   commands in `notes` all survive.
+5. **The rehearsal, which is the real test.** Someone who has not seen this
+   repository takes their own script, their own `.wav` and three of their own
+   images and produces a reel, with a stopwatch running and no terminal open. If
+   they cannot afterwards name the five steps, F is not finished.
+6. **Both machines agree.** Identical frame count and duration for the same
+   input (`WORKSHOP_MACHINE_SETUP.md` §6.4).

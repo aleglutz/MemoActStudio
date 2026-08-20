@@ -18,14 +18,21 @@ Not P1: the custom node pack, six effect families, video fragments, per-shot GUI
 - **English only.** Translation (RU/DE/HY) is out of project scope — handled separately with local DeepL + whisperX. No multilingual burn-in, no Armenian, no RU normalisation.
 - **`projects/sidur` is not a dev fixture.** A new English script + narration is awaited from the project owner; until then `projects/demo_en` is the only working fixture.
 - **Two audiences, two environments** (SPEC §0): August online intensive — 30 students, 8 lessons, **Comfy Cloud**, overview-level; September offline workshop — 16 of those students, **local ComfyUI on two rented machines**, practical/production.
-- **The September workshop teaches `comfyui-memoacts` itself.** So **P2 has a hard September deadline** — P1 and P2 both have weeks, not months. P1 must be *finished, not polished*: there is no longer slack in P2 to absorb P1 overrun. Module priority for the September cut is in SPEC §0; `nodes_layers.py` (six effect families) is the designated first cut.
+- **The September workshop teaches `comfyui-memoacts` itself.** So **P2 has a hard September deadline** — P1 and P2 both have weeks, not months. P1 must be *finished, not polished*: there is no longer slack in P2 to absorb P1 overrun. Module priority for the September cut is in SPEC §0; `nodes_layers.py` (six effect families) is the designated first cut — **reversed
+2026-08-21**, see the interface decision below.
 **The command line is not the teaching surface (2026-08-21).** In the owner's
 words: *CLI-first is my own setup. I cannot and do not want to teach it to
 anyone.* `tools/` and `README.md` remain the author's scaffolding and the
 reference implementation of every step — they stay, they keep working, and the
 interface may call the same `memoacts_core` functions. But nothing a student
 sees, types or is examined on is a terminal command. The brief for what replaces
-it is `docs/INTERFACE_BRIEF.md`.
+it is `docs/INTERFACE_BRIEF.md`, and the plan that answers it is `docs/PLAN.md`
+(2026-08-21): the graph is the spine — five nodes, one screen — and `shots.csv`
+is edited in a table widget inside the middle one. Two scope decisions taken
+with it: students arrive with **their own script, recording and images**, and
+**per-shot focus and per-shot effects are in the September scope**, which
+reverses SPEC §0's "`nodes_layers.py` is the designated first cut" the same way
+`nodes_video.py` was reinstated on 2026-08-11.
 
 - Stretch goal — teaching students to build their own tools from the pack as a worked example — is a **golden achievement, never a requirement**. Its only actionable consequence now: write the pack legibly from the first commit, since that is cheap early and expensive to retrofit. No separate teaching version, no tutorial content in scope.
 
