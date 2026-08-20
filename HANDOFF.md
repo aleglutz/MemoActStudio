@@ -50,11 +50,16 @@ written out twice and the copies had drifted apart.
 
 ## What is open
 
-- **`docs/PLAN.md` is from 2026-08-10** and most of it is done — subtitles,
-  `shots.csv`, animated maps, moving bands all landed. It has not been re-read
-  against the current state. Do that before trusting it as a task list.
+- **`docs/PLAN.md` is finished.** Confirmed by the project owner on
+  2026-08-20: subtitles, `shots.csv`, animated maps and moving bands all
+  landed. It is history, not a task list. The next plan is a different subject
+  — packaging the machinery as something teachable — and replaces it.
 - **The MemoActStudio interface has not been started.** The cleanup above was
-  the preparation for it.
+  the preparation for it, and writing its plan is the next session's whole job.
+  Useful fact for it: the node pack is **already V3** — `io.ComfyNode` /
+  `io.Schema` throughout, no `INPUT_TYPES` anywhere — so P2 extends it rather
+  than migrating it. 871 lines across six files, 14 registered nodes, against
+  2 864 lines of `memoacts_core` and 2 900 of `tools/`.
 - **`New_York_May-8_1945.jpg` still has no `SOURCES.md` entry**, and its rights
   are unchecked. Carried over from the previous handoff, still true.
 - **`projects/demo_en`** renders but has not been run since the reorganisation.
