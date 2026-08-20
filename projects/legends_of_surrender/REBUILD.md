@@ -166,21 +166,32 @@ above the wordmark moves every anchor under it.
 
     python tools/render_move.py --project projects/legends_of_surrender \
         --image hook_page.png --name S00_hook --frames 144 --ease cosine \
-        --shutter 0.5 --subframes 96 \
+        --shutter 0.5 --subframes 384 \
         --caption-from projects/legends_of_surrender/script.md \
-        --key 0.000:0.504,0.814,1.00 --key 0.125:0.504,0.814,1.00 \
-        --key 0.333:-2.833,1.627,1.00 --key 0.500:-2.833,1.627,1.00 \
-        --key 0.729:-0.989,0.179,1.00 --key 1.000:-0.989,0.179,1.00
+        --key 0.000:0.504,0.814,1.00 --key 0.112:0.504,0.814,1.00 \
+        --key 0.231:-2.833,1.627,1.00 --key 0.545:-2.833,1.627,1.00 \
+        --key 0.622:-0.989,0.179,1.00 --key 1.000:-0.989,0.179,1.00
 
-| time | | |
-|---|---|---|
-| 0.0–0.6 s | held on **M E M O A C T S**, typed among the working notes | |
-| 0.6–1.6 s | up and right across the header | 3 930 px/s |
-| 1.6–2.4 s | held on the pencilled **67** in the corner | *"Six-seven is dead."* |
-| 2.4–3.5 s | back down and left | 3 110 px/s |
-| 3.5–4.8 s | held on **8, 9** in the enumeration | *"Let's talk eight-nine."* |
+**The holds are cut to the read, not to a feel.** The take was measured on its
+own envelope — 50 ms buckets, not by ear — and the move was fitted to what came
+back:
 
-Four things about it are load-bearing:
+| time | | | spoken |
+|---|---|---|---|
+| 0.00–0.54 s | held on **M E M O A C T S**, typed among the working notes | | |
+| 0.54–1.11 s | up and right across the header | 6 880 px/s | |
+| 1.11–2.62 s | held on the pencilled **67** in the corner | | 1.20–2.60 |
+| 2.62–2.99 s | back down and left | 9 250 px/s | |
+| 2.99–4.80 s | held on **8, 9** in the enumeration | | 2.95–4.45 |
+
+Each line is on screen from just before its first syllable to just after its
+last. **The 0.30 s the reader left between the two sentences is the whole
+budget for the second whip**, which is why it is nearly three times the speed
+of the first — the alternative was a caption arriving after the line it
+captions, which was what the first cut of this did. Re-record the hook and this
+move is re-timed with it; the two are not independent.
+
+Five things about it are load-bearing:
 
 - **`s = 1.00` throughout.** The sheet is generated, so it is generated at the
   size the closest beat needs: one page pixel per frame pixel, nothing
@@ -193,36 +204,33 @@ Four things about it are load-bearing:
   the ceiling — at 4.2 the **8** is against the left edge of the frame and the
   comma after the **9** is sliced by the right one.
 - **`--shutter 0.5`** is what makes the whips read as speed rather than as a
-  stutter: at 3 930 px/s the sheet crosses an eighth of the frame between
-  frames. It is off by default, so `S12_ru_page_move` above still renders
-  identically. `--subframes 96` goes with it — the samples are spaced one per
-  pixel and a half, so a whip this fast asks for 87 of them and the default
-  ceiling of 48 would leave the smear as a row of ghosts, which is the artefact
-  the shutter exists to remove.
+  stutter: at 9 250 px/s the sheet crosses nearly a third of the frame between
+  frames, and the second whip is only eleven frames long. It is off by default,
+  so `S12_ru_page_move` above still renders identically. `--subframes 384` goes
+  with it — the samples are spaced one per pixel and a half, so the cosine peak
+  of that whip asks for about 325 of them, and the default ceiling of 48 would
+  leave the smear as a row of ghosts, which is the artefact the shutter exists
+  to remove. It is a ceiling, not a count: the holds still cost two samples
+  each.
 - **The two lines come out of `script.md`**, from a `> **HOOK**` blockquote that
   the script parser drops — the hook is not in `narration.wav`, so it cannot
   be a shot without shifting every cue after it, but screen text is verbatim script
   text and never a string typed into a command line. `--caption-from` puts one
   line on each hold, filling from the last hold backwards, and takes the timing
-  from the move itself; re-time the move and the lines follow — as they did when
-  the cold open lost 1.6 s. They carry no styling of their own: the reel's
-  caption sits below the middle of the frame (`subs.SubStyle`) precisely so it
-  clears the beat a page move aims at, and a cold open captioned differently
-  would read as another film.
+  from the move itself; re-time the move and the lines follow — as they did
+  when the cold open was cut to the recorded read. They carry no styling of
+  their own: the reel's caption sits below the middle of the frame
+  (`subs.SubStyle`) precisely so it clears the beat a page move aims at, and a
+  cold open captioned differently would read as another film.
+- **The 67 is what sets the caption height for the whole reel.** It is the one
+  beat whose subject is drawn rather than photographed, so its extent can be
+  measured: ink to y = 1259 of 1920. `margin_v` 670 put the plate's top edge at
+  1184 — through the tail of the 7. 530 puts it at 1324, clear by ~98 px on the
+  rendered frame. Every other shot is a photograph, and a photograph has no
+  edge to clear; this one does, so it decides.
 
 The clip itself is mute; the read arrives at assembly, off the head of
-`voiceover.wav`. Measured against the holds it was fitted to, it runs a little
-ahead of the type:
-
-| | on screen | spoken |
-|---|---|---|
-| "Six-seven is dead." | 1.598-2.400 | 1.300-3.100 |
-| "Let's talk eight-nine." | 3.499-4.800 | 3.140-4.070 |
-
-Both lines start about 0.3 s before their caption, and *dead* carries 0.7 s past
-its own. Re-time the move rather than the cue if that wants closing: the lines
-take their timing from the holds (`--caption-from`), so nothing else has to be
-touched.
+`voiceover.wav`.
 
 ## The recording — one take, two files
 

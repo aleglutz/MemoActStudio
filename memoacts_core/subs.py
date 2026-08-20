@@ -70,19 +70,25 @@ class SubStyle:
     shadow_depth: float = 2.0
     margin_l: int = 60
     margin_r: int = 60
-    #: 670 from the foot puts the line's own centre at y = 1217 of 1920, which
-    #: is halfway between the two positions this reel has actually been cut
-    #: with: dead centre, and the 420 the cold open used. One position for the
-    #: whole reel, hook included — a caption that moves between a title beat and
-    #: the reel proper reads as two different films.
-    margin_v: int = 670
+    #: One position for the whole reel, hook included — a caption that moves
+    #: between a title beat and the reel proper reads as two different films.
+    #: Which makes the cold open the binding constraint, since it is the one
+    #: beat whose subject is *drawn* rather than photographed and so has a
+    #: measurable extent: the pencilled 67 carries ink down to y = 1259 of 1920,
+    #: and 670 put the plate's top edge at 1184 — straight through the tail of
+    #: the 7. 530 clears the lowest ink by ~65 px and still sits 110 px above
+    #: the 420 the cold open used before the two positions were merged.
+    margin_v: int = 530
     bold: bool = False
 
     #: Plate behind the text. White captions over a pale document are
     #: unreadable without one — the archival stills in this material run from
     #: near-black to bare paper, and no outline colour survives both.
-    #: 0 disables it and restores the plain outline style.
-    plate_opacity: float = 0.80
+    #: 0 disables it and restores the plain outline style. 0.68 rather than the
+    #: 0.80 the reel was first cut with: enough of the paper reads through the
+    #: box for it to sit on the sheet instead of punching a hole in it, and the
+    #: white type still clears the brightest source in the reel.
+    plate_opacity: float = 0.68
     plate_colour: str = "#000000"
     plate_pad: float = 10.0        # how far the box extends past the text
 

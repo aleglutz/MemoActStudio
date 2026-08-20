@@ -22,6 +22,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+from dataclasses import replace
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
@@ -52,9 +53,11 @@ def main() -> int:
                     help="one caption per narration block, as P1 did, instead "
                          "of cutting blocks into single-line captions at word "
                          "timings")
-    ap.add_argument("--plate", type=float, default=0.80,
+    ap.add_argument("--plate", type=float, default=None,
                     help="opacity of the box behind the caption; 0 falls back "
-                         "to the plain outline style (default: 0.55)")
+                         "to the plain outline style. Default: whatever "
+                         "subs.SubStyle carries, which is what the cold open "
+                         "renders with — the two must not drift apart")
     ap.add_argument("--no-labels", action="store_true",
                     help="skip the corner tags naming a place or a person")
     ap.add_argument("--label-hold", type=float, default=3.0,
@@ -110,7 +113,9 @@ def main() -> int:
 
     ass = None
     if not args.no_subs:
-        style = subs.SubStyle(plate_opacity=args.plate, size=args.sub_size)
+        style = subs.SubStyle(size=args.sub_size)
+        if args.plate is not None:
+            style = replace(style, plate_opacity=args.plate)
         cues = subs.cues_from_shots(doc["shots"], style, out_w,
                                     segment=not args.no_segment)
         labels = ([] if args.no_labels
