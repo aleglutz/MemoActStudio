@@ -101,7 +101,9 @@ So two of the four are genuinely hands-on, and they are the first two. Levels 3
 and 4 are screened, with a single frame handed over so the students still touch
 the thing they are being shown.
 
-`HANDOUT.md` is what the participants get: the two exercises node by node, the
+`Slides for Module 03.md` is the session itself — a two-hour run sheet with a
+minute budget on every block, the moodboard segment handed to the designer, and
+one live exercise rather than two. `HANDOUT.md` is what the participants get: the two exercises node by node, the
 two mistakes they will actually make, and what each one proves. `CLOUD.md` is
 the survey behind the table above — which nodes and models Cloud actually
 carries, what a run costs, and one of our own assumptions that the billing
