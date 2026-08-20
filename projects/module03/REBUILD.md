@@ -98,24 +98,71 @@ Start the server with two flags, or it will not survive the run
 python -I ComfyUI/main.py --windows-standalone-build        --disable-pinned-memory --cache-none
 ```
 
-Then, about fifteen minutes on a 3090 Ti for ten seconds of film:
+Then, about 3.7 seconds a frame on a 3090 Ti — 55 minutes for the whole cut.
+`--start` resumes, so a run that dies costs one chunk, not the hour:
 
 ```
-python tools/module03_render.py        projects/module03/workflows/L3_restore_api.json        --frames 300 --chunk 8 --prefix module03/L3/        --server http://127.0.0.1:8189
+python tools/module03_render.py        projects/module03/workflows/L3_restore_api.json        --frames 901 --chunk 8 --prefix module03/L3/        --server http://127.0.0.1:8189
 ```
 
 Frames land in `<ComfyUI>/output/module03/L3/`, already in the right order by
-filename. Count them before encoding — 300 is right, and anything short means a
+filename. Count them before encoding — 901 is right, and anything short means a
 run failed quietly.
 
+The frames do not form a plain number sequence — each chunk restarts its counter
+— and **this ffmpeg cannot glob** ("globbing is not supported by this
+libavformat build"). Both problems go away with a list file, which also fixes
+the order explicitly instead of trusting a wildcard:
+
 ```
-ffmpeg -framerate 30 -pattern_type glob -i "<ComfyUI>/output/module03/L3/*.png"        -c:v libx264 -crf 16 -preset medium -pix_fmt yuv420p        projects/module03/out/L3_restored.mp4
+cd <ComfyUI>/output/module03/L3
+ls *.png | sort | awk -v d="$PWD/" '{print "file '" d $0 "'"; print "duration 0.0333333"}' > list.txt
+ls *.png | sort | tail -1 | awk -v d="$PWD/" '{print "file '" d $0 "'"}' >> list.txt
 ```
+
+Write Windows paths (`C:/...`) into it, not git-bash paths (`/c/...`) — ffmpeg
+is a native binary and does not understand the second kind. The last file is
+repeated on purpose: the concat demuxer gives the final entry no duration.
+
+```
+ffmpeg -f concat -safe 0 -i list.txt -r 30 -frames:v 901        -c:v libx264 -crf 16 -preset medium -pix_fmt yuv420p        projects/module03/out/L3_restored_30s.mp4
+```
+
+`-frames:v 901` is not decoration. The repeated last entry and the rounding of
+`0.0333333` against a true 1/30 add up to two extra frames, and the clip comes
+out 30.10 s against the master's 30.03. Cutting it to the master's own frame
+count keeps the two files comparable frame for frame. The two comparisons need the same
+guard plus `fps=30` in the filter chain: fed by `concat`, ffmpeg negotiated
+**50 fps** for them and wrote every frame twice. The duration looked right, which
+is exactly why it was easy to miss — check `r_frame_rate`, not the length.
 
 For the comparison, the original has to be enlarged too — otherwise you are
 comparing sizes instead of methods. Enlarge it with lanczos, which invents
 nothing, and that becomes the honest baseline:
 
 ```
-ffmpeg -i sources/master_30s.mp4 -t 10        -vf "scale=2136:1600:flags=lanczos"        -c:v libx264 -crf 16 -preset medium -pix_fmt yuv420p -an        out/L3_native_2x.mp4
+ffmpeg -i sources/master_30s.mp4        -vf "scale=2136:1600:flags=lanczos"        -c:v libx264 -crf 16 -preset medium -pix_fmt yuv420p -an        out/L3_native_2x_30s.mp4
 ```
+
+### The two comparisons
+
+Whole frames side by side are useless on a projector — at this size each half
+lands too small to read. Both comparisons therefore work on the same patch of
+picture, `1000×800` at `x=600, y=300`, which holds the signing table.
+
+Side by side, plain enlargement left, restored right:
+
+```
+ffmpeg -f concat -safe 0 -i list.txt -r 30 -i sources/master_30s.mp4 -filter_complex        "[1:v]scale=2136:1600:flags=lanczos,crop=1000:800:600:300[a];         [0:v]crop=1000:800:600:300[b];[a][b]hstack,fps=30"        -r 30 -frames:v 901 -c:v libx264 -crf 16 -preset medium -pix_fmt yuv420p -an        out/L3_ab_zoom_30s.mp4
+```
+
+One frame cut down the middle, plain left, restored right, with a line on the
+seam so nobody has to guess where it is:
+
+```
+ffmpeg -f concat -safe 0 -i list.txt -r 30 -i sources/master_30s.mp4 -filter_complex        "[1:v]scale=2136:1600:flags=lanczos,crop=1068:1600:0:0[a];         [0:v]crop=1068:1600:1068:0[b];[a][b]hstack,         drawbox=x=1067:y=0:w=2:h=1600:color=white@0.5:t=fill,fps=30"        -r 30 -frames:v 901 -c:v libx264 -crf 16 -preset medium -pix_fmt yuv420p -an        out/L3_split_30s.mp4
+```
+
+> The ten-second versions of all four files — `L3_restored.mp4`,
+> `L3_native_2x.mp4`, `L3_ab_zoom.mp4`, `L3_split.mp4` — are still in `out/` and
+> stay there. Nothing in that folder is deleted; see the module README.

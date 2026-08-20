@@ -46,7 +46,7 @@ under rising intervention rather than four unrelated clips.
 |---|---|---|---|
 | 1 | Quotes in frame | CPU | Nothing to the image; words from a document |
 | 2 | Sound for silent film | 6 s GPU per layer | A soundtrack that never existed |
-| 3 | Upscale / restoration | ~15 min GPU per 10 s | Twice the pixels, and texture no camera recorded |
+| 3 | Upscale / restoration | ~55 min GPU for the 30 s | Twice the pixels, and texture no camera recorded |
 | 4 | Colourisation | ~20 s GPU per frame | Colour, and — unguarded — the whole image |
 
 `workflows/README.md` is the technical companion: what each graph is made of,
@@ -111,19 +111,24 @@ billing record contradicts.
 |---|---|---|
 | `out/L1_quotes.mp4` | 30 s | Three quotes from the document, over the footage |
 | `out/L2_sound.mp4` | 30 s | The same footage with a soundtrack that was made up |
-| `out/L3_ab_zoom.mp4` | 10 s | **Screen this one.** Same patch of frame, plain enlargement on the left, Remacri on the right |
-| `out/L3_split.mp4` | 10 s | One frame cut down the middle: left plain, right restored |
-| `out/L3_restored.mp4` | 10 s | The restored clip on its own, 2136×1600 |
+| `out/L3_ab_zoom_30s.mp4` | 30 s | **Screen this one.** Same patch of frame, plain enlargement on the left, Remacri on the right |
+| `out/L3_split_30s.mp4` | 30 s | One frame cut down the middle: left plain, right restored, line on the seam |
+| `out/L3_restored_30s.mp4` | 30 s | The restored clip on its own, 2136×1600 |
 | `stills/L3_models_close_00014.png` | — | Plain ‖ Remacri ‖ NMKD-Siax on one face — where the model choice shows |
 | `out/L4_ab.mp4` | 6 s | Three panels: the film, the model's redraw, the restrained version |
 | `stills/L4_ab_*.png` | — | The same three panels at full size, on three frames |
 
 Two things to say out loud, because the clips cannot say them:
 
-- **Levels 3 and 4 are slowed down.** Level 3 is ten seconds of real time. Level
-  4 is twenty frames played at ten a second — two thirds of a second stretched
-  to two. Slow motion nobody announces is its own small fake, and this is the
-  wrong module to commit one in.
+- **Level 4 is slowed down.** Twenty frames played at ten a second — two thirds
+  of a second stretched to two. Slow motion nobody announces is its own small
+  fake, and this is the wrong module to commit one in. Levels 1, 2 and 3 all run
+  the full thirty seconds at real speed, so level 4 is the only one to say this
+  about.
+
+- **The ten-second level-3 files are still in `out/`** — `L3_restored.mp4`,
+  `L3_native_2x.mp4`, `L3_ab_zoom.mp4`, `L3_split.mp4`. They are the earlier
+  cut, kept, not current. Screen the `_30s` files.
 - **Level 3 is twice the size of the others.** That is the point of it, but it
   means it will not sit in a row with levels 1, 2 and 4 without being scaled for
   the screen.

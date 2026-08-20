@@ -100,8 +100,9 @@ back. `tools/module03_render.py` also clears memory between runs.
 > same graph twice counts as a repeat, and a repeat skips saving the file. The
 > only symptom is a folder with fewer frames in it than you asked for.
 
-Cost: about 3 seconds a frame on a 3090 Ti, so ten seconds of film takes roughly
-fifteen minutes.
+Cost: 3.7 seconds a frame on a 3090 Ti — 55 minutes for the whole thirty-second
+cut, which is what is delivered. `tools/module03_render.py --start` resumes, so
+a run that dies costs one chunk rather than the hour.
 
 **What an upscaler actually does to archival film.** Two things, and only one of
 them is what people expect. It sharpens edges — buttons, insignia, the line of a
