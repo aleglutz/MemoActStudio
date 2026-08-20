@@ -35,6 +35,11 @@ this exists rather than a motion preset:
   at all. Here the path is baked once and the shots read consecutive parts of
   it through the `in` column, as `memoacts_core.video` already does for footage.
 
+`--shutter` opens the frame for part of its own interval and accumulates the
+sheet's travel across it, which is the difference between a fast traverse and a
+stutter. It is off by default, so every render made before it existed still
+comes out identical.
+
 `--ease linear` holds a constant speed and stops dead at a key, which is what a
 sheet shoved across glass does; `cosine` (the default) arrives and settles, and
 matches `memoacts_core.schedule` so a baked path and a preset feel like one
@@ -193,6 +198,15 @@ def main() -> int:
     ap.add_argument("--bed", default=",".join(str(v) for v in BED),
                     help="R,G,B of the surface the page lies on")
     ap.add_argument("--ease", default="cosine", choices=["cosine", "linear"])
+    ap.add_argument("--shutter", type=float, default=0.0,
+                    help="motion blur, as the fraction of a frame interval the "
+                         "shutter stays open (0.5 is the film convention, 180 "
+                         "degrees). 0, the default, leaves every existing "
+                         "render bit-identical")
+    ap.add_argument("--subframes", type=int, default=48,
+                    help="ceiling on the samples accumulated per frame; the "
+                         "number actually taken follows how far the sheet "
+                         "moves during the exposure")
     ap.add_argument("--on-upscale", default="warn",
                     choices=["warn", "error", "allow"],
                     help="a path may magnify a page past its own pixels; this "
@@ -278,33 +292,61 @@ def main() -> int:
                                  int(round(cy * OUT_H - ph / 2))))
         return frame
 
+    cache: dict[tuple[int, int], Image.Image] = {}
+    cache_b: dict[tuple[int, int], Image.Image] = {}
+
+    def still(t: float) -> Image.Image:
+        """The sheet as it stands at an instant — not necessarily a frame."""
+        cx, cy, s, page = at(keys, t, ease)
+        # A turn owns the page on both sides of itself: before it ends the
+        # sheet on top is the one being turned, after it the one revealed.
+        for t0, t1, to in turns:
+            if t >= t1:
+                page = to
+        for t0, t1, to in turns:
+            if t0 <= t < t1:
+                before = at(keys, max(t0 - 1e-6, 0.0), ease)
+                from_page, s_out = before[3], before[2]
+                s_in = at(keys, t1, ease)[2]
+                # Each sheet keeps its own scale through the turn. They
+                # differ because the scans do — 1024px against 1860px for
+                # the same sheet of paper — so interpolating between them
+                # would shrink the page being turned while it turns, which
+                # is the one thing paper does not do.
+                return fold(compose(pages[from_page - 1], cx, cy, s_out, cache),
+                            compose(pages[to - 1], cx, cy, s_in, cache_b),
+                            (t - t0) / (t1 - t0))
+        return compose(pages[page - 1], cx, cy, s, cache)
+
+    def travel(t0: float, t1: float) -> float:
+        """How far the sheet moves across the frame between two instants, px."""
+        a, b = at(keys, t0, ease), at(keys, t1, ease)
+        return math.hypot((b[0] - a[0]) * OUT_W, (b[1] - a[1]) * OUT_H)
+
     def frames():
-        cache: dict[tuple[int, int], Image.Image] = {}
-        cache_b: dict[tuple[int, int], Image.Image] = {}
+        step = 1.0 / max(args.frames - 1, 1)
         for i in range(args.frames):
-            t = i / max(args.frames - 1, 1)
-            cx, cy, s, page = at(keys, t, ease)
-            # A turn owns the page on both sides of itself: before it ends the
-            # sheet on top is the one being turned, after it the one revealed.
-            for t0, t1, to in turns:
-                if t >= t1:
-                    page = to
-            for t0, t1, to in turns:
-                if t0 <= t < t1:
-                    before = at(keys, max(t0 - 1e-6, 0.0), ease)
-                    from_page, s_out = before[3], before[2]
-                    s_in = at(keys, t1, ease)[2]
-                    # Each sheet keeps its own scale through the turn. They
-                    # differ because the scans do — 1024px against 1860px for
-                    # the same sheet of paper — so interpolating between them
-                    # would shrink the page being turned while it turns, which
-                    # is the one thing paper does not do.
-                    yield fold(compose(pages[from_page - 1], cx, cy, s_out, cache),
-                               compose(pages[to - 1], cx, cy, s_in, cache_b),
-                               (t - t0) / (t1 - t0))
-                    break
-            else:
-                yield compose(pages[page - 1], cx, cy, s, cache)
+            t = i * step
+            if args.shutter <= 0:
+                yield still(t)
+                continue
+            # A frame is an exposure, not an instant. Sampling the path across
+            # the time the shutter is open is what stops a fast traverse from
+            # strobing: at 30 fps a whip moves a tenth of the frame between
+            # frames, and the eye reads that as a stutter rather than as speed.
+            # The samples are spaced by *distance*, not by count: a fixed count
+            # smears a hold for nothing and leaves a whip as a row of separate
+            # ghosts, which is the artefact it was meant to remove. One sample
+            # per pixel and a half; a hold costs two. Cheap because nothing is
+            # resampled — the sheet runs at s = 1.0 and a sample is one paste.
+            half = 0.5 * args.shutter * step
+            lo, hi = max(t - half, 0.0), min(t + half, 1.0)
+            n = min(max(int(travel(lo, hi) / 1.5) + 2, 2), max(2, args.subframes))
+            acc = None
+            for j in range(n):
+                sub = np.asarray(still(lo + (hi - lo) * j / (n - 1)), dtype=np.float32)
+                acc = sub if acc is None else acc + sub
+            yield Image.fromarray(np.clip(acc / n, 0, 255).astype(np.uint8))
     dest = args.project / "composites" / f"{args.name}.mp4"
     dest.parent.mkdir(parents=True, exist_ok=True)
     encode(frames(), dest, args.fps, crf=args.crf,

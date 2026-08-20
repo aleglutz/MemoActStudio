@@ -133,3 +133,48 @@ lands at the end of the second shot rather than after it. **If the narration is
 re-recorded**, read the new shot lengths from `generated/report.txt`, set
 `--frames` to their sum plus six, and update `in` on the 1:32 row of
 `shots.csv`.
+
+## The cold open — S00, 6.40 s
+
+Not in `shots.csv`, and deliberately so: the reel is cut to a recorded
+narration and every cue in it is measured from that recording, so a shot
+inserted at the head would move all twenty of them. The hook is built as its
+own clip and joined ahead of the reel at assembly.
+
+The sheet first. It is a markdown file — `hook_page.md`, in git — typed onto
+paper whose tone and grain are sampled from the act scans:
+
+    python tools/render_page.py         --page projects/legends_of_surrender/hook_page.md         --out projects/legends_of_surrender/composites/hook_page.png         --anchor "M E M O A C T S" --anchor "8, 9" --anchor pencil
+
+It prints the three `render_move.py` keys below rather than leaving them to be
+measured off the image by eye, exactly as `render_map.py` prints its `focus`.
+**If the sheet is edited, re-read the keys from that output** — a line added
+above the wordmark moves every anchor under it.
+
+    python tools/render_move.py --project projects/legends_of_surrender         --image hook_page.png --name S00_hook --frames 192 --ease cosine         --shutter 0.5         --key 0.000:0.500,0.812,1.00 --key 0.110:0.500,0.812,1.00         --key 0.393:-2.833,1.627,1.00 --key 0.518:-2.833,1.627,1.00         --key 0.801:-0.886,0.183,1.00 --key 1.000:-0.886,0.183,1.00
+
+| time | | |
+|---|---|---|
+| 0.0–0.7 s | held on **M E M O A C T S**, typed among the working notes | |
+| 0.7–2.5 s | up and right across the header | 2 180 px/s |
+| 2.5–3.3 s | held on the pencilled **67** in the corner | |
+| 3.3–5.1 s | back down and left | 1 930 px/s |
+| 5.1–6.4 s | held on **8, 9** in the enumeration | |
+
+Three things about it are load-bearing:
+
+- **`s = 1.00` throughout.** The sheet is generated, so it is generated at the
+  size the closest beat needs: one page pixel per frame pixel, nothing
+  resampled, no enlargement to declare, and the paper keeps the grain it was
+  drawn with. It also makes the two whips cheap, since a frame is a paste.
+- **The camera never zooms**, because the model is a sheet on a bed and paper
+  does not swell — the same rule the act shot follows. That is what forces the
+  enumeration into display type: one type size cannot both fit fifteen cells of
+  wordmark in a 1080 px frame and fill it with two numerals.
+- **`--shutter 0.5` is new** and is what makes the whips read as speed rather
+  than as a stutter: at 2 180 px/s the sheet crosses a tenth of the frame
+  between frames. It is off by default, so `S12_ru_page_move` above still
+  renders identically.
+
+The line the hook is built for — *"six-seven is dead, let's talk eight-nine"* —
+is not recorded. Until it is, the clip runs mute.
