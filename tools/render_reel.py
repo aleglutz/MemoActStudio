@@ -16,25 +16,29 @@ the streaming renderer removes (GAPS.md #2).
 Run tools/generate_shots.py first; this consumes its output. Keeping the two
 separate is deliberate (SPEC §4): shots.json is a file a human can read and
 edit between the two steps.
+
+The work is `memoacts_core.pipeline.render_project`, which the Render node
+calls with the same options object — the flags below are its fields.
 """
 from __future__ import annotations
 
 import argparse
 import json
 import sys
-from dataclasses import replace
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from PIL import Image  # noqa: E402
+from memoacts_core.effects import PRESETS  # noqa: E402
+from memoacts_core.pipeline import (ProjectError, RenderOptions,  # noqa: E402
+                                    render_project)
 
-from memoacts_core import subs  # noqa: E402
-from memoacts_core.project import find_narration, resolve_media  # noqa: E402
-from memoacts_core.effects import PRESETS, preset  # noqa: E402
-from memoacts_core.render import ShotRender, render_reel  # noqa: E402
-from memoacts_core.schedule import Motion, compute  # noqa: E402
-from memoacts_core.video import is_video, probe  # noqa: E402
+
+def printer(stage: str, done: int = 0, total: int = 0, message: str = "",
+            preview=None) -> None:
+    """Show the lines the pipeline phrases; ignore the counters and frames."""
+    if message:
+        print(message)
 
 
 def main() -> int:
@@ -68,7 +72,12 @@ def main() -> int:
                     help="what to do when a source cannot fill the output "
                          "(SPEC §5.2 resolution guard)")
     ap.add_argument("--effects", default="none", choices=sorted(PRESETS),
-                    help="effect preset applied to every shot (SPEC §5.4)")
+                    help="effect preset for every shot that names none of its "
+                         "own in shots.csv (SPEC §5.4)")
+    ap.add_argument("--shot", type=int, action="append", default=None,
+                    help="render only this shot, by number; repeatable. A "
+                         "preview: no narration and no captions, because both "
+                         "are timed from the head of the reel")
     args = ap.parse_args()
 
     proj = args.project
@@ -78,78 +87,24 @@ def main() -> int:
         return 1
     doc = json.loads(shots_path.read_text(encoding="utf-8"))
 
-    narration = proj / doc.get("narration", "")
-    if not narration.exists():
-        narration = find_narration(proj)
-        if narration is None:
-            print(f"no narration.* in {proj}")
-            return 1
+    opts = RenderOptions(subs=not args.no_subs, sub_size=args.sub_size,
+                         segment=not args.no_segment, plate=args.plate,
+                         labels=not args.no_labels, label_hold=args.label_hold,
+                         crf=args.crf, on_upscale=args.on_upscale,
+                         effects=args.effects)
+    try:
+        res = render_project(proj, doc, out=args.out, opts=opts,
+                             shot_ids=args.shot, progress=printer)
+    except ProjectError as exc:
+        print(exc)
+        return 1
 
-    fps = doc["fps"]
-    out_w, out_h = doc.get("width", 1080), doc.get("height", 1920)
-
-    shots: list[ShotRender] = []
-    for s in doc["shots"]:
-        img = resolve_media(proj, s)
-        if not img.exists():
-            print(f"missing media for shot {s['id']}: {img}")
-            return 1
-        if is_video(img):
-            src_w, src_h = probe(img).size
-        else:
-            with Image.open(img) as im:
-                src_w, src_h = im.size
-        sched = compute(src_w, src_h, s["n_frames"], Motion(**s["motion"]),
-                        out_w=out_w)
-        # A fresh stack per shot: the pipeline holds decoder state (texture
-        # clip position), so sharing one across shots would interleave them.
-        fx = preset(args.effects) if args.effects != "none" else None
-        shots.append(ShotRender(media=img, schedule=sched, effects=fx,
-                                media_in=s.get("media_in") or 0.0,
-                                speed=s.get("speed") or 1.0))
-
-    out_path = args.out or proj / "out" / "reel.mp4"
-    out_path.parent.mkdir(parents=True, exist_ok=True)
-
-    ass = None
-    if not args.no_subs:
-        style = subs.SubStyle(size=args.sub_size)
-        if args.plate is not None:
-            style = replace(style, plate_opacity=args.plate)
-        cues = subs.cues_from_shots(doc["shots"], style, out_w,
-                                    segment=not args.no_segment)
-        labels = ([] if args.no_labels
-                  else subs.labels_from_shots(doc["shots"], hold=args.label_hold))
-        credit_cues = ([] if args.no_labels
-                       else subs.credits_from_shots(doc["shots"]))
-        ass, srt = subs.write_tracks(out_path.parent, cues, stem=out_path.stem,
-                                     style=style, labels=labels,
-                                     credits=credit_cues)
-        if labels:
-            print(f"labels: {len(labels)} corner tags, {args.label_hold:.1f}s each")
-        if credit_cues:
-            print(f"credits: {len(credit_cues)} source lines, held for the shot")
-        # A wrapped caption stacks two plates and puts a dark bar through the
-        # text, so this is a defect report, not a style note.
-        for c in subs.check_wrap(cues, style, out_w):
-            print(f"  WRAPS (plates will overlap): {c.text!r}")
-        print(f"subtitles: {len(cues)} cues from {len(doc['shots'])} blocks "
-              f"-> {ass.name}, {srt.name}")
-
-    total = sum(len(s.schedule.ws) for s in shots)
-    print(f"rendering {len(shots)} shots, {total} frames "
-          f"({total / fps:.3f} s at {fps} fps) -> {out_path.name}")
-
-    render_reel(shots, out_path, fps, narration=narration, ass=ass,
-                crf=args.crf, out_w=out_w, out_h=out_h,
-                on_upscale=args.on_upscale)
-
-    print(f"wrote {out_path}")
-    # The reel is frame-quantised, so it is normally a few ms longer than the
-    # narration. A large gap means the shot table and the audio disagree.
-    drift = total / fps - doc.get("duration_s", total / fps)
-    print(f"video {total / fps:.3f} s vs narration {doc.get('duration_s')} s "
-          f"(drift {drift * 1000:+.0f} ms)")
+    for w in res.warnings:
+        print(f"[MemoActs] {w}")
+    print(f"wrote {res.path}")
+    if args.shot is None:
+        print(f"video {res.duration_s:.3f} s vs narration "
+              f"{doc.get('duration_s')} s (drift {res.drift_s * 1000:+.0f} ms)")
     return 0
 
 

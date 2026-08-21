@@ -149,6 +149,16 @@ Writes `out/reel.mp4` at 1080×1920, 30 fps, with the `.ass` and `.srt` tracks
 beside it. Useful flags: `--no-subs`, `--sub-size 56`, `--plate 0.80`
 (subtitle plate opacity), `--on-upscale warn|error|allow`, `--crf 19`.
 
+`--shot 7` renders that shot alone — seconds instead of minutes, which is the
+way to judge a framing or a move without re-rendering the reel. It is a preview
+and says so: no narration and no captions, because both are timed from the head
+of the reel and would be wrong against a fragment of it.
+
+Each shot's look comes from its own `effects` column in `shots.csv`;
+`--effects archive_soft` sets the look for every shot that names none. Effects
+cost three to four times the render time, so a whole reel under a heavy preset
+is minutes, not seconds — check one shot first.
+
 ## 7. Re-recording the narration
 
 Replace `sources/narration.wav` and re-run steps 4 and 6. Nothing else moves:

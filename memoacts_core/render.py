@@ -21,7 +21,7 @@ import shutil
 import subprocess
 import tempfile
 import warnings
-from collections.abc import Iterable, Iterator
+from collections.abc import Callable, Iterable, Iterator
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -312,15 +312,37 @@ def render_reel(shots: Iterable[ShotRender], out_path: Path, fps: int, *,
                 narration: Path | None = None, ass: Path | None = None,
                 fontsdir: Path | None = None, max_mbps: float | None = 12.0,
                 crf: int = 19, out_w: int = OUT_W, out_h: int = OUT_H,
-                on_upscale: str = "warn") -> Path:
-    """Whole reel, one pass, constant memory. The P1 concat step disappears."""
+                on_upscale: str = "warn",
+                on_frame: Callable[[int, int, Image.Image], None] | None = None
+                ) -> Path:
+    """Whole reel, one pass, constant memory. The P1 concat step disappears.
+
+    `on_frame(done, total, frame)` is called as each frame leaves the renderer
+    and before it reaches ffmpeg. This is the only progress signal the pipeline
+    has: `encode` writes into a process whose stderr goes to a temp file rather
+    than a pipe (a Windows deadlock, see `encode`), so ffmpeg's own counter is
+    not readable. Raising from inside the callback stops the render — ffmpeg's
+    stdin closes and `encode` reports a non-zero return.
+    """
     shots = list(shots)
     # Pick the x264 tune from the content rather than making the caller know
     # about it: any shot carrying grain makes the whole reel grainy material.
     tune = "grain" if any(
         s.effects is not None and s.effects.grain is not None
         and s.effects.grain.amount > 0 for s in shots) else None
-    return encode(reel_frames(shots, out_w, out_h, on_upscale, fps), out_path,
+    frames = reel_frames(shots, out_w, out_h, on_upscale, fps)
+    if on_frame is not None:
+        frames = _counted(frames, sum(len(s.schedule.ws) for s in shots), on_frame)
+    return encode(frames, out_path,
                   fps, narration=narration, ass=ass, fontsdir=fontsdir,
                   tune=tune, max_mbps=max_mbps, crf=crf,
                   out_w=out_w, out_h=out_h)
+
+
+def _counted(frames: Iterable[Image.Image], total: int,
+             on_frame: Callable[[int, int, Image.Image], None]
+             ) -> Iterator[Image.Image]:
+    """Count frames past a callback without holding any of them."""
+    for i, frame in enumerate(frames, 1):
+        on_frame(i, total, frame)
+        yield frame

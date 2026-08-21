@@ -126,10 +126,13 @@ discovering it live** — a shorter reel teaches the same pipeline.
    python tools/render_reel.py --project projects/demo_en
    ```
 
-   Expect: 4 shots, 415 frames, 13.833 s, drift within a few ms, and one
-   `UserWarning` about `03_small.png` being enlarged 1.92× — **that warning is
-   correct behaviour**, not a fault. The fixture deliberately contains a source
-   too small for the output so the resolution guard is exercised.
+   Expect: 4 shots, 415 frames, 13.833 s, drift within a few ms, and one line
+   reading `[MemoActs] 03_small.png: source supplies only 562px for a 1080px
+   output (1.92x enlargement)` — **that warning is correct behaviour**, not a
+   fault. The fixture deliberately contains a source too small for the output
+   so the resolution guard is exercised. (It used to arrive as a bare Python
+   `UserWarning` on stderr; the pipeline now collects it so the graph can show
+   it too, and the CLI prints it with the same prefix the nodes use.)
 
 2. **Alignment produces timings** (this also seeds the model, §3.5):
 

@@ -142,52 +142,116 @@ class ResolvedShot:
         return self.media is not None and self.media.suffix.lower() in VIDEO_EXTS
 
 
+#: The columns `write_template` emits, and the order a file gets when the
+#: editor writes one from nothing. A file already on disk keeps its own header.
+COLUMNS = ("shot", "media", "in", "motion", "rate", "anchor", "speed",
+           "focus", "label", "credit", "effects", "notes")
+
+
+@dataclass
+class ShotTable:
+    """`shots.csv` exactly as it sits on disk, so it can be written back.
+
+    `ShotEdit` is the typed view the pipeline consumes; it deliberately drops
+    what it does not understand. This keeps the rest: the header as the author
+    spelled it, any column this code has never heard of, and the `#` comment
+    rows. The table editor writes through here, so a file the author has been
+    keeping by hand survives being opened in the GUI and saved untouched.
+    """
+    fieldnames: list[str] = field(default_factory=lambda: list(COLUMNS))
+    rows: list[dict[str, str]] = field(default_factory=list)
+
+    def data_rows(self) -> list[dict[str, str]]:
+        """The rows that address a shot — comments and blank keys dropped."""
+        return [r for r in self.rows if _row_key(r) and not _row_key(r).startswith("#")]
+
+
+def _row_key(row: dict[str, str]) -> str:
+    """The `shot` cell of a row, whatever case the header was written in."""
+    for k, v in row.items():
+        if (k or "").strip().lower() == "shot":
+            return (v or "").strip()
+    return ""
+
+
+def read_table(path: Path) -> ShotTable:
+    """Read `shots.csv` verbatim. A missing file gives an empty table."""
+    if not path.exists():
+        return ShotTable()
+    with path.open(newline="", encoding="utf-8-sig") as fh:
+        reader = csv.DictReader(fh)
+        fieldnames = list(reader.fieldnames or COLUMNS)
+        rows = [{k: (v if isinstance(v, str) else "") for k, v in raw.items()
+                 if k is not None}
+                for raw in reader if raw is not None]
+    return ShotTable(fieldnames=fieldnames, rows=rows)
+
+
+def write_table(path: Path, table: ShotTable) -> Path:
+    """Write a `ShotTable` back, header and unknown columns intact.
+
+    `\\r\\n` is `csv.writer`'s own default and what every `shots.csv` in this
+    repository already uses, so a save with no edits is a no-op to git.
+    """
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fieldnames = table.fieldnames or list(COLUMNS)
+    tmp = path.with_suffix(path.suffix + ".tmp")
+    with tmp.open("w", newline="", encoding="utf-8") as fh:
+        w = csv.DictWriter(fh, fieldnames=fieldnames, extrasaction="ignore")
+        w.writeheader()
+        for row in table.rows:
+            w.writerow({k: row.get(k, "") for k in fieldnames})
+    # Replace rather than truncate-and-write: a crash mid-write would otherwise
+    # leave the author's edit decisions half gone, and they are not regenerable.
+    tmp.replace(path)
+    return path
+
+
+def edits_from_table(table: ShotTable) -> list[ShotEdit]:
+    """Type the rows of a table. Comments and unaddressed rows are dropped."""
+    rows: list[ShotEdit] = []
+    for raw in table.rows:
+        # Normalise headers once: users type "Shot", " media ", "IN".
+        row = {(k or "").strip().lower(): (v or "").strip()
+               for k, v in raw.items() if k}
+        key = row.get("shot", "")
+        if not key or key.startswith("#"):
+            continue
+
+        edit = ShotEdit(
+            key=key,
+            media=row.get("media", ""),
+            media_in=parse_timecode(row.get("in", "")),
+            motion=row.get("motion", ""),
+            anchor=row.get("anchor", ""),
+            focus=row.get("focus", ""),
+            label=row.get("label", ""),
+            credit=row.get("credit", ""),
+            effects=row.get("effects", ""),
+            notes=row.get("notes", ""),
+        )
+        if ":" in key:
+            edit.cue = parse_timecode(key)
+        else:
+            try:
+                edit.index = int(key)
+            except ValueError:
+                edit.cue = parse_timecode(key)
+        try:
+            edit.rate = float(row["rate"]) if row.get("rate") else None
+        except ValueError:
+            edit.rate = None
+        try:
+            edit.speed = float(row["speed"]) if row.get("speed") else None
+        except ValueError:
+            edit.speed = None
+        rows.append(edit)
+    return rows
+
+
 def read_shot_list(path: Path) -> list[ShotEdit]:
     """Read `shots.csv`. A missing file is not an error — it means no overrides."""
-    if not path.exists():
-        return []
-
-    rows: list[ShotEdit] = []
-    with path.open(newline="", encoding="utf-8-sig") as fh:
-        for raw in csv.DictReader(fh):
-            if raw is None:
-                continue
-            # Normalise headers once: users type "Shot", " media ", "IN".
-            row = {(k or "").strip().lower(): (v or "").strip()
-                   for k, v in raw.items() if k}
-            key = row.get("shot", "")
-            if not key or key.startswith("#"):
-                continue
-
-            edit = ShotEdit(
-                key=key,
-                media=row.get("media", ""),
-                media_in=parse_timecode(row.get("in", "")),
-                motion=row.get("motion", ""),
-                anchor=row.get("anchor", ""),
-                focus=row.get("focus", ""),
-                label=row.get("label", ""),
-                credit=row.get("credit", ""),
-                effects=row.get("effects", ""),
-                notes=row.get("notes", ""),
-            )
-            if ":" in key:
-                edit.cue = parse_timecode(key)
-            else:
-                try:
-                    edit.index = int(key)
-                except ValueError:
-                    edit.cue = parse_timecode(key)
-            try:
-                edit.rate = float(row["rate"]) if row.get("rate") else None
-            except ValueError:
-                edit.rate = None
-            try:
-                edit.speed = float(row["speed"]) if row.get("speed") else None
-            except ValueError:
-                edit.speed = None
-            rows.append(edit)
-    return rows
+    return edits_from_table(read_table(path))
 
 
 def apply_shot_list(shots: list[ScriptShot], edits: list[ShotEdit],
@@ -298,9 +362,7 @@ def write_template(path: Path, shots: list[ScriptShot]) -> Path:
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", newline="", encoding="utf-8") as fh:
         w = csv.writer(fh)
-        w.writerow(["shot", "media", "in", "motion", "rate", "anchor",
-                    "speed", "focus", "label", "credit", "effects",
-                    "notes"])
+        w.writerow(list(COLUMNS))
         for i, s in enumerate(shots, 1):
             cue = ("" if s.cue is None
                    else f"{int(s.cue) // 60}:{int(s.cue) % 60:02d}")

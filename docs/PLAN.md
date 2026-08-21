@@ -334,8 +334,13 @@ both.
 
 1. **No regression.** After A,
    `python tools/render_reel.py --project projects/legends_of_surrender`
-   produces the same 20 shots, 5 069 frames, 168.97 s, and `generated/report.txt`
-   is byte-identical to the file it replaces.
+   produces the same 20 shots, **4 925 frames, 164.167 s**, and
+   `generated/report.txt` is byte-identical to the file it replaces apart from
+   its schema line. (5 069 frames / 168.97 s is `reel_with_hook.mp4`, the reel
+   behind its 4.80 s cold open — a different artefact, assembled afterwards.)
+   **Done 2026-08-21:** report identical line for line, `reel.ass` identical
+   byte for byte, and the MP4 matches on frame count and duration to the
+   microsecond.
 2. **Parity.** The same project rendered from the graph and from the CLI agrees
    on frame count, duration and drift, and both reports agree.
 3. **Cold start.** Restart ComfyUI, open `example_workflows/reel_stills.json`,

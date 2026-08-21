@@ -19,6 +19,13 @@ Additive: an empty string is the absence of one, which is how a 1.2 file reads.
 **1.4 (2026-08-11)** adds `media_in` and `speed` for video fragments. Additive:
 both are `null` for a still, which is every shot in a 1.3 file.
 
+**1.5 (2026-08-21)** adds `effects`, the shot's own look by preset name. It is
+the `effects` column of `shots.csv`, which until now was parsed and then thrown
+away — `write_outputs` had nowhere to put it, so a per-shot look could not
+reach the renderer at all and every shot got whatever `--effects` said.
+Additive: `null` on every shot in a 1.4 file, which is what "no look of its
+own" means, and a 1.4 reader ignores it.
+
 ## shots.json
 
 ```json

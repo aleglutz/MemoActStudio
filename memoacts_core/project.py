@@ -309,7 +309,8 @@ def write_outputs(out_dir: Path, *, lang: str, fps: int, narration: str,
                   labels: list[str] | None = None,
                   credits: list[str] | None = None,
                   media_ins: list[float | None] | None = None,
-                  speeds: list[float | None] | None = None) -> Path:
+                  speeds: list[float | None] | None = None,
+                  effects: list[str] | None = None) -> Path:
     out_dir.mkdir(parents=True, exist_ok=True)
     crops = out_dir / "crops"
     crops.mkdir(exist_ok=True)
@@ -319,6 +320,7 @@ def write_outputs(out_dir: Path, *, lang: str, fps: int, narration: str,
     credits = credits or [""] * len(blocks)
     media_ins = media_ins or [None] * len(blocks)
     speeds = speeds or [None] * len(blocks)
+    effects = effects or [""] * len(blocks)
     shots = []
     report = [f"MemoActs shot report — schema {SCHEMA_VERSION}",
               f"narration: {narration}  duration: {duration:.2f}s  fps: {fps}  "
@@ -363,6 +365,11 @@ def write_outputs(out_dir: Path, *, lang: str, fps: int, narration: str,
             # and the renderer ignores them there.
             "media_in": media_ins[i - 1],
             "speed": speeds[i - 1],
+            # The shot's own look, by preset name (schema 1.5). Empty means the
+            # shot takes whatever the render is given globally, which is how
+            # every 1.4 file behaves. Effects are the one decision that costs
+            # render time — three to four times it — so the report prints them.
+            "effects": effects[i - 1] or None,
             "cue_s": cue,
             "cue_drift_s": None if cue is None else round(span.t_start - cue, 2),
             # Word timings, kept so captions can be cut inside a block at real
@@ -382,6 +389,9 @@ def write_outputs(out_dir: Path, *, lang: str, fps: int, narration: str,
             " [DIGITS]" if digit_flags[i - 1] else "",
             " [CLAMPED]" if sched.clamped else "",
             "" if drift is None or abs(drift) < 2.0 else f" [DRIFT {drift:+.1f}s]",
+            # Only when the shot asks for one, so a project that sets no looks
+            # reports exactly as it did before the column existed.
+            f" [FX {effects[i - 1]}]" if effects[i - 1] else "",
         ])
         cue_txt = "" if cue is None else f"  cue {int(cue)//60}:{int(cue)%60:02d}"
         report.append(
