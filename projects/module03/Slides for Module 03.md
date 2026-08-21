@@ -112,6 +112,9 @@ supplied separately.
 
 ## S6 The film, and three facts that decide everything
 
+**Screen `../legends_of_surrender/sources/videos/MBK_KAPFILM_FINAL.mp4`** — the
+source, before anything is done to it: Tempelhof, the signing, the banquet.
+
 Museum Berlin-Karlshorst, 7:36. Our cut: **04:14–04:44**, the signing.
 
 1. **It is pillarboxed.** The transfer is 1280×800; the picture inside it is
@@ -147,6 +150,16 @@ Museum Berlin-Karlshorst, 7:36. Our cut: **04:14–04:44**, the signing.
 > already graded by a machine nobody remembers.
 
 *(10 min for S6–S7 — five and five.)*
+
+> **Two corrections to the running time.** The source film is **7:36** and this
+> block is ten minutes, so it cannot be played whole here without taking six
+> minutes from somewhere else. Scrub it — Tempelhof at the head, the signing
+> around 4:14, the banquet at the tail — and let the room watch the whole thing
+> on the page afterwards, where it costs nothing.
+>
+> Also worth pointing at while scrubbing: the museum's own burned-in trilingual
+> captions, around 3:20. They are the reason the working cut starts where it
+> does.
 
 ---
 

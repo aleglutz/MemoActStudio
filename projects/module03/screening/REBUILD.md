@@ -5,11 +5,20 @@
 Berlin-Karlshorst's, and this repository is public. GPL-3.0 covers the code; it
 does not licence somebody else's archive.
 
-Eight files, re-encoded from the originals in `../out/` and
-`../../legends_of_surrender/out/`. Run from `projects/`:
+Nine files, re-encoded from the originals in `../out/`,
+`../../legends_of_surrender/out/` and
+`../../legends_of_surrender/sources/videos/`. Run from `projects/`:
 
 ```
 mkdir -p module03/screening/media
+
+# The source film, whole, shown before any of the four levels. Its silent
+# audio track is kept on purpose: turn the volume up and hear nothing, which
+# is the claim level 2 rests on.
+ffmpeg -y -i legends_of_surrender/sources/videos/MBK_KAPFILM_FINAL.mp4 \
+       -c:v libx264 -crf 26 -preset slow -pix_fmt yuv420p \
+       -movflags +faststart -c:a aac -b:a 96k \
+       module03/screening/media/KAPFILM_full.mp4
 
 # The reel keeps its native 1080x1920 -- it opens the session and a 720-wide
 # copy is visibly softer on a beamer.
@@ -45,7 +54,8 @@ for spec in \
 done
 ```
 
-About 80 MB in total, of which the reel is 42.
+About 150 MB in total: the source film is 70 and the reel 42. Both are the
+reason to keep this folder out of git.
 
 `-movflags +faststart` matters if this is ever served over HTTP — without it the
 browser downloads the whole file before the first frame appears.
