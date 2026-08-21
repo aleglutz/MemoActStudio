@@ -89,8 +89,12 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--project", type=Path, required=True)
     ap.add_argument("--host", default="127.0.0.1:8188")
-    ap.add_argument("--comfy-root", type=Path, default=Path(
-        r"C:\Users\Aleg\beehAIve\ComfyUI-Easy-Install\ComfyUI-Easy-Install\ComfyUI"))
+    # The pack lives in ComfyUI/custom_nodes/<this repo>, so the install is
+    # two levels above it. Derived rather than written out: a path from one
+    # machine is wrong on every other one, and this default used to be
+    # exactly that.
+    ap.add_argument("--comfy-root", type=Path,
+                    default=Path(__file__).resolve().parents[3])
     ap.add_argument("--export-workflow", type=Path, default=None)
     ap.add_argument("--export-all", type=Path, default=None,
                     help="write every chunk graph (API format) to this dir and exit — "

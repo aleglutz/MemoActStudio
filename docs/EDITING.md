@@ -5,7 +5,8 @@ by hand. This is how the two fit together without fighting.
 
 ## Where the editor's workspace lives
 
-    C:\Users\Aleg\beehAIve\freecut-workspace\
+Anywhere **outside the repo** — on the author's machine, a
+`freecut-workspace` folder beside the ComfyUI install.
 
 **Outside the repo, deliberately.** FreeCut unpacks a whole workspace wherever
 it is pointed — media copies, thumbnails, waveform caches, its own `README.md`
@@ -13,7 +14,8 @@ and a nested `projects/` tree. Pointed at a MemoActs project it collided by
 name (`projects/legends_of_surrender/projects/`) and dropped its README exactly
 where the project's own would go.
 
-If FreeCut ever asks for a workspace folder again, give it that path. The
+If FreeCut ever asks for a workspace folder again, give it a path outside
+the repository. The
 `.gitignore` still carries guard rules in case it does not.
 
 The workspace is self-contained: media is referenced by UUID and no file in it

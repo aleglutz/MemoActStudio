@@ -44,7 +44,7 @@ reverses SPEC §0's "`nodes_layers.py` is the designated first cut" the same way
 
 - ComfyUI (Easy-Install), Windows.
 - **Python is embedded.** Install packages into it, never into a system Python:
-  `C:\Users\Aleg\beehAIve\ComfyUI-Easy-Install\ComfyUI-Easy-Install\python_embeded\python.exe -m pip install <pkg>`
+  `<ComfyUI-Easy-Install>\python_embeded\python.exe -m pip install <pkg>`
 - This repo lives under `ComfyUI\custom_nodes\MemoActStudio` so ComfyUI loads it directly.
 - Comfy Cloud: curated custom-node list only — **our own pack cannot be installed there.** That is why P1 uses stock nodes.
 - MCP: local ComfyUI MCP for the dev loop; official Comfy Cloud MCP (`cloud.comfy.org/mcp`, OAuth) for cloud graphs.
@@ -66,9 +66,9 @@ reverses SPEC §0's "`nodes_layers.py` is the designated first cut" the same way
 | `ALIGNERS.md` | Aligner evaluation. Decided: stable-ts primary, behind an `Aligner` interface |
 | `GAPS.md` | Every compromise forced by stock nodes in P1 — this is the P2 backlog |
 | `HARDENING.md` | Deferred portability items (much reduced — students are on Cloud, not local) |
-| `README.md` | The CLI path, cold start to rendered reel. Start here to *run* something |
+| `README.md` | The public front door: what this is, install, the five nodes. Written for a stranger arriving from GitHub |
 | `HANDOFF.md` | Where the last session stopped and what the next one does first. Rewritten, not appended to; superseded versions go to `archive/handoffs/` |
-| `docs/` | Working documents: `PLAN.md` (current task list), `WORKSHOP_HANDOUT.md` (what a September student is given), `P1_GRAPH.md` + `PARTICIPANT_GRAPH_RECIPE.md` (August intensive), `WORKSHOP_MACHINE_SETUP.md` (September), `SHOTS_SCHEMA.md`, `THREEBAND_TOOL.md`, `UPSCALE.md`, `EDITING.md`, `INTERFACE_BRIEF.md` (the brief for the student-facing interface — paste it to open that session) |
+| `docs/` | Working documents: `PLAN.md` (current task list), `WORKSHOP_HANDOUT.md` (what a September student is given), `CLI.md` (the author's terminal path, cold start to rendered reel), `P1_GRAPH.md` + `PARTICIPANT_GRAPH_RECIPE.md` (August intensive), `WORKSHOP_MACHINE_SETUP.md` (September), `SHOTS_SCHEMA.md`, `THREEBAND_TOOL.md`, `UPSCALE.md`, `EDITING.md`, `INTERFACE_BRIEF.md` (the brief for the student-facing interface — paste it to open that session) |
 | `example_workflows/` | `reel_stills.json` — the five-node graph a student opens. Load it in ComfyUI rather than reading it |
 | `web/` + `nodes_web.py` | The shot-table widget and the `/memoacts/` routes behind it |
 | `archive/` | Superseded documents, kept for their reasoning. Not authoritative, not maintained — see `archive/README.md` |

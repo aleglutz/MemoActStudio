@@ -51,3 +51,7 @@ projects/*.mp4
 # Claude Code worktrees, created per-task under the repo and removed with
 # `git worktree remove`. Never part of the tree they branch from.
 .claude/worktrees/
+
+# Per-machine Claude Code permissions. Ignored globally on the author's box,
+# which does not travel to a clone — so it is said here too.
+.claude/settings.local.json
