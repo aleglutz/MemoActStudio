@@ -2,8 +2,9 @@
 
 Read `CLAUDE.md` and `SPEC.md` first, as always. This file is the delta. The
 morning version recorded that `docs/PLAN.md` had been written and nothing
-implemented. Since then **A, B and C of that plan are built and verified**, and
-the terminal is no longer on the path from a project folder to a rendered reel.
+implemented. Since then **A, B, C and D of that plan are built and verified**,
+and the terminal is no longer on the path from a project folder to a rendered
+reel.
 
 ## The short version
 
@@ -35,6 +36,14 @@ seconds. `MemoActsShotReport` is gone — the table prints the real `report.txt`
 Media is a picker whose every option carries its own `max_zoom`, so the
 resolution guard is a choice at selection time rather than a warning after the
 render — which is what `GAPS.md` has been asking for.
+
+**D — the focus picker.** Drag a rectangle over the thumbnail and it becomes the
+`focus` triple, fitted to what the renderer will use rather than to what was
+drawn. Verified through the pipeline, not only the panel: a focus drawn in the
+browser and saved changed one line of `shots.csv`, read back as
+`(0.525, 0.45, 0.769)`, and `schedule.compute` turned it into crops running
+1404 → 1080 px — the 1.30× push-in the panel had promised. The author's file was
+restored afterwards.
 
 ## What it was checked against
 
