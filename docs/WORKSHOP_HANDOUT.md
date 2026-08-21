@@ -1,158 +1,153 @@
-# The workshop — you cut a reel to your own voice
+# Workshop handout — assembling a reel
 
-By the end of the day you have a vertical video: your words, read in your voice,
-with your pictures, captioned in the exact text you wrote. You also know what
-each of the five steps did to it, which matters more, because the first one you
-can do again on your own.
+By the end of the session you will have produced a vertical video from your own
+script, your own recording and your own images, with subtitles carrying the
+script text exactly as written.
 
-The tool is five nodes in ComfyUI. There is no command to type.
+The pack is six nodes in ComfyUI. No commands are typed.
 
-## Before you start
+## What to bring
 
-Bring three things:
-
-| | What it has to be |
+| | Requirement |
 |---|---|
-| **A script** | 40–60 seconds of speech, in English. Six or eight sentences. Write it as you would say it |
-| **A recording** | you reading it, one take, `.wav`. We record it in the room |
-| **Pictures** | six or so. Bigger is better and you will see exactly why |
+| **Script** | 40–60 seconds of speech, in English. Six to eight sentences, written the way you would say them |
+| **Recording** | You reading the script, one take, `.wav`. Recorded during the session |
+| **Images** | About six. Larger is better; the reason is explained in step 3 |
 
-Everything else is on the machine.
+Everything else is installed on the machine.
 
-> **Your reel is a folder.** Four folders and three files under `projects/`, and
-> your name on it. Nothing you do reaches anyone else's; nothing anyone else
-> does reaches you.
+## Your project
+
+A project is a directory under `projects/`, named after you. It contains:
+
+```
+script.md      your text
+shots.csv      your edit decisions, written by the Shot Table node
+sources/
+  narration.wav
+  images/
+generated/     shots.json and report.txt, written by the pack
+out/           the finished video
+```
+
+Projects are separate. Nothing you do affects anyone else's.
+
+## Opening the workflow
+
+**Workflows → memoacts_reel_stills.** Six nodes appear, connected left to
+right. Five of them produce the reel; the sixth renders a single shot for
+checking.
 
 ---
 
-# The five steps
+## 1 · Project — this is my material
 
-Open the workflow: **Workflows → memoacts_reel_stills**. Six boxes appear, wired
-left to right. Five of them are the reel; the sixth is a shortcut you will be
-grateful for.
+Select your directory in the **project** dropdown and press **Run**.
 
-## 1 · Project — "this is my material"
+The node reports what it found: which recording, its length, how many images,
+how many shots the script contains, and which image each shot resolved to.
 
-Pick your folder in the **project** dropdown. Press **Run**.
+Read this output before continuing. Most problems that cost time later — a
+recording in the wrong directory, an image filename that does not match — are
+visible here.
 
-It reads the folder and tells you what it found: which recording, how long, how
-many pictures, how many shots your script has, and which picture each shot
-ended up with.
+## 2 · Align — my words become timings
 
-**Read this before anything else.** Every way a day goes wrong starts here — a
-recording in the wrong folder, a picture that is not where the shot says it is.
-Two seconds of reading against twenty minutes of confusion.
+Press **Run**. This step takes one to two minutes and is the slowest in the
+workflow.
 
-## 2 · Align — "my words become timings"
+It compares the recording with the script and determines when each word is
+spoken. It does not transcribe: it never decides *what* was said, only *when*.
+This is why the subtitles later reproduce your script exactly, including
+numbers and dates.
 
-Press **Run** again. This one takes a minute or two, and it is the only slow
-step in the day.
+The result is cached. It is recomputed only when the script or the recording
+changes, so later steps cost nothing.
 
-It listens to your recording with your script in hand and works out when each
-word lands. **It is not transcribing.** It never decides *what* you said — only
-*when*. That is the whole reason the captions later say exactly what you wrote,
-including the dates, which an automatic subtitle button gets wrong more often
-than not.
+## 3 · Shot Table — I decide what is seen
 
-It runs once. Everything you do afterwards is free, until you re-record or
-rewrite.
+One row per sentence, one decision per column.
 
-## 3 · Shot Table — "I decide what is seen"
-
-This is where you work, and it is a table because that is what the decisions
-are: one row per sentence, and one decision per column.
-
-| Column | What it decides |
+| Column | Decides |
 |---|---|
-| **media** | which picture this sentence is over |
-| **motion** | how it moves — `zoom_in`, `pan_lr`, `static`, and the rest |
-| **rate** | how fast, as a fraction. 0.04–0.08 reads as a slow drift |
-| **focus** | what the shot is *about* — see below |
-| **label** | a tag in the corner: a place, a person |
-| **credit** | where the picture came from, held for the shot |
-| **effects** | the look, and what it costs you in render time |
-| **notes** | for you. The tool never reads it |
+| **media** | which image this sentence appears over |
+| **motion** | how it moves: `zoom_in`, `zoom_out`, `pan_lr`, `pan_rl`, `static`, and others |
+| **rate** | how fast, as a fraction of the frame. 0.04–0.08 reads as a slow drift |
+| **focus** | the area the shot moves towards — see below |
+| **label** | a caption in the top corner: a place or a person |
+| **credit** | the image source, displayed for the length of the shot |
+| **effects** | a look, with its render cost |
+| **notes** | your own notes; not read by the pack |
 
-Two things on this panel are worth more than the rest of the day:
+### The number beside each image
 
-**The number next to every picture.** `Karlshorst-Prepared.jpg — 0.96×`. That is
-how much picture there is compared with the frame. **Below 1.00 means the
-picture is smaller than the video and has to be blown up to fit** — it will look
-soft, and no setting fixes it. Above 1.00 is room to move.
+The media dropdown shows each file with a figure, for example
+`Karlshorst-Prepared.jpg — 0.96×`. This is the width of the largest 9:16 window
+the image can supply, divided by the output width of 1080 pixels.
 
-**Drag on the thumbnail.** The rectangle you draw is what the shot pushes in to
-— the face, the signature, the town on the map. Click, and it moves without
-resizing. The panel answers you as you draw: *"focus 0.375 · 2.67× push-in"*,
-or in orange, *"as narrow as this source allows; anything tighter is
-enlargement"*. It refuses to let you draw a window it would have to widen
-behind your back.
+- **Below 1.00**: the image is smaller than the video frame and will be
+  enlarged to fit. It will look soft, and no setting changes that.
+- **Above 1.00**: there is spare resolution, which is what a zoom uses.
 
-Press **Save** when the table reads the way you want. **Run** rebuilds the shot
-list and prints the report.
+### Setting a focus
 
-## 4 · Subtitles — "the words become captions"
+Drag a rectangle on the thumbnail to mark the area the shot moves towards: a
+face, a signature, a place on a map. Click to move the rectangle without
+resizing it.
 
-Set the size and the plate — the box behind the text, which is there because
-archival pictures run from near-black to bare paper and no single text colour
-survives both.
+The rectangle is always 9:16 and is adjusted to what the renderer will use. The
+panel reports the result as you draw, for example `focus 0.375 · 2.67× push-in`.
+If you draw a rectangle narrower than the image can supply, it is widened to the
+smallest usable size and the panel says so.
 
-It shows you every caption and when it appears, instantly, without rendering
-anything. If a caption is too wide for one line it says so in red: a wrapped
-caption stacks two plates and puts a dark bar through its own text.
+Press **Save** to write `shots.csv`, then **Run** to rebuild the shot table and
+print the report.
 
-## 5 · Render Reel — "the reel is made"
+## 4 · Subtitles — the words become captions
 
-**Run.** Frames appear in the node as they are made, and the finished video
-plays there when it is done. Minutes, not seconds.
+Set the font size and the opacity of the plate behind the text. The plate
+exists because archival images range from near-black to white paper, and no
+single text colour is legible over both.
 
-Which is why the sixth box exists.
+The node lists every caption with its timing, without rendering. Captions too
+wide for one line are flagged: a wrapped caption draws two overlapping plates,
+which produces a dark band across the text.
+
+## 5 · Render Reel — the reel is made
+
+Press **Run**. Frames appear in the node as they are rendered, and the finished
+video plays there when the render completes. A full reel takes minutes.
 
 ## One shot, in seconds
 
-**Preview Shot** renders a single shot — type its number, run, watch. Seconds
-instead of minutes. This is how you decide whether a move works. Use it about
-twenty times before you render the reel once.
+**Preview Shot** renders a single shot. Enter its number and run; the result
+appears in seconds rather than minutes. Use it to check framing and motion
+before rendering the whole reel.
 
-It has no sound and no captions, deliberately: both are timed from the start of
-the reel and would be wrong against a piece of it.
-
----
-
-# What you get, and what you don't
-
-**You get** a 1080×1920 MP4 at 30 fps, your narration passed through without
-being re-encoded, captions burnt in, and the `.srt` beside it.
-
-**You don't get:**
-
-- **A timeline.** You cannot drag a shot to make it a second longer. The
-  narration decides how long each shot is, because the narration is what the
-  audience is following. To change a duration, change the sentence.
-- **Anything invented.** No picture is generated, no line is written for you, no
-  gap is filled. The tool arranges what you brought.
-- **An undo button on the file.** `shots.csv` is a text file your edits are
-  saved into. It is also the only place your decisions live, which is why it is
-  the one thing worth copying somewhere before you experiment.
-- **Silent upscaling.** If a picture is too small the tool tells you, twice, and
-  then does the best it can. It will never quietly pretend the pixels are there.
-
-That last one is the difference worth taking home. Every step here reports what
-it did and what it could not do. The workflow you are used to — the one with the
-auto-subtitle button — does neither, which is why its mistakes reach the screen.
+It has no audio and no subtitles, because both are timed from the start of the
+reel and would not match a fragment of it.
 
 ---
 
-# When it goes wrong
+## What the pack does not do
 
-| What you see | What it means |
+- **No timeline.** Shot duration comes from the narration and cannot be set
+  directly. To lengthen a shot, lengthen the sentence.
+- **No generation.** No image is created, no text is written, no gap is filled.
+  The pack arranges the material you supply.
+- **No undo history.** `shots.csv` holds your edit decisions and is overwritten
+  when you save. Copy it before making large changes.
+- **No silent upscaling.** An undersized image is reported when you select it,
+  in the shot report, and again at render time, with the enlargement factor.
+
+## Troubleshooting
+
+| Message or symptom | Cause |
 |---|---|
-| `no narration.* in …` | the recording is not in `sources/`, or is not named `narration` |
-| every caption is in the wrong place | the read and the script diverged. Re-read the block, do not edit timings |
-| `confidence 0.00` everywhere | alignment fell back to spreading the shots evenly. Step 2 failed; the log says why |
-| a shot shows a picture you did not choose | that shot names nothing, so it took the next picture in the folder |
-| `WRAPS` in the subtitle panel | a caption is too long for one line. Shorten the sentence |
-| the table says `0.42×` and looks alarmed | your picture is less than half the width of the frame. Find a bigger one |
-| the render is taking forever | look at the effects column. `newsreel` costs four times a plain render |
-
-If something is not on this list, the message on screen is written to be read.
-Read it before asking — it usually names the file.
+| `no narration.* in …` | The recording is not in `sources/`, or is not named `narration` |
+| Captions appear at the wrong times | The reading diverged from the script. Re-record the affected block rather than editing timings |
+| `confidence 0.00` on every shot | Alignment failed and fell back to spreading shots evenly. The log states the reason |
+| A shot shows an image you did not choose | That shot names no media, so images are assigned from the directory in order |
+| `WRAPS` in the Subtitles node | A caption is too long for one line. Shorten the sentence |
+| `0.42×` beside an image | The image is less than half the width of the output frame. Use a larger one |
+| The render is much slower than expected | Check the effects column. `newsreel` costs about four times a render with no effects |
