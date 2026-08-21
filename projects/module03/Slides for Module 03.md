@@ -369,7 +369,8 @@ And then the awkward part: **Remacri is not available on Comfy Cloud.**
 2. **Your platform offers two upscalers, and both invent grain on skin that has
    none. You cannot install the careful one.** Do you use what is there, or do
    you not upscale at all? Answer as if the deadline is tomorrow.
-3. **Jackson's argument is legibility**: at native size and speed, nobody
+3. **Jackson's argument — from the film you watched for last time — is
+   legibility**: at native size and speed, nobody
    watches, so nobody learns anything. Is that worth the invention? Notice that
    the reel you saw this morning answered *no* — and lost part of its frame to
    bands for it.
@@ -449,21 +450,23 @@ Every one of them reported success.
 **One sentence each: which level is the last one you would use on your own
 subject — and what would you have to write down for the next person to trust it?**
 
-## S23 Homework — two films that made opposite choices
+## S23 Homework — start a reference board on Are.na
 
-**They Shall Not Grow Old** — recommended in full; required excerpt **22:18–32:52**
-**Babi Yar. Context** — recommended in full; required excerpt **52:46–1:08:36**
+**are.na — <https://www.are.na/>**
 
-> **Say:** These are not two examples of the same thing. Jackson takes the
-> footage as far as it can go — he slows it to a natural speed, sharpens it,
-> colours it, and hires lip-readers so the men can speak. Loznitsa cleans the
-> image and builds an entire soundtrack for silent material, and then stops: no
-> colour, no voice, no narrator telling you what you are seeing.
->
-> Both are defensible. Both are choices. Come to module 04 able to say, for each
-> film, which of the four levels its makers used and which they refused — and
-> whether you agree.
+Make an account and open a channel for your own film. Put references in it as
+you find them: images, frames, typography, colour, layouts — anything that
+answers the question the moodboard block asked, *how should this look*.
 
-**Exercise 1 is yours to run** — `HANDOUT.md`, twenty minutes, no GPU.
+**Bring the link to module 04 on 25.08.**
+
+> **Say:** A channel is a working surface, not a presentation. It is allowed to
+> be unfinished, contradictory, and full of things you will throw away. The
+> point is to have somewhere to put a reference the moment you see it, instead
+> of remembering it wrong a week later.
+
+**Optional, and it needs no GPU:** `HANDOUT.md` has the two exercises from
+today's levels 1 and 2 written out node by node, if you want to run them
+yourself.
 
 *(5 min for S22–S23 — three and two.)*
