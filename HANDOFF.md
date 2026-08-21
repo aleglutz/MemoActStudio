@@ -2,9 +2,9 @@
 
 Read `CLAUDE.md` and `SPEC.md` first, as always. This file is the delta. The
 morning version recorded that `docs/PLAN.md` had been written and nothing
-implemented. Since then **A, B, C and D of that plan are built and verified**,
-and the terminal is no longer on the path from a project folder to a rendered
-reel.
+implemented. Since then **A through F of that plan are built and verified**, the
+terminal is no longer on the path from a project folder to a rendered reel, and
+**only G is left — none of which is code.**
 
 ## The short version
 
@@ -37,6 +37,20 @@ Media is a picker whose every option carries its own `max_zoom`, so the
 resolution guard is a choice at selection time rather than a warning after the
 render — which is what `GAPS.md` has been asking for.
 
+**E — the cost of a look.** All six presets measured on this machine rather
+than the two SPEC already carried: clean 23.9 s on the fixture, then `handheld`
+2.6×, `archive_soft` 2.9×, `cold_document` 3.2×, `archive_harsh` 3.9×,
+`newsreel` 4.0×. The two known figures came back unchanged, which is why the
+four new ones can be trusted. `effects.COST` holds them; the editor prints them
+beside each preset name.
+
+**F — the things a student is handed.** `example_workflows/reel_stills.json`
+(six nodes, titled with the sentence each one is, round-tripped through
+ComfyUI's own loader), `projects/workshop_starter` (six sentences that explain
+what the tool is doing to them while it does it, one source deliberately too
+small), and `docs/WORKSHOP_HANDOUT.md` in the register of module03's handout —
+with a "what you get, and what you don't" section, and no command in it.
+
 **D — the focus picker.** Drag a rectangle over the thumbnail and it becomes the
 `focus` triple, fitted to what the renderer will use rather than to what was
 drawn. Verified through the pipeline, not only the panel: a focus drawn in the
@@ -62,19 +76,22 @@ restored afterwards.
 
 ## What the next session does first
 
-**The tail of item E** — the render-cost multiplier on a row that names an
-effect preset, so the one decision that costs minutes says so where it is made.
-Hours, not a day.
+**Item G, and it is not a coding session.** Provision machine A by executing
+`docs/WORKSHOP_MACHINE_SETUP.md` for the first time on a clean box, correcting
+it as it fails — it was written from this dev machine by inspection and has
+never been run. Extend its §6 to verify the *node* path rather than the CLI.
+Then measure on the rented hardware: one clean render, one `archive_soft`
+render, one alignment from cold. Those three numbers decide how long the
+exercise project may be.
 
-Then **F** — the template workflow, a short starter project, and the handout in
-the register of `projects/module03/HANDOUT.md` — and **G**, machine A. Those two
-are the teaching material and the machines, which is the half no amount of code
-substitutes for.
+And put the four files `projects/workshop_starter` needs into the image — its
+`REBUILD.md` names them. Nothing in the repository can do that: media is never
+versioned, and one of the three pictures has to be too small on purpose.
 
-**D landed 2026-08-21**: drag on the thumbnail to say what a shot is about.
-`schedule.focus_limits` states what a focus may be, beside the code that
-enforces it, and the panel refuses to invite a rectangle that cannot mean
-anything — true of five of this reel's twenty shots.
+**The rehearsal has not been run**, and it is the real test: someone who has not
+seen this repository, their own script, their own `.wav`, three of their own
+pictures, a stopwatch, and no terminal. If they cannot afterwards name the five
+steps, the handout is not finished.
 
 ## Two things worth knowing before touching the UI
 
