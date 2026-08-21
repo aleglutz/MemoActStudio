@@ -55,3 +55,15 @@ projects/*.mp4
 # Per-machine Claude Code permissions. Ignored globally on the author's box,
 # which does not travel to a clone — so it is said here too.
 .claude/settings.local.json
+
+# Frames lifted from Museum Berlin-Karlshorst's KAPFILM footage, and their
+# colourised and upscaled variants. They are teaching artefacts and they stay
+# on disk -- projects/module03/REBUILD.md remakes every one of them from the
+# source film -- but the film is the museum's, and this repository is public.
+# GPL-3.0 covers the code; it does not licence somebody else's archive.
+projects/module03/stills/
+projects/module03/quotes.ass
+
+# A reference document whose provenance was never written down. Kept on disk,
+# out of a public repository until it is known who made it.
+archive/script-framework.pdf
