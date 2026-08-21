@@ -1,13 +1,16 @@
-# Running a reel from the command line
+# Command-line interface
 
-**This is the author's path, not the taught one.** Students never open a
-terminal — they use the node graph (`docs/WORKSHOP_HANDOUT.md`). This page is
-here because `tools/` is the reference implementation of every step: when the
-graph and the command line disagree, this is what they are checked against.
-Both call the same four functions in `memoacts_core.pipeline`.
+`tools/` runs the same pipeline as the ComfyUI nodes, without ComfyUI. Both
+call the same functions in `memoacts_core.pipeline` with the same arguments, so
+the output is identical.
 
-What to type, in order, from a cold start. Every command runs from the
-repository root, and ComfyUI is not needed for any of it.
+Use it for scripting, batch runs, and for comparing node output against a
+known-good result. The September workshop teaches the node graph instead — see
+`docs/WORKSHOP_HANDOUT.md`.
+
+Requirements: Python 3.10 or later, `stable-ts`, `num2words`, and ffmpeg built
+with libass. ComfyUI is not required. All commands run from the repository
+root.
 
 ---
 

@@ -7,7 +7,7 @@
 [project]
 name = "memoactstudio"
 version = "0.2.0"
-description = "Cut a vertical reel to a voice-over. The script is ground truth; alignment computes timing only, so captions are never transcribed."
+description = "Assembles vertical video from a script, a voice-over recording and still images. Uses forced alignment, so subtitles carry the written script rather than a transcription."
 readme = "README.md"
 license = { text = "GPL-3.0-or-later" }
 requires-python = ">=3.10"
