@@ -32,7 +32,8 @@ from .memoacts_core import effects as fx
 from .memoacts_core import shotlist
 from .memoacts_core.pipeline import ProjectError, read_project
 from .memoacts_core.project import MEDIA_DIRS
-from .memoacts_core.schedule import FOCUSABLE, PRESETS as MOTION_PRESETS, base_window
+from .memoacts_core.schedule import (FOCUSABLE, PRESETS as MOTION_PRESETS,
+                                     base_window, focus_limits)
 from .memoacts_core.video import is_video, probe
 from .nodes_project import PROJECTS_DIR
 
@@ -235,9 +236,15 @@ def _media(folder: Path) -> list[dict]:
             except Exception:                                      # noqa: BLE001
                 continue
             w0, _ = base_window(*size)
+            lo, hi = focus_limits(*size)
             out.append({"name": p.name, "dir": d, "width": size[0],
                         "height": size[1], "video": is_video(p),
-                        "max_zoom": round(w0 / 1080, 2)})
+                        "max_zoom": round(w0 / 1080, 2),
+                        # What a focus rectangle may be, as fractions of the
+                        # source width. The picker clamps to these rather than
+                        # letting someone draw a window the guard then widens.
+                        "focus_min_w": round(lo, 4),
+                        "focus_max_w": round(hi, 4)})
     return out
 
 

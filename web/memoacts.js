@@ -31,15 +31,18 @@ const COLUMNS = [
   { key: "notes", label: "notes", kind: "text", width: 260 },
 ];
 
-/** Room for the columns, the detail strip and a dozen rows without scrolling.
+/** The size the node opens at. A starting point, not a floor.
  *
- * A starting size, not a floor: the node can be dragged smaller and the table
- * scrolls inside it, which is the right behaviour anyway. There is no floor to
- * be had — a DOM widget reports {minWidth: 0} for itself, and the frontend
- * ignores an override of `computeLayoutSize`, whether it is set on what
- * addDOMWidget returns, on the widget looked up from node.widgets, or later
- * from a timeout. Verified by reading the value back off the live node each
- * time; it stayed at the default. */
+ * There is no floor to be had from outside the frontend, and it was worth the
+ * hour to establish rather than leave as a maybe. A DOM widget reports
+ * `{minWidth: 0}` for itself; `computeLayoutSize` cannot be overridden — not on
+ * what `addDOMWidget` returns, not on the widget looked up from `node.widgets`,
+ * not later from a timeout — and `node.computeSize` is reassigned back over any
+ * override. Each was read back off the live node and each had reverted.
+ *
+ * So a relayout can still shrink the node to a sliver, and the cure is to drag
+ * it wide again. The table scrolls inside whatever it is given, which is the
+ * right behaviour for a table anyway. */
 const MIN_WIDTH = 860;
 const MIN_HEIGHT = 520;
 
@@ -75,11 +78,22 @@ const CSS = `
 .memoacts-table .dirty input, .memoacts-table .dirty select { border-color:#e0b341; }
 .memoacts-detail { flex:0 0 auto; display:flex; gap:10px; padding:8px;
   border-top:1px solid var(--border-color,#444); max-height:190px; }
-.memoacts-detail img { max-height:170px; max-width:220px; border-radius:4px;
-  background:#111; object-fit:contain; }
+.memoacts-frame { position:relative; flex:0 0 auto; align-self:flex-start;
+  line-height:0; cursor:crosshair; touch-action:none; }
+.memoacts-frame img { display:block; max-height:170px; max-width:220px;
+  border-radius:4px; background:#111; }
+.memoacts-frame .rect { position:absolute; box-sizing:border-box;
+  border:1.5px solid #8ab4f8; background:rgba(138,180,248,.14);
+  box-shadow:0 0 0 9999px rgba(0,0,0,.35); pointer-events:none; display:none; }
+.memoacts-frame .rect.bad { border-color:#ff9b9b; background:rgba(255,155,155,.14); }
+.memoacts-frame.locked { cursor:not-allowed; }
 .memoacts-detail .meta { flex:1 1 auto; overflow:auto; line-height:1.45; }
 .memoacts-detail .warn { color:#ffcf8b; }
 .memoacts-detail .bad { color:#ff9b9b; }
+.memoacts-detail .hint { opacity:.6; }
+.memoacts-detail button.link { font:inherit; padding:0; margin-top:2px;
+  border:none; background:none; color:#8ab4f8; cursor:pointer;
+  text-decoration:underline; }
 `;
 
 /** Walk back along the wires until something knows which project this is. */
@@ -121,6 +135,13 @@ class ShotTableWidget {
     this.head = el("thead");
     this.body = el("tbody");
     this.thumb = el("img", { alt: "" });
+    this.rect = el("div", { className: "rect" });
+    this.frame = el("div", { className: "memoacts-frame" }, [this.thumb, this.rect]);
+    this.frame.addEventListener("pointerdown", (e) => this.pickStart(e));
+    this.frame.addEventListener("pointermove", (e) => this.pickMove(e));
+    this.frame.addEventListener("pointerup", (e) => this.pickEnd(e));
+    this.frame.addEventListener("pointercancel", () => this.pickCancel());
+    this.thumb.addEventListener("load", () => this.drawFocus());
     this.meta = el("div", { className: "meta" });
 
     this.root = el("div", { className: "memoacts-table" }, [
@@ -134,7 +155,7 @@ class ShotTableWidget {
       el("div", { className: "memoacts-scroll" }, [
         el("table", {}, [this.head, this.body]),
       ]),
-      el("div", { className: "memoacts-detail" }, [this.thumb, this.meta]),
+      el("div", { className: "memoacts-detail" }, [this.frame, this.meta]),
     ]);
   }
 
@@ -256,6 +277,7 @@ class ShotTableWidget {
     } else {
       input = el("input", { type: "text", value });
     }
+    (shot._els ||= {})[col.key] = input;
     input.onchange = () => {
       shot.row[col.key] = input.value;
       tr.classList.add("dirty");
@@ -295,6 +317,139 @@ class ShotTableWidget {
     return null;
   }
 
+  /** The media record for whatever this shot will actually show. */
+  mediaFor(shot) {
+    const name = shot.row.media || shot.resolved;
+    return this.data.media.find((m) => m.name === name) || null;
+  }
+
+  /** `[cx, cy, w]` from the cell, or null. Same three numbers shots.csv holds. */
+  focusOf(shot) {
+    const parts = (shot.row.focus || "").trim().split(/[,\s/]+/).filter(Boolean);
+    if (parts.length !== 3) return null;
+    const nums = parts.map(Number);
+    return nums.some(Number.isNaN) ? null : nums;
+  }
+
+  /**
+   * Fit a drawn rectangle to what the renderer will actually use.
+   *
+   * The same two ceilings memoacts_core.schedule.focus_window enforces, applied
+   * before the fact instead of after it: never narrower than the output frame,
+   * never wider than the base 9:16 window, and the centre pulled in so the
+   * window sits inside the source. `wide` reports the first of those biting,
+   * which is the render-time warning arriving while it is still a choice.
+   */
+  fitFocus(media, cx, cy, w) {
+    const wide = w < media.focus_min_w - 1e-6;
+    w = Math.min(Math.max(w, media.focus_min_w), media.focus_max_w);
+    let wpx = w * media.width;
+    let hpx = wpx * 16 / 9;                       // the frame is 9:16
+    if (hpx > media.height) {
+      hpx = media.height;
+      wpx = hpx * 9 / 16;
+      w = wpx / media.width;
+    }
+    const halfX = wpx / 2 / media.width;
+    const halfY = hpx / 2 / media.height;
+    return {
+      cx: Math.min(Math.max(cx, halfX), 1 - halfX),
+      cy: Math.min(Math.max(cy, halfY), 1 - halfY),
+      w, wpx, hpx, wide,
+      zoom: (media.max_zoom * 1080) / wpx,
+    };
+  }
+
+  drawFocus(live) {
+    const shot = this.selected;
+    const media = shot && this.mediaFor(shot);
+    const f = live || (shot && this.focusOf(shot));
+    const box = this.thumb.getBoundingClientRect();
+    if (!f || !media || !box.width) {
+      this.rect.style.display = "none";
+      return;
+    }
+    const fit = live || this.fitFocus(media, f[0], f[1], f[2]);
+    this.rect.style.display = "block";
+    this.rect.classList.toggle("bad", fit.wide);
+    this.rect.style.left = `${(fit.cx - fit.wpx / 2 / media.width) * box.width}px`;
+    this.rect.style.top = `${(fit.cy - fit.hpx / 2 / media.height) * box.height}px`;
+    this.rect.style.width = `${(fit.wpx / media.width) * box.width}px`;
+    this.rect.style.height = `${(fit.hpx / media.height) * box.height}px`;
+  }
+
+  atPointer(e) {
+    const box = this.thumb.getBoundingClientRect();
+    return [(e.clientX - box.left) / box.width, (e.clientY - box.top) / box.height];
+  }
+
+  pickStart(e) {
+    if (!this.selected || !this.mediaFor(this.selected) || !this.thumb.src) return;
+    this.frame.setPointerCapture(e.pointerId);
+    this.drag = { from: this.atPointer(e), moved: false };
+  }
+
+  pickMove(e) {
+    if (!this.drag) return;
+    const [x, y] = this.atPointer(e);
+    const [x0, y0] = this.drag.from;
+    if (Math.abs(x - x0) > 0.02 || Math.abs(y - y0) > 0.02) this.drag.moved = true;
+    if (!this.drag.moved) return;
+    const media = this.mediaFor(this.selected);
+    // The width is what is being drawn; the height follows from 9:16, because
+    // that is the frame the window will be resized into.
+    const fit = this.fitFocus(media, (x + x0) / 2, (y + y0) / 2, Math.abs(x - x0));
+    this.drag.fit = fit;
+    this.drawFocus(fit);
+    this.sayFocus(fit, media, true);
+  }
+
+  pickEnd(e) {
+    if (!this.drag) return;
+    const media = this.mediaFor(this.selected);
+    let fit = this.drag.fit;
+    if (!this.drag.moved) {
+      // A click moves the window rather than drawing one: the framing is
+      // usually right and the subject is not.
+      const current = this.focusOf(this.selected);
+      const [x, y] = this.atPointer(e);
+      fit = this.fitFocus(media, x, y,
+        current ? current[2] : media.focus_max_w * 0.6);
+    }
+    this.drag = null;
+    if (!fit) return;
+    this.setCell(this.selected, "focus",
+      `${fit.cx.toFixed(3)} ${fit.cy.toFixed(3)} ${fit.w.toFixed(3)}`);
+    this.drawFocus();
+    this.select(this.selected, this.body.children[this.selected.id - 1]);
+  }
+
+  pickCancel() {
+    this.drag = null;
+    this.drawFocus();
+  }
+
+  /** Write a cell from somewhere other than its own input, and show it there. */
+  setCell(shot, key, value) {
+    shot.row[key] = value;
+    const input = shot._els?.[key];
+    if (input) input.value = value;
+    this.body.children[shot.id - 1]?.classList.add("dirty");
+    this.dirty = true;
+    this.say("edited — not saved");
+  }
+
+  sayFocus(fit, media, live) {
+    const line = this.focusLine;
+    if (!line) return;
+    line.className = fit.wide ? "bad" : "";
+    line.textContent = fit.wide
+      ? `focus ${fit.w.toFixed(3)} — as narrow as this source allows; `
+        + `anything tighter is enlargement`
+      : `focus ${fit.w.toFixed(3)} · ${fit.zoom.toFixed(2)}× push-in`
+        + (live ? " — release to keep" : "");
+  }
+
   select(shot, tr) {
     if (!shot) return;
     this.selected = shot;
@@ -330,16 +485,49 @@ class ShotTableWidget {
       lines.push(el("div", { className: "bad", textContent: `${shown} is in none of the media folders` }));
     }
     const motion = shot.row.motion;
+    const focus = this.focusOf(shot);
+    this.focusLine = el("div", {});
+    if (media) {
+      if (focus) {
+        this.sayFocus(this.fitFocus(media, focus[0], focus[1], focus[2]), media);
+      } else if (media.focus_max_w > media.focus_min_w + 1e-6) {
+        this.focusLine.className = "hint";
+        this.focusLine.textContent =
+          "drag on the thumbnail to say what the shot is about; click to move it";
+      } else {
+        // No room to choose: every window is the widest one, and the guard is
+        // going to enlarge whatever is picked. Saying so is more use than an
+        // invitation to draw a rectangle that cannot mean anything.
+        this.focusLine.className = "warn";
+        this.focusLine.textContent =
+          "no focus to choose here — this source already fills less than the frame";
+      }
+    }
+    lines.push(this.focusLine);
+    if (focus) {
+      lines.push(el("div", {}, [el("button", {
+        className: "link", textContent: "clear focus",
+        onclick: () => {
+          this.setCell(shot, "focus", "");
+          this.select(shot, this.body.children[shot.id - 1]);
+        },
+      })]));
+    }
     if (shot.row.focus && motion && !this.data.focusable.includes(motion)) {
       lines.push(el("div", { className: "warn",
         textContent: `focus is set but ${motion} traverses rather than arrives, `
           + `so it is ignored — use ${this.data.focusable.join(", ")}` }));
     }
     this.meta.replaceChildren(...lines);
-    this.thumb.src = shown
+    const src = shown
       ? `/memoacts/thumb?project=${encodeURIComponent(this.project)}`
         + `&file=${encodeURIComponent(shown)}`
       : "";
+    // Only reassign when it changes: setting .src to the same URL still clears
+    // the image for a frame, and the focus rectangle would flicker with it.
+    if (this.thumb.getAttribute("src") !== src) this.thumb.src = src;
+    this.frame.classList.toggle("locked", !media);
+    this.drawFocus();
   }
 }
 

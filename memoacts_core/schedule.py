@@ -109,6 +109,25 @@ def focus_window(src_w: int, src_h: int, focus: tuple[float, float, float],
     return w, h, cxf * src_w, cyf * src_h, clamped
 
 
+def focus_limits(src_w: int, src_h: int, out_w: int = 1080,
+                 aspect: float = ASPECT) -> tuple[float, float]:
+    """The `w` fractions a focus may usefully name, as `(narrowest, widest)`.
+
+    The same two ceilings `focus_window` enforces, said before the fact instead
+    of after it: no narrower than the output (that would enlarge) and no wider
+    than the base window (there is no more image). A picker needs them in
+    advance to stop the person drawing a rectangle it will then quietly widen —
+    which is the whole difference between a warning and a choice (`GAPS.md`).
+
+    Both are fractions of the source width, as `Motion.focus` is. When a source
+    is too small to fill the output at all the two collapse to the same number:
+    every window is the widest one, and the guard is going to enlarge whatever
+    is chosen.
+    """
+    w0, _ = base_window(src_w, src_h, aspect)
+    return min(float(out_w), w0) / src_w, w0 / src_w
+
+
 def compute(src_w: int, src_h: int, n_frames: int, motion: Motion,
             out_w: int = 1080, aspect: float = ASPECT) -> ShotSchedule:
     """Per-frame crop rects. Resolution guard (SPEC §5.2): the crop window may
