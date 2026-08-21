@@ -199,17 +199,21 @@ on screen.
 
 # For the facilitator
 
-Prepare before the session:
+Nothing here is built in the room — the session screens the four levels and
+argues about them, and this document goes home. That lowers the stakes but not
+the preparation, because you will be answering questions about it afterwards.
 
 - Upload `module03_master_30s.mp4` once yourself and see what the dropdown label
-  looks like, so you can tell participants what to look for.
-- Build both graphs once in the Cloud UI and save them. Importing
-  `workflows/L1_quote_api.json` may work and may not: our local `DrawText+`
-  carries a `direction` field that Cloud's build of the node does not have.
-  Try the import first, by all means — but have the hand-built graph saved
-  before the session rather than finding out in front of thirty people.
-- Run one level-2 layer to confirm node availability, for the price of six GPU
-  seconds. Never open a session with an untested graph.
+  looks like, so you can tell participants what to look for. Distribute the file
+  with this document.
+- Build both graphs once in the Cloud UI and save them, then share them.
+  Importing `workflows/L1_quote_api.json` may work and may not: our local
+  `DrawText+` carries a `direction` field that Cloud's build of the node does
+  not have. A saved, working graph in the participants' hands removes the whole
+  question.
+- Run one level-2 layer yourself, for the price of six GPU seconds, before
+  anyone else does. Every instruction in this document is worth exactly as much
+  as the last time somebody ran it.
 
 Budget: level 2 is about three cents a head, so thirty participants is around a
 dollar; level 1 runs no model. Anything beyond that is a screening, by design —
