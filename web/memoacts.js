@@ -31,6 +31,18 @@ const COLUMNS = [
   { key: "notes", label: "notes", kind: "text", width: 260 },
 ];
 
+/** Room for the columns, the detail strip and a dozen rows without scrolling.
+ *
+ * A starting size, not a floor: the node can be dragged smaller and the table
+ * scrolls inside it, which is the right behaviour anyway. There is no floor to
+ * be had — a DOM widget reports {minWidth: 0} for itself, and the frontend
+ * ignores an override of `computeLayoutSize`, whether it is set on what
+ * addDOMWidget returns, on the widget looked up from node.widgets, or later
+ * from a timeout. Verified by reading the value back off the live node each
+ * time; it stayed at the default. */
+const MIN_WIDTH = 860;
+const MIN_HEIGHT = 520;
+
 const CSS = `
 .memoacts-table { display:flex; flex-direction:column; height:100%; min-height:0;
   font-family: system-ui, sans-serif; font-size:11px; color:var(--fg-color,#ddd);
@@ -343,7 +355,8 @@ app.registerExtension({
       serialize: false,          // the file is the state; the graph holds none
       hideOnZoom: false,
     });
-    node.size = [Math.max(node.size[0], 900), Math.max(node.size[1], 620)];
+    node.setSize([Math.max(node.size[0], MIN_WIDTH),
+                  Math.max(node.size[1], MIN_HEIGHT + 120)]);
     // Wait for the graph to finish loading, so walking back to the Project node
     // finds links that a freshly-deserialised workflow has not wired yet.
     setTimeout(() => widget.load(), 250);
