@@ -23,7 +23,7 @@ rhetorical ones: each has at least two defensible answers.
 | 1:40 | Level 4 — colour, **+ discussion** | S19–S21 | 15 |
 | 1:55 | Close and homework | S22–S23 | 5 |
 
-Files to have open: `projects/legends_of_surrender/out/reel_with_hook.mp4`,
+Files to have open: `../legends_of_surrender/out/reel_with_hook.mp4`,
 then `out/L1_quotes.mp4`, `out/L2_sound.mp4`, `out/L3_ab_zoom_30s.mp4`,
 `out/L3_split_30s.mp4`, `stills/L3_models_close_00014.png`, `out/L4_ab.mp4`,
 `stills/L4_ab_00300.png`, `stills/L4_ab_00660.png`.
@@ -67,7 +67,7 @@ go through. Let's call it the
 
 ## S4 Screening — what the end of the workflow looks like
 
-**Screen `projects/legends_of_surrender/out/reel_with_hook.mp4`** — 2:49,
+**Screen `../legends_of_surrender/out/reel_with_hook.mp4`** — 2:49,
 1080×1920, twenty shots, cut to a recorded narration. *Signed After Midnight*,
 made for Museum Berlin-Karlshorst.
 
