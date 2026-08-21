@@ -17,7 +17,7 @@ from pathlib import Path
 
 from comfy_api.latest import io, ui
 
-from .memoacts_core.effects import PRESETS
+from .memoacts_core.effects import COST, PRESETS
 from .memoacts_core.pipeline import RenderOptions, render_project
 from .nodes_types import Effects, Shots, Subs
 
@@ -29,6 +29,13 @@ PREVIEW_EVERY = 12
 #: Longest edge of a preview frame. The reel is 1080x1920; a node on the canvas
 #: is a few hundred pixels wide, and the resize happens server-side anyway.
 PREVIEW_PX = 512
+
+
+def _cost_list() -> str:
+    """The presets by what they cost, cheapest first — see `effects.COST`."""
+    return ", ".join(f"{name} {mult:.1f}x"
+                     for name, mult in sorted(COST.items(), key=lambda kv: kv[1])
+                     if name != "none")
 
 
 def _output_path(filename_prefix: str) -> tuple[Path, str]:
@@ -95,8 +102,9 @@ class MemoActsRenderReel(io.ComfyNode):
                     "effect_preset", options=["none"] + sorted(set(PRESETS) - {"none"}),
                     default="none",
                     tooltip="The look for every shot that names none of its own "
-                            "in the effects column of shots.csv. Effects cost "
-                            "three to four times the render time.",
+                            "in the effects column of shots.csv. Measured cost, "
+                            "as a multiple of a clean render: "
+                            + _cost_list() + ".",
                 ),
                 io.Int.Input(
                     "crf", default=19, min=0, max=51,
@@ -158,7 +166,8 @@ class MemoActsPreviewShot(io.ComfyNode):
                 io.Combo.Input(
                     "effect_preset", options=["none"] + sorted(set(PRESETS) - {"none"}),
                     default="none",
-                    tooltip="Applied unless the shot names a look of its own.",
+                    tooltip="Applied unless the shot names a look of its own. "
+                            "Measured cost: " + _cost_list() + ".",
                 ),
                 io.Combo.Input(
                     "on_upscale", options=["warn", "error", "allow"],

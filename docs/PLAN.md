@@ -264,7 +264,7 @@ Reference patterns for an in-node canvas widget are installed on this machine
 (`ComfyUI-Olm-DragCrop`, `comfyui-enricos-nodes`). Read them; do not vendor
 them.
 
-### E. Per-shot effects in the table — **mostly landed with A and C**
+### E. Per-shot effects in the table — **DONE 2026-08-21**
 
 The `effects` column reaches the renderer for the first time (schema 1.5, from
 A), a preset dropdown per row from `sorted(effects.PRESETS)`, and the seven
@@ -272,7 +272,7 @@ effect nodes remain the "build your own look" path for students who get that
 far. The row shows the render-cost multiplier, because that number is a teaching
 point rather than a footnote.
 
-### F. Template workflow, starter project, handout (≈1.5 days)
+### F. Template workflow, starter project, handout — **DONE 2026-08-21**
 
 - `example_workflows/reel_stills.json` — the five nodes, wired, saved as the
   workflow a student opens.
@@ -307,17 +307,19 @@ already says so; now there is a figure to apply it to.
 3. ~~**C** — the table widget.~~ **Done 2026-08-21**, seen working in a browser.
 4. ~~**D** — focus picker.~~ **Done 2026-08-21**, and `schedule.focus_limits`
    now states the rule next to the code that enforces it.
-5. **E** — per-shot effects. Mostly landed with A (schema 1.5, the column
-   reaching the renderer) and C (a preset per row). What is left is the
-   cost multiplier shown on the row — hours, not a day. **Next.**
-6. **F** — template, starter project, handout. 1.5 d.
-7. **G** — machine A and the measurements. 1 d.
+5. ~~**E** — per-shot effects.~~ **Done 2026-08-21.** All six presets measured
+   rather than two remembered; `effects.COST` carries the multipliers and the
+   editor prints them beside each name.
+6. ~~**F** — template, starter project, handout.~~ **Done 2026-08-21.**
+7. **G** — machine A and the measurements. 1 d. **Next, and it is not code.**
 
-A, B, C and D took one day rather than eight and a half, largely because
-`memoacts_core` was already interface-agnostic and the drift, once named, was
-mechanical to remove. What remains is the tail of E, then F and G — the
-teaching material and the machines, which is the half no amount of code
-substitutes for.
+A through F took one day rather than eleven, largely because `memoacts_core`
+was already interface-agnostic and the drift, once named, was mechanical to
+remove. **G is what is left, and none of it is code**: provision machine A,
+execute `WORKSHOP_MACHINE_SETUP.md` for the first time on a clean box, measure
+a render on the rented hardware, and put the four files `workshop_starter`
+needs into it. The rehearsal in the verification section below is the real
+test, and it has not been run.
 
 ## What this plan does not touch
 

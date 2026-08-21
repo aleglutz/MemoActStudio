@@ -297,7 +297,10 @@ class ShotTableWidget {
       return this.data.anchors.map((a) => ({ value: a, text: a || "(default)" }));
     }
     if (kind === "effects") {
-      return this.data.effects.map((e) => ({ value: e, text: e || "(none)" }));
+      return this.data.effects.map((e) => ({
+        value: e,
+        text: e ? `${e} — ${this.costOf(e).toFixed(1)}× render` : "(none)",
+      }));
     }
     if (kind === "media") {
       const dirs = new Map();
@@ -315,6 +318,11 @@ class ShotTableWidget {
         ...[...dirs].map(([group, items]) => ({ group, items }))];
     }
     return null;
+  }
+
+  /** What a look costs, as a multiple of a clean render. 1 for no look. */
+  costOf(name) {
+    return this.data.effect_cost?.[name] ?? 1;
   }
 
   /** The media record for whatever this shot will actually show. */
@@ -474,12 +482,18 @@ class ShotTableWidget {
         textContent: `${media.name} · ${media.width}×${media.height} · ${media.dir}`,
       }));
       const zoom = media.max_zoom;
+      // Three cases, not two: exactly 1.00 fills the frame and has no room to
+      // move, which is neither the enlargement warning nor an invitation.
+      const exact = Math.abs(zoom - 1) < 0.005;
       lines.push(el("div", {
-        className: zoom < 1 ? "bad" : zoom < 1.15 ? "warn" : "",
-        textContent: zoom < 1
-          ? `max_zoom ${zoom.toFixed(2)}× — too small for the frame; it will be `
-            + `enlarged ${(1 / zoom).toFixed(2)}× before any move`
-          : `max_zoom ${zoom.toFixed(2)}× — headroom for a push in`,
+        className: zoom < 1 && !exact ? "bad" : zoom < 1.15 ? "warn" : "",
+        textContent: exact
+          ? `max_zoom 1.00× — fills the frame exactly, with nothing spare to `
+            + `move into`
+          : zoom < 1
+            ? `max_zoom ${zoom.toFixed(2)}× — too small for the frame; it will be `
+              + `enlarged ${(1 / zoom).toFixed(2)}× before any move`
+            : `max_zoom ${zoom.toFixed(2)}× — headroom for a push in`,
       }));
     } else if (shown) {
       lines.push(el("div", { className: "bad", textContent: `${shown} is in none of the media folders` }));
@@ -495,12 +509,14 @@ class ShotTableWidget {
         this.focusLine.textContent =
           "drag on the thumbnail to say what the shot is about; click to move it";
       } else {
-        // No room to choose: every window is the widest one, and the guard is
-        // going to enlarge whatever is picked. Saying so is more use than an
-        // invitation to draw a rectangle that cannot mean anything.
+        // No room to choose: every window is the widest one, so a rectangle
+        // here cannot mean anything. Saying which of the two reasons it is
+        // matters — one is a source that is exactly enough, the other a source
+        // the guard is already stretching.
         this.focusLine.className = "warn";
-        this.focusLine.textContent =
-          "no focus to choose here — this source already fills less than the frame";
+        this.focusLine.textContent = media.max_zoom < 0.995
+          ? "no focus to choose — the whole frame is already being enlarged"
+          : "no focus to choose — this source fills the frame and no more";
       }
     }
     lines.push(this.focusLine);
@@ -512,6 +528,15 @@ class ShotTableWidget {
           this.select(shot, this.body.children[shot.id - 1]);
         },
       })]));
+    }
+    const look = shot.row.effects;
+    if (look) {
+      const cost = this.costOf(look);
+      lines.push(el("div", {
+        className: cost >= 3 ? "warn" : "",
+        textContent: `${look} — this shot renders ${cost.toFixed(1)}× as slowly `
+          + `as a plain one`,
+      }));
     }
     if (shot.row.focus && motion && !this.data.focusable.includes(motion)) {
       lines.push(el("div", { className: "warn",

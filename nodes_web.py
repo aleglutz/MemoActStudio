@@ -145,6 +145,10 @@ async def shots(request: web.Request) -> web.Response:
         "focusable": list(FOCUSABLE),
         "anchors": ["", "center", "top"],
         "effects": [""] + sorted(set(fx.PRESETS) - {"none"}),
+        # What each look costs, as a multiple of a clean render (effects.COST).
+        # Shown beside the name because it is the one edit decision that is paid
+        # for in minutes, on a machine eight students are sharing.
+        "effect_cost": fx.COST,
         "shots": out,
         "media": _media(folder),
         "warnings": read.warnings,

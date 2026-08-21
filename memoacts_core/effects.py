@@ -490,6 +490,31 @@ class EffectPipeline:
             self._texture = None
 
 
+#: What each preset costs, as a multiple of the same render with no effects.
+#:
+#: Measured 2026-08-21 on `projects/demo_en` — 415 frames, one process, the six
+#: renders back to back so nothing but the preset differed: 23.9 s clean, then
+#: 61.8 / 70.0 / 76.7 / 93.4 / 96.1 s. The two figures SPEC §5.4 already carried
+#: (23 s and 71 s for `archive_soft`) come back unchanged, which is the reason
+#: to trust the four that are new.
+#:
+#: This is a workshop scheduling fact, not a footnote (SPEC §0): sixteen
+#: students share two machines, so a look that quadruples a four-minute render
+#: does not fit a rotation slot. The interface shows this number where the
+#: choice is made, which is the only place it can change a decision.
+#:
+#: Machine-dependent in absolute seconds and roughly stable as a ratio — grain
+#: synthesis and the unsharp mask dominate, and both are plain CPU work.
+COST: dict[str, float] = {
+    "none": 1.0,
+    "handheld": 2.6,
+    "archive_soft": 2.9,
+    "cold_document": 3.2,
+    "archive_harsh": 3.9,
+    "newsreel": 4.0,
+}
+
+
 def preset(name: str) -> EffectStack:
     """An EffectStack from a named preset. Unknown names raise, rather than
     silently returning an empty stack that looks like a broken effect."""

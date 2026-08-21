@@ -1,0 +1,7 @@
+shot,media,in,motion,rate,anchor,speed,focus,label,credit,effects,notes
+0:00,01_wide.jpg,,pan_lr,0,,,,,,,"a wide source: it has room to travel sideways, so it pans"
+0:06,02_tall.jpg,,zoom_in,0.05,,,,,,,"a tall source: it has room to push in, so it zooms"
+0:14,03_small.jpg,,static,,,,,,,,"deliberately too small — the report and the editor both say so"
+0:23,01_wide.jpg,,pan_rl,0,,,,,,,the same picture the other way, so the reel does not repeat itself
+0:32,02_tall.jpg,,zoom_out,0.05,,,,,,,pulling back out of the same detail
+0:41,03_small.jpg,,static,,,,,,,,"closing on the small one again; by now you know why it holds still"

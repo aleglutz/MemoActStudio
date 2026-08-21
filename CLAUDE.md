@@ -68,10 +68,13 @@ reverses SPEC §0's "`nodes_layers.py` is the designated first cut" the same way
 | `HARDENING.md` | Deferred portability items (much reduced — students are on Cloud, not local) |
 | `README.md` | The CLI path, cold start to rendered reel. Start here to *run* something |
 | `HANDOFF.md` | Where the last session stopped and what the next one does first. Rewritten, not appended to; superseded versions go to `archive/handoffs/` |
-| `docs/` | Working documents: `PLAN.md` (current task list), `P1_GRAPH.md` + `PARTICIPANT_GRAPH_RECIPE.md` (August intensive), `WORKSHOP_MACHINE_SETUP.md` (September), `SHOTS_SCHEMA.md`, `THREEBAND_TOOL.md`, `UPSCALE.md`, `EDITING.md`, `INTERFACE_BRIEF.md` (the brief for the student-facing interface — paste it to open that session) |
+| `docs/` | Working documents: `PLAN.md` (current task list), `WORKSHOP_HANDOUT.md` (what a September student is given), `P1_GRAPH.md` + `PARTICIPANT_GRAPH_RECIPE.md` (August intensive), `WORKSHOP_MACHINE_SETUP.md` (September), `SHOTS_SCHEMA.md`, `THREEBAND_TOOL.md`, `UPSCALE.md`, `EDITING.md`, `INTERFACE_BRIEF.md` (the brief for the student-facing interface — paste it to open that session) |
+| `example_workflows/` | `reel_stills.json` — the five-node graph a student opens. Load it in ComfyUI rather than reading it |
+| `web/` + `nodes_web.py` | The shot-table widget and the `/memoacts/` routes behind it |
 | `archive/` | Superseded documents, kept for their reasoning. Not authoritative, not maintained — see `archive/README.md` |
 | `projects/legends_of_surrender/` | **The live project** — English reel "Signed After Midnight" for Museum Berlin-Karlshorst. Media is unversioned; `REBUILD.md` regenerates it |
 | `projects/demo_en/` | Working fixture (4 shots, 13.8 s) — pipeline mechanics only. Its stills are unversioned but are on disk, in `sources/images/` |
+| `projects/workshop_starter/` | The first project of the September workshop — short, and about itself. Media is a facilitator task, `REBUILD.md` says exactly which four files |
 
 ## Project layout
 
