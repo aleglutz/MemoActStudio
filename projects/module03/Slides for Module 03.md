@@ -95,9 +95,9 @@ Three things to name **after** it plays, not before:
 The idea behind the project's visual identity, and how it connects to the
 students' own films. Slides supplied separately.
 
-> **Hand-over cue:** you have just seen one project's answer to "how should this
-> look". Now the reasoning behind it — and how you build the same thing for your
-> own subject.
+> **Say:** *Hand-over cue* — you have just seen one project's answer to "how
+> should this look". Now the reasoning behind it, and how you build the same
+> thing for your own subject.
 >
 > **Hand-back cue:** a moodboard decides *how* the document will look on screen.
 > The rest of the session is about *how far you are allowed to change it* to get
