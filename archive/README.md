@@ -38,7 +38,7 @@ session starts; these are kept for the reasoning they carry, not the next steps.
 
 | File | What it is |
 |---|---|
-| `script-framework.pdf` | storyboard-format reference, added 2026-08-05 alongside the script parser that learned to read it |
+| `script-framework.pdf` | Storyboard-format reference, added 2026-08-05 alongside the script parser that learned to read it. **On disk, not in the repository:** nobody wrote down who made it, and an unattributed document does not go into a public repo. Restore it to git the day its provenance is known |
 
 ## Where the other archives are
 

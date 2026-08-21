@@ -142,7 +142,17 @@ Two things to say out loud, because the clips cannot say them:
 None of the media is in git. `REBUILD.md` regenerates all of it from the one
 archival file.
 
-## Nothing in `out/` or `stills/` is deleted
+## Nothing in `out/` or `stills/` is deleted — and none of it is in git
+
+**On disk, not in the repository (2026-08-21).** The stills are frames of Museum
+Berlin-Karlshorst's KAPFILM footage and its colourised and upscaled variants,
+and this repository is public under GPL-3.0. That licence covers the code; it
+does not licence somebody else's archive. `REBUILD.md` remakes every one of
+them from the source film, which is the same guarantee the rest of the project
+gives for media — nothing here is lost, it is regenerated.
+
+That distinction is the reason the rule below is about deleting rather than
+about tracking:
 
 Not the superseded renders, not the ones no longer named in any document. A
 render made before a decision is what makes the decision visible in a seminar —
