@@ -1,5 +1,7 @@
 # MemoActStudio
 
+![MemoActStudio](docs/images/cover.png)
+
 A ComfyUI node pack for assembling vertical video from a script, a voice-over
 recording and a set of still images.
 
@@ -9,7 +11,7 @@ boundaries and subtitles. It does not transcribe, so the burnt-in caption is
 the text you wrote, character for character. That is the difference from
 transcription-based subtitling, which can misread names, numbers and dates.
 
-![The shot table, inside its node](docs/images/shot-table.jpg)
+![The shot table, inside its node](docs/images/shot-table.png)
 
 Developed for MemoActs, a documentary series and its production workshop.
 
