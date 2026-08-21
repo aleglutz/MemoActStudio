@@ -123,8 +123,16 @@ workshop rotation.
 The table widget reads and writes **the same `shots.csv` the author edits by
 hand** — one artefact, two doors. `#` comment rows, unknown columns and the
 `notes` field (which in `legends_of_surrender` carries rebuild commands) must
-survive a round trip verbatim, and the first write from the widget keeps a
-`.bak`.
+survive a round trip verbatim.
+
+*Built differently, 2026-08-21:* a write goes to a temp file and replaces the
+original, rather than keeping a `.bak` as planned. A backup is one copy of one
+previous state and needs a policy for when it is cleared; an atomic replace
+means the file is never half-written in the first place, which is the failure
+that would actually cost an author their edit decisions. Cells are also handed
+back to the widget exactly as spelled rather than as parsed — an in-point
+written `0:40` types to `40.0`, and returning that would rewrite the file for
+no reason anyone asked for.
 
 ---
 
@@ -161,7 +169,7 @@ having to be made.
 
 Effort is in working days on this machine.
 
-### A. `memoacts_core/pipeline.py` — one orchestration, two doors (≈2 days)
+### A. `memoacts_core/pipeline.py` — one orchestration, two doors — **DONE 2026-08-21**
 
 Three functions carrying everything `tools/generate_shots.py` and
 `tools/render_reel.py` do between `argparse` and `print`:
@@ -198,7 +206,7 @@ Also in A, because they are the same edit:
 back byte-identical. The 2026-08-20 reorganisation was verified exactly this
 way.
 
-### B. The five nodes, rebuilt on the spine (≈2 days)
+### B. The five nodes, rebuilt on the spine — **DONE 2026-08-21**
 
 `nodes_align.py`, `nodes_shot.py`, `nodes_subs.py` and `nodes_encode.py` call
 `pipeline`, and every divergence in the table above disappears by construction.
@@ -219,7 +227,7 @@ document plus its project directory.
 is renderable from the graph with `shots.csv` edited in Notepad. That is already
 a terminal-free path — not a good one, but a shippable one.
 
-### C. The shot-table widget (≈3 days)
+### C. The shot-table widget — **DONE 2026-08-21**
 
 `web/` plus `WEB_DIRECTORY`, and routes under `/memoacts/`:
 
@@ -256,7 +264,7 @@ Reference patterns for an in-node canvas widget are installed on this machine
 (`ComfyUI-Olm-DragCrop`, `comfyui-enricos-nodes`). Read them; do not vendor
 them.
 
-### E. Per-shot effects in the table (≈1 day)
+### E. Per-shot effects in the table — **mostly landed with A and C**
 
 The `effects` column reaches the renderer for the first time (schema 1.5, from
 A), a preset dropdown per row from `sorted(effects.PRESETS)`, and the seven
@@ -292,20 +300,21 @@ already says so; now there is a figure to apply it to.
 
 ---
 
-## Recommended order
+## Recommended order, and where it stands
 
-1. **A** — the spine. 2 d. Nothing student-facing; everything else depends on it.
-2. **B** — the five nodes. 2 d. **A terminal-free path exists from here.**
-3. **C** — the table widget. 3 d. The interface becomes the thing being taught.
-4. **D** — focus picker. 1.5 d.
-5. **E** — per-shot effects. 1 d.
+1. ~~**A** — the spine.~~ **Done 2026-08-21.**
+2. ~~**B** — the five nodes.~~ **Done 2026-08-21. The terminal-free path exists.**
+3. ~~**C** — the table widget.~~ **Done 2026-08-21**, seen working in a browser.
+4. **D** — focus picker. 1.5 d. **Next.**
+5. **E** — per-shot effects. Mostly landed with A (schema 1.5, the column
+   reaching the renderer) and C (a preset per row). What is left is the
+   cost multiplier shown on the row — hours, not a day.
 6. **F** — template, starter project, handout. 1.5 d.
 7. **G** — machine A and the measurements. 1 d.
 
-About twelve working days. A and B are four of them and produce something that
-works; C and F are what make it teachable; D and E are what make it *good*, and
-they are the cut order if the calendar closes — D first, then E, which returns
-SPEC §0's original verdict on `nodes_layers.py`.
+A, B and C took one day rather than seven, largely because `memoacts_core` was
+already interface-agnostic and the drift, once named, was mechanical to remove.
+What remains is D, F and G — roughly four days — with E folded into D.
 
 ## What this plan does not touch
 
