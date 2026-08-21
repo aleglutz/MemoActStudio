@@ -29,6 +29,15 @@ from .nodes_project import MemoActsProject
 from .nodes_shot import MemoActsSetImage, MemoActsSetMotion, MemoActsShotTable
 from .nodes_subs import MemoActsSubtitles
 
+# Importing this registers the /memoacts/... routes the shot-table widget calls.
+# It has to happen at load time, before ComfyUI hands its aiohttp app the route
+# table it collected.
+from . import nodes_web  # noqa: F401,E402
+
+#: The shot-table widget, served from web/ (SPEC §5.2 — the edit is a table,
+#: and a node graph is poor at tables).
+WEB_DIRECTORY = "web"
+
 
 class MemoActsExtension(ComfyExtension):
     @override

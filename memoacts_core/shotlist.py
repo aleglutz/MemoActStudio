@@ -163,11 +163,15 @@ class ShotTable:
 
     def data_rows(self) -> list[dict[str, str]]:
         """The rows that address a shot — comments and blank keys dropped."""
-        return [r for r in self.rows if _row_key(r) and not _row_key(r).startswith("#")]
+        return [r for r in self.rows if row_key(r) and not row_key(r).startswith("#")]
 
 
-def _row_key(row: dict[str, str]) -> str:
-    """The `shot` cell of a row, whatever case the header was written in."""
+def row_key(row: dict[str, str]) -> str:
+    """The `shot` cell of a row, whatever case the header was written in.
+
+    Public because the table editor addresses rows too, and a second guess at
+    which column names the shot is a second thing to keep in step.
+    """
     for k, v in row.items():
         if (k or "").strip().lower() == "shot":
             return (v or "").strip()
@@ -247,6 +251,17 @@ def edits_from_table(table: ShotTable) -> list[ShotEdit]:
             edit.speed = None
         rows.append(edit)
     return rows
+
+
+def rows_with_edits(table: ShotTable) -> list[tuple[dict[str, str], ShotEdit]]:
+    """Each addressing row paired with its typed form.
+
+    `data_rows` and `edits_from_table` skip the same rows, so zipping them
+    happens to line up — but "happens to" is how the two halves of this project
+    drifted apart before. Pairing them here makes the guarantee the function's
+    job rather than the caller's memory.
+    """
+    return list(zip(table.data_rows(), edits_from_table(table)))
 
 
 def read_shot_list(path: Path) -> list[ShotEdit]:
