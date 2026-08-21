@@ -1,27 +1,32 @@
 """comfyui-memoacts — ComfyUI node pack for the MemoActs reel workflow.
 
-The nodes are thin wrappers; the logic lives in `memoacts_core`, which stays
-importable and testable without ComfyUI (SPEC §3) and is exercised headlessly by
-`tools/render_reel.py`.
+The nodes are widgets and reporting; the work is `memoacts_core.pipeline`,
+which `tools/` calls in the same order with the same arguments (SPEC §3). That
+is deliberate and load-bearing: the two used to be separate implementations of
+the same sequence, and they drifted.
 
-Typical graph:
+The workflow is five nodes, left to right, and each is one sentence:
 
-    Align Shots ─→ Set Motion ─→ Subtitles ─→ Render Reel
-                        ↑
-    Effect Preset ─→ Grade ─→ Grain ─→ … ─→ Apply Effects
-                        └──────→ Shot Report
+    Project ─→ Align ─→ Shot Table ─→ Subtitles ─→ Render Reel
+    "my material"  "my words   "I decide   "the words   "the reel
+                    become      what is     become       is made"
+                    timings"    seen"       captions"
+
+                        Shot Table ─→ Preview Shot     one shot, seconds
+    Effect Preset ─→ Grade ─→ Grain ─→ … ─→ Apply Effects ─┘
 """
 from typing_extensions import override
 
 from comfy_api.latest import ComfyExtension, io
 
-from .nodes_align import MemoActsAlignShots
-from .nodes_encode import MemoActsRenderReel
+from .nodes_align import MemoActsAlign
+from .nodes_encode import MemoActsPreviewShot, MemoActsRenderReel
 from .nodes_layers import (MemoActsApplyEffects, MemoActsEffectPreset,
                            MemoActsFrameOverlay, MemoActsGrade,
                            MemoActsGrain, MemoActsShake, MemoActsSharpen,
                            MemoActsTexture)
-from .nodes_shot import MemoActsSetImage, MemoActsSetMotion, MemoActsShotReport
+from .nodes_project import MemoActsProject
+from .nodes_shot import MemoActsSetImage, MemoActsSetMotion, MemoActsShotTable
 from .nodes_subs import MemoActsSubtitles
 
 
@@ -29,12 +34,14 @@ class MemoActsExtension(ComfyExtension):
     @override
     async def get_node_list(self) -> list[type[io.ComfyNode]]:
         return [
-            MemoActsAlignShots,
-            MemoActsSetMotion,
-            MemoActsSetImage,
-            MemoActsShotReport,
+            MemoActsProject,
+            MemoActsAlign,
+            MemoActsShotTable,
             MemoActsSubtitles,
             MemoActsRenderReel,
+            MemoActsPreviewShot,
+            MemoActsSetMotion,
+            MemoActsSetImage,
             MemoActsEffectPreset,
             MemoActsGrade,
             MemoActsGrain,

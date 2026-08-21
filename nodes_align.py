@@ -1,8 +1,12 @@
-"""Alignment node — narration + script → editable shot table (SPEC §5.1).
+"""Alignment node — "my words become timings" (SPEC §5.1).
 
-Wraps `memoacts_core.align`. The script is ground truth: alignment computes
-*timings only*, never text, so the CapCut error class (dates and names mangled
-by transcription) cannot occur here.
+Wraps `memoacts_core.pipeline.align_project`. The script is ground truth:
+alignment computes *timings only*, never text, so the CapCut error class — dates
+and names mangled by transcription — cannot occur here.
+
+This is the one slow step, and it is on its own node for that reason. Its cache
+key is the script and the recording, so every later edit to the shot table is
+free; only re-recording or rewriting costs another pass over the audio.
 
 This node runs locally only. Comfy Cloud has no aligner, which is why P1 used
 the prepared-inputs model (SPEC §4) and shipped `shots.json` as an asset.
@@ -13,38 +17,32 @@ from pathlib import Path
 
 from comfy_api.latest import io
 
-from .memoacts_core import SCHEMA_VERSION
-from .memoacts_core.align import StableTsAligner, proportional_spans
-from .memoacts_core.normalize import normalize_block
-from .memoacts_core.project import (MEDIA_DIRS, apply_shot_lead, list_images,
-                                    parse_script_shots, resolve_shot_images)
-from .memoacts_core.schedule import default_motion, frames_for
-from .nodes_types import Shots
+from .memoacts_core.pipeline import align_project, read_project
+from .memoacts_core.project import find_narration
+from .nodes_types import Alignment, Project
 
 
-def _find_narration(project: Path) -> Path | None:
-    return next(iter(sorted(project.glob("narration.*"))), None)
-
-
-class MemoActsAlignShots(io.ComfyNode):
+class MemoActsAlign(io.ComfyNode):
     @classmethod
     def define_schema(cls):
         return io.Schema(
-            node_id="MemoActsAlignShots",
-            display_name="MemoActs — Align Shots",
+            node_id="MemoActsAlign",
+            display_name="MemoActs — Align",
             category="memoacts",
             description=(
-                "Aligns narration audio to a known script and emits the shot "
-                "table. Reads <project>/script.md, <project>/narration.*, "
-                "<project>/images/. Timings only — the script text is never "
-                "altered."
+                "Aligns the recording to the script and emits the timings. "
+                "Nothing is transcribed — the words on screen are the ones you "
+                "wrote, and only their timing is computed. The slow step: it "
+                "runs once and is cached until the script or the recording "
+                "changes."
             ),
             inputs=[
-                io.String.Input(
-                    "project_dir",
-                    tooltip="Folder holding script.md, narration.*, images/",
+                Project.Input("project"),
+                io.Combo.Input(
+                    "lang", options=["en"], default="en",
+                    tooltip="English only, by project scope (SPEC v3.1). "
+                            "Translation happens outside this workflow.",
                 ),
-                io.Combo.Input("lang", options=["en"], default="en"),
                 io.Combo.Input(
                     "model",
                     options=["tiny", "base", "small", "medium"],
@@ -53,114 +51,52 @@ class MemoActsAlignShots(io.ComfyNode):
                             "transcription. Larger is slower, not necessarily "
                             "more accurate for timings.",
                 ),
-                io.Int.Input("fps", default=30, min=1, max=120),
-                io.Int.Input(
-                    "shot_lead_ms", default=100, min=0, max=1000,
-                    tooltip="Cuts lead the sentence onset by this much. An "
-                            "image arriving slightly early reads as "
-                            "intentional; arriving late reads as a mistake.",
-                ),
                 io.Boolean.Input(
                     "skip_alignment", default=False,
-                    tooltip="Spread shots proportionally instead of aligning. "
-                            "Fast, for dry runs — timings will be wrong.",
+                    tooltip="Spread the shots evenly instead of listening to "
+                            "the recording. No model, instant, and the timings "
+                            "are wrong — for trying the rest of the graph out.",
                 ),
             ],
-            outputs=[Shots.Output("SHOTS")],
+            outputs=[Alignment.Output("ALIGNMENT")],
         )
 
     @classmethod
-    def fingerprint_inputs(cls, project_dir, lang, model, fps, shot_lead_ms,
-                           skip_alignment):
-        """Re-run when the script or the narration changes on disk.
+    def fingerprint_inputs(cls, project, lang, model, skip_alignment):
+        """Re-run when the script or the recording changes on disk — only then.
 
-        Without this a student edits script.md, re-runs, and silently gets the
-        previous shot table back — the widgets did not change, so ComfyUI would
-        consider the node cached.
+        Deliberately blind to `shots.csv` and to the media: those belong to the
+        shot table, and a student who moves a picture must not pay for another
+        alignment to see it.
         """
-        project = Path(project_dir)
+        folder = Path(project["project_dir"])
         stamps = []
-        for p in (project / "script.md", _find_narration(project)):
+        for p in (folder / "script.md", find_narration(folder)):
             try:
                 stamps.append(p.stat().st_mtime_ns if p else 0)
             except OSError:
                 stamps.append(0)
-        return f"{stamps}|{lang}|{model}|{fps}|{shot_lead_ms}|{skip_alignment}"
+        return f"{folder}|{stamps}|{lang}|{model}|{skip_alignment}"
 
     @classmethod
-    def execute(cls, project_dir, lang, model, fps, shot_lead_ms,
-                skip_alignment):
-        project = Path(project_dir)
-        if not project.is_dir():
-            raise ValueError(f"project_dir is not a folder: {project}")
-
-        script = project / "script.md"
-        if not script.exists():
-            raise ValueError(f"no script.md in {project}")
-        script_shots = parse_script_shots(script)
-        blocks = [s.text for s in script_shots]
-        if not script_shots:
-            raise ValueError(f"{script} has no shots")
-
-        narration = _find_narration(project)
-        if narration is None:
-            raise ValueError(f"no narration.* audio file in {project}")
-
-        images = list_images(project / MEDIA_DIRS[0])
-        if not images:
-            raise ValueError(f"no images in {project / MEDIA_DIRS[0]}")
-
-        imgs, warns = resolve_shot_images(script_shots, images)
-        for w in warns:
+    def execute(cls, project, lang, model, skip_alignment):
+        folder = Path(project["project_dir"])
+        read = read_project(folder)
+        alignment = align_project(folder, read, lang=lang, model=model,
+                                  use_aligner=not skip_alignment,
+                                  progress=_progress)
+        for w in alignment.warnings:
             print(f"[MemoActs] warning: {w}")
-        named = sum(1 for s in script_shots if s.assets)
-        print(f"[MemoActs] {len(script_shots)} shots — {named} with a "
-              f"storyboard image, {len(script_shots) - named} cycled")
-        silent = [s.label or str(i)
-                  for i, s in enumerate(script_shots, 1) if s.silent]
-        if silent:
-            # Duration comes from the pause between neighbours; no pause means
-            # the shot collapses to one frame.
-            print(f"[MemoActs] silent shots (no narration): {', '.join(silent)}")
+        return io.NodeOutput({"alignment": alignment,
+                              "project_dir": str(folder)})
 
-        normed, had_digits = [], []
-        for b in blocks:
-            n, had = normalize_block(b, lang)
-            normed.append(n)
-            had_digits.append(had)
 
-        aligner = StableTsAligner(model)
-        duration = aligner.audio_duration(narration)
-        if skip_alignment:
-            spans = proportional_spans(blocks, duration)
-        else:
-            spans = aligner.align(narration, normed, lang)
-        spans = apply_shot_lead(spans, shot_lead_ms)
+def _progress(stage, done=0, total=0, message="", preview=None):
+    """Say what is happening, since nothing else can.
 
-        n_frames = frames_for([(s.t_start, s.t_end) for s in spans], fps)
-
-        shots = []
-        for i, (text, norm, span, img, nf) in enumerate(
-                zip(blocks, normed, spans, imgs, n_frames)):
-            m = default_motion(i)
-            shots.append({
-                "id": i + 1,
-                "text": text,                    # verbatim — reaches the screen
-                "text_normalized": norm,         # alignment only
-                "t_start": round(span.t_start, 3),
-                "t_end": round(span.t_end, 3),
-                "n_frames": nf,
-                "estimated": span.estimated,
-                "confidence": round(span.confidence, 3),
-                "had_digits": had_digits[i],
-                "image": img.name,
-                "motion": {"preset": m.preset, "rate": m.rate, "anchor": m.anchor},
-            })
-
-        doc = {
-            "schema_version": SCHEMA_VERSION, "fps": fps,
-            "width": 1080, "height": 1920, "lang": lang,
-            "narration": narration.name, "duration_s": round(duration, 3),
-            "shot_lead_ms": shot_lead_ms, "shots": shots,
-        }
-        return io.NodeOutput({"doc": doc, "project_dir": str(project)})
+    `align()` is one opaque call into stable-whisper: no callback, no chunks,
+    no fraction to report. A line before it starts is the honest maximum, and
+    it matters because the first run also downloads the model.
+    """
+    if message:
+        print(f"[MemoActs] {message}")

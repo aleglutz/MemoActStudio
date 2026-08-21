@@ -33,6 +33,15 @@ FONTS_DIR = Path(__file__).resolve().parent.parent / "assets" / "fonts"
 _FONT_FILE = "ShareTechMono-Regular.ttf"
 
 
+def font_path() -> Path:
+    """The font libass burns in, which is also the one a measurement must open.
+
+    Public because the node layer measures too, and a second copy of the file
+    name is a second thing to keep in step.
+    """
+    return FONTS_DIR / _FONT_FILE
+
+
 @dataclass
 class SubStyle:
     """Neutral default styling, matching the look P1 established with DrawText+.
@@ -261,7 +270,6 @@ def cues_from_shots(shots: list[dict], style: SubStyle | None = None,
     if not segment:
         return [Cue(s["t_start"], s["t_end"], s["text"]) for s in shots]
 
-    font_path = FONTS_DIR / _FONT_FILE
     width = caption.usable_width(play_w, st.margin_l, st.margin_r,
                                  st.plate_pad if st.plate_opacity > 0 else 0.0)
     cues: list[Cue] = []
@@ -272,7 +280,7 @@ def cues_from_shots(shots: list[dict], style: SubStyle | None = None,
             continue
         words = [Word(w["text"], w["t_start"], w["t_end"]) for w in raw]
         for c in caption.segment(words, size=st.size, max_width=width,
-                                 font_path=font_path,
+                                 font_path=font_path(),
                                  min_duration=min_duration):
             cues.append(Cue(c.t_start, c.t_end, c.text))
     return cues
@@ -328,9 +336,8 @@ def check_wrap(cues: list[Cue], style: SubStyle | None = None,
     st = style or SubStyle()
     width = caption.usable_width(play_w, st.margin_l, st.margin_r,
                                  st.plate_pad if st.plate_opacity > 0 else 0.0)
-    font_path = FONTS_DIR / _FONT_FILE
     return [c for c in cues
-            if caption.text_width(c.text, st.size, font_path) > width]
+            if caption.text_width(c.text, st.size, font_path()) > width]
 
 
 def write_tracks(out_dir: Path, cues: list[Cue], *, stem: str = "subtitles",

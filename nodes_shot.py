@@ -1,12 +1,20 @@
-"""Per-shot editing nodes (SPEC §5.2 — "the interactive heart").
+"""The shot table — "I decide what is seen" (SPEC §5.2, the interactive heart).
+
+`MemoActsShotTable` turns timings plus edit decisions into the table everything
+downstream reads, and prints the shot report so the decisions can be checked
+before anything is rendered: confidence per shot, drift against the cue written
+in the script, and the resolution guard's verdict on the image chosen for it.
+
+The decisions themselves live in `shots.csv` — twenty rows of media, motion,
+focus, labels and credits — because that is a table and a table is the right
+instrument for it. This node re-reads that file every run, so an edit made in
+any editor is picked up without re-aligning. The table editor arrives as a
+widget on this node; until then the file is the interface, and both write the
+same thing.
 
 Defaults must produce a decent reel with zero per-shot input, so the creator
-edits **by exception**. `MemoActsSetMotion` is that exception mechanism: it
-overrides one shot (or all of them) and leaves the rest alone.
-
-The resolution guard lives here too, surfaced as an inspectable report rather
-than only as a render-time warning — by the time `render` warns, the image has
-already been assigned to the shot (`GAPS.md`).
+edits **by exception**. `MemoActsSetMotion` and `MemoActsSetImage` are that
+exception mechanism inside the graph: they override one shot and leave the rest.
 """
 from __future__ import annotations
 
@@ -15,9 +23,87 @@ from pathlib import Path
 
 from comfy_api.latest import io, ui
 
-from .memoacts_core.project import MEDIA_DIRS, resolve_media
-from .memoacts_core.schedule import PRESETS, Motion, compute
-from .nodes_types import Shots
+from .memoacts_core.pipeline import compose_project, read_project
+from .memoacts_core.project import MEDIA_DIRS
+from .memoacts_core.schedule import PRESETS
+from .nodes_types import Alignment, Shots
+
+
+class MemoActsShotTable(io.ComfyNode):
+    @classmethod
+    def define_schema(cls):
+        return io.Schema(
+            node_id="MemoActsShotTable",
+            display_name="MemoActs — Shot Table",
+            category="memoacts",
+            description=(
+                "Combines the timings with the edit decisions in shots.csv — "
+                "which image, which move, what it is about, what it is called — "
+                "and emits the shot table. Cheap: it re-reads the folder every "
+                "run, so an edit costs nothing and never re-runs alignment."
+            ),
+            is_output_node=True,
+            inputs=[
+                Alignment.Input("alignment"),
+                io.Int.Input("fps", default=30, min=1, max=120),
+                io.Int.Input(
+                    "shot_lead_ms", default=100, min=0, max=1000,
+                    tooltip="Cuts lead the sentence onset by this much. An "
+                            "image arriving slightly early reads as "
+                            "intentional; arriving late reads as a mistake.",
+                ),
+                io.Boolean.Input(
+                    "save", default=True,
+                    tooltip="Write generated/shots.json and report.txt. Off "
+                            "keeps the table in the graph only — the render "
+                            "works either way.",
+                ),
+                io.Int.Input(
+                    "max_chunk", default=30, min=1, max=600, optional=True,
+                    tooltip="Frames per crop CSV, for the Comfy Cloud path "
+                            "only (GAPS.md). Local rendering never chunks.",
+                ),
+            ],
+            outputs=[Shots.Output("SHOTS")],
+        )
+
+    @classmethod
+    def fingerprint_inputs(cls, alignment, fps, shot_lead_ms, save,
+                           max_chunk=30):
+        """Re-run when the edit decisions or the media change.
+
+        The alignment upstream is cached on the script and the recording; this
+        is the other half — `shots.csv` and the folders it points into. Without
+        it a student edits a row, runs, and gets the previous table back.
+        """
+        folder = Path(alignment["project_dir"])
+        stamps = []
+        for p in [folder / "shots.csv"] + [folder / d for d in MEDIA_DIRS]:
+            try:
+                stamps.append(p.stat().st_mtime_ns)
+            except OSError:
+                stamps.append(0)
+        return f"{folder}|{stamps}|{fps}|{shot_lead_ms}|{save}|{max_chunk}"
+
+    @classmethod
+    def execute(cls, alignment, fps, shot_lead_ms, save, max_chunk=30):
+        folder = Path(alignment["project_dir"])
+        read = read_project(folder)
+        for w in read.warnings:
+            print(f"[MemoActs] warning: {w}")
+
+        comp = compose_project(folder, read, alignment["alignment"], fps=fps,
+                               lead_ms=shot_lead_ms, max_chunk=max_chunk,
+                               write=save)
+        for w in comp.warnings:
+            print(f"[MemoActs] warning: {w}")
+
+        report = comp.report
+        if read.warnings or comp.warnings:
+            report += "\n" + "\n".join(
+                f"warning: {w}" for w in read.warnings + comp.warnings)
+        return io.NodeOutput({"doc": comp.doc, "project_dir": str(folder)},
+                             ui=ui.PreviewText(report))
 
 
 class MemoActsSetMotion(io.ComfyNode):
@@ -29,7 +115,9 @@ class MemoActsSetMotion(io.ComfyNode):
             category="memoacts",
             description=(
                 "Overrides the motion preset for one shot, or for every shot. "
-                "Chain several to edit by exception."
+                "Chain several to edit by exception. The lasting place for this "
+                "decision is the motion column of shots.csv; this is for trying "
+                "one out."
             ),
             inputs=[
                 Shots.Input("shots"),
@@ -72,89 +160,39 @@ class MemoActsSetImage(io.ComfyNode):
             node_id="MemoActsSetImage",
             display_name="MemoActs — Set Shot Image",
             category="memoacts",
-            description="Assigns a different image from the project's images/ "
-                        "folder to one shot.",
+            description="Assigns different media to one shot — a still, a map "
+                        "plate, a composite or a video fragment.",
             inputs=[
                 Shots.Input("shots"),
                 io.Int.Input("shot_id", default=1, min=1, max=999),
-                io.String.Input("image_filename",
-                                tooltip="File name inside <project>/images/"),
+                io.String.Input(
+                    "media_filename",
+                    tooltip="A file name in one of " + ", ".join(MEDIA_DIRS),
+                ),
             ],
             outputs=[Shots.Output("SHOTS")],
         )
 
     @classmethod
-    def execute(cls, shots, shot_id, image_filename):
+    def execute(cls, shots, shot_id, media_filename):
         out = copy.deepcopy(shots)
-        target = Path(out["project_dir"]) / MEDIA_DIRS[0] / image_filename
-        if not target.exists():
-            raise ValueError(f"no such image: {target}")
-        for s in out["doc"]["shots"]:
+        project = Path(out["project_dir"])
+        # All four media folders, in the one search order there is. Looking only
+        # in images/ meant a map plate or a stacked composite could not be
+        # assigned here at all, though shots.csv has always allowed it.
+        found = next((project / d / media_filename for d in MEDIA_DIRS
+                      if (project / d / media_filename).exists()), None)
+        if found is None:
+            raise ValueError(f"{media_filename!r} is in none of "
+                             f"{', '.join(MEDIA_DIRS)} under {project}")
+        entries = out["doc"]["shots"]
+        for s in entries:
             if s["id"] == shot_id:
-                s["image"] = image_filename
+                s["image"] = media_filename
+                # Recorded so the renderer does not have to search again, and
+                # so a stale path from the previous media cannot win.
+                s["image_path"] = found.relative_to(project).as_posix()
                 break
         else:
-            raise ValueError(f"no shot {shot_id} in this table")
+            raise ValueError(f"no shot {shot_id}; this table has 1..{len(entries)}")
         return io.NodeOutput(out)
-
-
-class MemoActsShotReport(io.ComfyNode):
-    @classmethod
-    def define_schema(cls):
-        return io.Schema(
-            node_id="MemoActsShotReport",
-            display_name="MemoActs — Shot Report",
-            category="memoacts",
-            description=(
-                "Human-readable shot table: timings, alignment confidence, "
-                "motion, and the resolution guard's verdict per shot."
-            ),
-            is_output_node=True,
-            inputs=[Shots.Input("shots")],
-            outputs=[],
-        )
-
-    @classmethod
-    def execute(cls, shots):
-        from PIL import Image as PILImage
-
-        doc = shots["doc"]
-        project = Path(shots["project_dir"])
-        fps, out_w = doc["fps"], doc.get("width", 1080)
-
-        lines = [
-            f"{doc['narration']}  {doc['duration_s']:.2f}s  {fps} fps  "
-            f"lang {doc['lang']}  lead {doc['shot_lead_ms']}ms",
-            f"{len(doc['shots'])} shots, {sum(s['n_frames'] for s in doc['shots'])} frames",
-            "",
-        ]
-        for s in doc["shots"]:
-            img = resolve_media(project, s)
-            try:
-                with PILImage.open(img) as im:
-                    src_w, src_h = im.size
-                sched = compute(src_w, src_h, s["n_frames"],
-                                Motion(**s["motion"]), out_w=out_w)
-                widest = max(sched.ws, default=out_w)
-                # Two distinct warnings: CLAMPED means the zoom was reduced to
-                # stay legal; UPSCALED means even the widest frame cannot fill
-                # the output, which no amount of clamping fixes.
-                flags = []
-                if s.get("estimated"):
-                    flags.append("ESTIMATED")
-                if sched.clamped:
-                    flags.append("CLAMPED")
-                if widest < out_w:
-                    flags.append(f"UPSCALED {out_w / widest:.2f}x")
-                guard = f"max_zoom {sched.max_zoom:.2f}x"
-            except Exception as exc:                       # noqa: BLE001
-                flags, guard = ["IMAGE ERROR"], str(exc)[:60]
-
-            lines.append(
-                f"shot {s['id']:02d}  {s['t_start']:6.2f}–{s['t_end']:6.2f}s "
-                f"({s['n_frames']:4d} fr)  conf {s.get('confidence', 0):.2f}  "
-                f"{s['image']}  {s['motion']['preset']}@{s['motion']['rate']:.2f}  "
-                f"{guard}" + (f"  [{', '.join(flags)}]" if flags else ""))
-            lines.append(f"          {s['text'][:96]}")
-
-        return io.NodeOutput(ui=ui.PreviewText("\n".join(lines)))

@@ -28,6 +28,7 @@ from __future__ import annotations
 import json
 import warnings as _warnings
 from collections.abc import Callable
+from copy import deepcopy
 from dataclasses import dataclass, field, replace
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -120,6 +121,7 @@ class RenderOptions:
     plate: float | None = None              # None keeps subs.SubStyle's own
     labels: bool = True
     label_hold: float = 3.0
+    min_duration: float = 1.0               # shortest a caption may stay up
     crf: int = 19
     on_upscale: str = "warn"
     effects: str = "none"                   # fallback for shots setting none
@@ -325,13 +327,16 @@ def _motion_for(index: int, pick: ResolvedShot) -> Motion:
 
 def shots_from_doc(project: Path, doc: dict[str, Any], *,
                    default_effects: str = "none",
+                   stacks: dict[int, EffectStack] | None = None,
                    shot_ids: list[int] | None = None
                    ) -> tuple[list[ShotRender], list[str]]:
     """Build the renderable shots from a `shots.json` document.
 
-    Per-shot `effects` (schema 1.5) wins over `default_effects`; an unknown
-    preset name warns and leaves the shot plain rather than stopping a render
-    that can still show every other shot.
+    Three ways to give a shot a look, in decreasing order of specificity: a
+    stack built in the graph (`stacks`, keyed by shot id), the preset the shot
+    names for itself in `shots.csv` (schema 1.5), and `default_effects` for
+    everything else. An unknown preset name warns and leaves the shot plain
+    rather than stopping a render that can still show every other shot.
     """
     out_w = doc.get("width", 1080)
     shots: list[ShotRender] = []
@@ -349,13 +354,14 @@ def shots_from_doc(project: Path, doc: dict[str, Any], *,
                 src_w, src_h = im.size
         sched = compute(src_w, src_h, s["n_frames"], Motion(**s["motion"]),
                         out_w=out_w)
-        name = s.get("effects") or default_effects
         fx: EffectStack | None = None
-        if name and name != "none":
+        name = s.get("effects") or default_effects
+        if stacks and s["id"] in stacks:
+            # A fresh copy per shot, for the same reason `preset` is called per
+            # shot: the pipeline holds a texture clip's decoder position.
+            fx = deepcopy(stacks[s["id"]])
+        elif name and name != "none":
             try:
-                # A fresh stack per shot: the pipeline holds decoder state
-                # (texture clip position), so sharing one across shots would
-                # interleave them.
                 fx = preset(name)
             except ValueError:
                 warnings.append(
@@ -370,6 +376,7 @@ def shots_from_doc(project: Path, doc: dict[str, Any], *,
 def render_project(project: Path, doc: dict[str, Any], *,
                    out: Path | None = None,
                    opts: RenderOptions | None = None,
+                   stacks: dict[int, EffectStack] | None = None,
                    shot_ids: list[int] | None = None,
                    progress: Progress = _noop) -> RenderResult:
     """Render the shot table to a finished vertical MP4.
@@ -386,7 +393,7 @@ def render_project(project: Path, doc: dict[str, Any], *,
 
     shots, warnings = shots_from_doc(project, doc,
                                      default_effects=opts.effects,
-                                     shot_ids=shot_ids)
+                                     stacks=stacks, shot_ids=shot_ids)
     if not shots:
         raise ProjectError("no shots to render")
 
@@ -409,7 +416,8 @@ def render_project(project: Path, doc: dict[str, Any], *,
         if opts.plate is not None:
             style = replace(style, plate_opacity=opts.plate)
         cues = subs.cues_from_shots(doc["shots"], style, out_w,
-                                    segment=opts.segment)
+                                    segment=opts.segment,
+                                    min_duration=opts.min_duration)
         labels = ([] if not opts.labels
                   else subs.labels_from_shots(doc["shots"], hold=opts.label_hold))
         credit_cues = [] if not opts.labels else subs.credits_from_shots(doc["shots"])
