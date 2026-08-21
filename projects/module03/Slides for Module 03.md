@@ -1,28 +1,36 @@
 # Slides — Module 03
 
 Two hours, strictly. The run sheet below is the contract; every slide carries
-its minute budget. The one decision baked in: **students build level 2 live and
-take level 1 home** in `HANDOUT.md`. Level 2 needs no video upload and six
-seconds of GPU a layer, so thirty people get through it; level 1 built from
-scratch in the Cloud UI is closer to half an hour, and we do not have it.
+its minute budget.
+
+**No hands-on building in this module.** Both exercises go home in `HANDOUT.md`,
+and the time they would have taken goes into arguing about the four levels
+instead — which is the part a room is actually needed for. Every level block
+therefore ends with a discussion slide, and those slides carry real questions,
+not rhetorical ones: each has at least two defensible answers.
 
 | Time | Block | Slides | Min |
 |---|---|---|---|
-| 0:00 | Where we are, schedule, homework | S1–S4 | 8 |
-| 0:08 | **Moodboard — designer** | S5 | 27 |
-| 0:35 | The ladder, and the film itself | S6–S7 | 10 |
-| 0:45 | Level 1 — quotes | S8–S10 | 12 |
-| 0:57 | Break | — | 5 |
-| 1:02 | Level 2 — the film is silent | S11 | 8 |
-| 1:10 | **Hands-on: build the sound** | S12–S15 | 25 |
-| 1:35 | Level 3 — sharpening | S16–S18 | 9 |
-| 1:44 | Level 4 — colour | S19–S21 | 11 |
-| 1:55 | Where would you have stopped | S22 | 5 |
+| 0:00 | Title, where we are, schedule | S1–S3 | 5 |
+| 0:05 | **Screening: the reel** | S4 | 8 |
+| 0:13 | **Visual identity + moodboard — designer** | S5 | 27 |
+| 0:40 | The ladder, and the film itself | S6–S7 | 9 |
+| 0:49 | Level 1 — quotes, **+ discussion** | S8–S10 | 13 |
+| 1:02 | Break | — | 5 |
+| 1:07 | Level 2 — sound, **+ discussion** | S11–S15 | 16 |
+| 1:23 | Level 3 — sharpening, **+ discussion** | S16–S18 | 14 |
+| 1:37 | Level 4 — colour, **+ discussion** | S19–S21 | 17 |
+| 1:54 | Where would you have stopped | S22 | 4 |
+| 1:58 | Homework | S23 | 2 |
 
-Files to have open: `out/L1_quotes.mp4`, `out/L2_sound.mp4`,
-`out/L3_ab_zoom_30s.mp4`, `out/L3_split_30s.mp4`,
-`stills/L3_models_close_00014.png`, `out/L4_ab.mp4`, `stills/L4_ab_00300.png`,
-`stills/L4_ab_00660.png`.
+Files to have open: `projects/legends_of_surrender/out/reel_with_hook.mp4`,
+then `out/L1_quotes.mp4`, `out/L2_sound.mp4`, `out/L3_ab_zoom_30s.mp4`,
+`out/L3_split_30s.mp4`, `stills/L3_models_close_00014.png`, `out/L4_ab.mp4`,
+`stills/L4_ab_00300.png`, `stills/L4_ab_00660.png`.
+
+> **Numbering note.** S1–S3 are unchanged. The screening is a new S4, and the
+> homework slide that was S4 moves to the end as S23, where it belongs in a
+> two-hour session. Everything from S6 on keeps the number it already had.
 
 ---
 
@@ -53,34 +61,47 @@ go through. Let's call it the
 **02.09** – 06 Production Process: Visual Effects and Sound Design
 **07.09** – 07 Final Screening and Wrap Up Discussion
 
-## S4 Homework — two films that made opposite choices
-
-**They Shall Not Grow Old** — recommended in full; required excerpt **22:18–32:52**
-**Babi Yar. Context** — recommended in full; required excerpt **52:46–1:08:36**
-
-> **Say:** These are not two examples of the same thing. Jackson takes the
-> footage as far as it can go — he slows it to a natural speed, sharpens it,
-> colours it, and hires lip-readers so the men can speak. Loznitsa cleans the
-> image and builds an entire soundtrack for silent material, and then stops:
-> no colour, no voice, no narrator telling you what you are seeing.
->
-> Both are defensible. Both are choices. **Today we will make the same four
-> choices ourselves**, on thirty seconds of one film, so that by the end of the
-> session you can say where you would have stopped — and notice that no tool
-> will ever tell you.
-
-*(8 min for S1–S4.)*
+*(5 min for S1–S3.)*
 
 ---
 
-## S5 Moodboard — 27 min, led by the designer
+## S4 Screening — what the end of the workflow looks like
 
-The block that turns step 3 of the workflow into something you can hand to an
-editor. Slides supplied separately.
+**Play `projects/legends_of_surrender/out/reel_with_hook.mp4`** — 2:49, 1080×1920,
+twenty shots, cut to a recorded narration. *Signed After Midnight*, made for
+Museum Berlin-Karlshorst.
 
-> **Hand-back cue:** the moodboard decides *how* the document will look on
-> screen. The rest of the session is about *how far you are allowed to change
-> it* to get there.
+Three things to name **after** it plays, not before:
+
+- **Every subtitle in it is verbatim from the script.** Not one line was
+  transcribed off the audio by a machine. That is the same rule you will meet
+  again in an hour, at level 1.
+- **At 1:01 it uses the archival film we are about to take apart** — the German
+  delegation arriving at Tempelhof, from the same Karlshorst reel.
+- **And it refuses to enlarge it.** Cropping that shot to vertical would need a
+  2.4× blow-up, so it sits full width with bands above and below instead. The
+  edit note in `shots.csv` says exactly that. **A decision from today's session
+  is already visible in the finished thing** — and the honest option was the one
+  that looks less impressive.
+
+> **Say:** You are looking at step 5 and 6 of the workflow. We are at step 3.
+> The reason to show you the end first is so that today's arguments are not
+> abstract: every one of them left a mark on that file.
+
+---
+
+## S5 Visual identity and the moodboard — 27 min, designer
+
+The idea behind the project's visual identity, and how it connects to the
+students' own films. Slides supplied separately.
+
+> **Hand-over cue:** you have just seen one project's answer to "how should this
+> look". Now the reasoning behind it — and how you build the same thing for your
+> own subject.
+>
+> **Hand-back cue:** a moodboard decides *how* the document will look on screen.
+> The rest of the session is about *how far you are allowed to change it* to get
+> there.
 
 ---
 
@@ -123,7 +144,7 @@ Museum Berlin-Karlshorst, 7:36. Our cut: **04:14–04:44**, the signing.
 > state, it is a scanning choice. You are never intervening in raw material.
 > You are intervening in someone else's intervention.
 
-*(10 min for S6–S7.)*
+*(9 min for S6–S7.)*
 
 ---
 
@@ -161,16 +182,29 @@ Two limits, and both are the argument for building your own tool later:
 > your material happens to conceal is the expensive kind** — it surfaces on the
 > next film, in front of an audience.
 
-## S10 Level 1 — your turn, at home
+## S10 Level 1 — discussion
 
-`HANDOUT.md`, Exercise 1. Three nodes, three runs, the exact frame ranges are in
-the table. Twenty minutes on your own time.
+**Three questions. None of them has one answer.**
 
-What you will find: three clips of eight seconds, **not a captioned film.** The
-stretches between quotes are in none of them, and joining them is editing work
-outside ComfyUI. That gap is the subject of module 05.
+1. **A caption is a verbatim quote from a real document. Does putting it over a
+   different moment of the film make it a lie?** Nothing in the words changed.
+   Where exactly does timing stop being editing and start being a claim?
+2. **This reel already carries the museum's own burned-in captions.** If yours
+   contradicts theirs on the same frame, whose survives — and who gets to
+   decide?
+3. **Does a quote belong on screen if you cannot also show where it came from?**
+   The reel has room for a source line. A thirty-second vertical video does not.
 
-*(12 min for S8–S10. Then 5 min break.)*
+> **Say:** Level 1 adds nothing to the image, and it is still the level where
+> you can mislead most cheaply. Every later level is more visible and therefore
+> easier to challenge.
+
+**Take home:** `HANDOUT.md`, Exercise 1 — three nodes, three runs, twenty
+minutes, no GPU. What you will find is three clips of eight seconds, **not a
+captioned film**: the stretches between quotes are in none of them, and joining
+them is editing work outside ComfyUI. That gap is the subject of module 05.
+
+*(13 min for S8–S10. Then 5 min break.)*
 
 ---
 
@@ -187,14 +221,13 @@ outside ComfyUI. That gap is the subject of module 05.
 **Screen `out/L2_sound.mp4`.** Ask before explaining anything: *did that sound
 like a recording?* Then say that not one sample of it existed an hour ago.
 
-*(8 min.)*
-
 ---
 
-## S12 Hands-on — the eight nodes
+## S12 Level 2 — how it is made, in eight nodes
 
-Everything is already on Cloud. No downloads, no Hugging Face account, no
-licence to accept.
+Everything is already on Cloud: no downloads, no Hugging Face account, no
+licence to accept. This is the graph you get in the handout — read it here,
+build it at home.
 
 | # | Node | Set |
 |---|---|---|
@@ -207,14 +240,14 @@ licence to accept.
 | 7 | **VAE Decode Audio** | VAE from node 1 |
 | 8 | **Save Audio (Advanced)** | `format` `flac` |
 
-> **The trap, and you will hit it.** Both text encoders take CLIP from **node
-> 2**, not from the checkpoint. The checkpoint has the model and the VAE but
+> **The trap, and you will hit it when you build this at home.** Both text
+> encoders take CLIP from **node 2**, not from the checkpoint. The checkpoint has the model and the VAE but
 > **no text encoder** — wire CLIP from node 1 and you get `CLIP = None` and an
 > error that blames the checkpoint file.
 >
 > Also: plain "Save Audio" is deprecated on Cloud. Use **Save Audio (Advanced)**.
 
-## S13 Hands-on — four layers
+## S13 Level 2 — four layers, and what they cost
 
 | Layer | Sec | Seed | Prompt |
 |---|---|---|---|
@@ -225,9 +258,10 @@ licence to accept.
 
 **Cost does not grow with length.** Six seconds of GPU per layer whether you ask
 for twelve seconds of audio or thirty-two. Four layers ≈ **three cents**. This
-is the one level thirty people can run at once.
+is the one level thirty people could run at once — which is why it is the one
+to try first when you get home.
 
-## S14 Hands-on — judging takes ears
+## S14 Level 2 — judging takes ears
 
 Two of those four prompts are **second attempts**, and the rewriting is the real
 skill here.
@@ -242,7 +276,7 @@ skill here.
 > **Say:** When a layer is wrong, do not just roll the seed. Ask what the model
 > misheard, and say the missing thing. Both fixes here were words, not numbers.
 
-## S15 Hands-on — what the graph cannot do
+## S15 Level 2 — what the graph cannot do, and discussion
 
 **Nothing in it places a sound at a timecode.** The model makes material; a
 person still decides when the shutter fires, how loud the room sits under it,
@@ -256,7 +290,19 @@ at once.
 > description of every level in this module, and the answer to "will this
 > replace an editor".
 
-*(25 min for S12–S15. Cut S14 first if the room is slow.)*
+**Discussion — three questions:**
+
+1. **Nobody captions a room tone. Should they?** What would an honest sound
+   credit even look like on a thirty-second video — and would anyone read it?
+2. **The narration in the reel you saw is a real recorded human voice.** If it
+   were synthetic, would you disclose that? Does your answer change for the
+   crowd murmur? If it does, what is the difference you are actually pointing at?
+3. **Stable Audio Open is trained largely on Freesound's CC0 library** — sounds
+   people recorded and gave away. So whose coughs are in that 1945 hall? Does it
+   matter that they are real recordings of real rooms, just not *that* room?
+
+*(16 min for S11–S15. Cut the eight-node table first if the room is slow — it is
+in the handout anyway.)*
 
 ---
 
@@ -302,7 +348,19 @@ And then the awkward part: **Remacri is not available on Comfy Cloud.**
 > **Say:** The platform's default is not the careful choice. It rarely is. If
 > you cannot name why you picked a model, you did not pick it.
 
-*(9 min for S16–S18.)*
+**Discussion — three questions:**
+
+1. **The grain is the film. Is removing it restoration, or retouching?** The
+   same operation is called both, depending on who is selling it.
+2. **Your platform offers you two upscalers, and both invent grain on skin that
+   has none. You cannot install the careful one.** Do you use what is there, or
+   do you not upscale at all? Answer as if the deadline is tomorrow.
+3. **Jackson's argument is legibility**: at native size and speed, nobody
+   watches, so nobody learns anything. Is that worth the invention? Notice that
+   the reel you saw this morning answered *no* — and lost half its frame to
+   bands for it.
+
+*(14 min for S16–S18.)*
 
 ---
 
@@ -346,7 +404,20 @@ frame-to-frame noise as the floor:
 > is nothing to colour, there is nothing to anchor the invention. That is not a
 > bug to apologise for — it is the argument, visible and measurable.
 
-*(11 min for S19–S21.)*
+**Discussion — three questions:**
+
+1. **The model returned a plausible modern photograph where a document had been,
+   and reported success.** Nothing failed. What in *your* process would have
+   caught it? Be concrete: name the step.
+2. **Our fix keeps the film's own luminance, so no shape can move.** Does that
+   make the colour honest — or does it only make the invention harder to see?
+   The colours on frame 660 are still wrong; they are just wrong with crisp
+   edges now.
+3. **The blank wall flickers 17.6× the film's own noise.** Is that instability a
+   defect to fix — or the only visible sign the viewer gets that this is
+   generated? Would you smooth it if you could?
+
+*(17 min for S19–S21. This is the block with the most room; let it run.)*
 
 ---
 
@@ -362,10 +433,30 @@ Four levels, one film, rising intervention:
 **No tool anywhere in today's session told you that a line had been crossed.**
 Every one of them reported success.
 
-**Homework:** the two excerpts (S4). Come to module 04 able to say, for each
-film, which of these four levels its makers used and which they refused — and
-whether you agree.
+**Round the room, one sentence each: which level is the last one you would
+have used on your own subject — and what would you have to write down for the
+next person to trust it?**
+
+*(4 min.)*
+
+---
+
+## S23 Homework — two films that made opposite choices
+
+**They Shall Not Grow Old** — recommended in full; required excerpt **22:18–32:52**
+**Babi Yar. Context** — recommended in full; required excerpt **52:46–1:08:36**
+
+> **Say:** These are not two examples of the same thing. Jackson takes the
+> footage as far as it can go — he slows it to a natural speed, sharpens it,
+> colours it, and hires lip-readers so the men can speak. Loznitsa cleans the
+> image and builds an entire soundtrack for silent material, and then stops: no
+> colour, no voice, no narrator telling you what you are seeing.
+>
+> Both are defensible. Both are choices. **You have just made the same four
+> choices yourselves.** Come to module 04 able to say, for each film, which of
+> the four levels its makers used and which they refused — and whether you
+> agree.
 
 **Exercise 1 is yours to run** — `HANDOUT.md`, twenty minutes, no GPU.
 
-*(5 min.)*
+*(2 min.)*

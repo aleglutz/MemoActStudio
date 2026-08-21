@@ -1,9 +1,13 @@
 # Module 03 — the two you build yourself
 
-You will be shown four ways of working an archival film: quoting it, sounding
-it, sharpening it, colouring it. Two of them you run yourself on Comfy Cloud
-during the seminar. They are the first two, and that is not an accident — they
-are the two that fit inside a shared cloud machine and a seminar hour.
+In the session you are shown four ways of working an archival film: quoting it,
+sounding it, sharpening it, colouring it. **Two of them you can run yourself**,
+and this is how. They are the first two, and that is not an accident — they are
+the two that fit on a shared cloud machine without an hour of GPU time.
+
+Neither is built in the room; the session spends that time arguing about the
+four levels instead. Do these afterwards, in your own time — level 2 first, it
+is the shorter one and it needs no video upload.
 
 The film is thirty seconds from the surrender at Karlshorst, 8 May 1945, held by
 Museum Berlin-Karlshorst.
