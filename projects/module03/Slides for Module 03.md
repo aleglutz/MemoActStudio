@@ -450,23 +450,34 @@ Every one of them reported success.
 **One sentence each: which level is the last one you would use on your own
 subject — and what would you have to write down for the next person to trust it?**
 
-## S23 Homework — start a reference board on Are.na
+## S23 Homework — one board and two installs
 
-**are.na — <https://www.are.na/>**
-
+**1. Start a reference board — <https://www.are.na/>**
 Make an account and open a channel for your own film. Put references in it as
 you find them: images, frames, typography, colour, layouts — anything that
-answers the question the moodboard block asked, *how should this look*.
+answers the question the moodboard block asked, *how should this look*. **Bring
+the link to module 04 on 25.08.**
 
-**Bring the link to module 04 on 25.08.**
+**2. Install Shotcut — <https://www.shotcut.org>**
+Video editor. Free, open source, Windows / macOS / Linux.
 
-> **Say:** A channel is a working surface, not a presentation. It is allowed to
-> be unfinished, contradictory, and full of things you will throw away. The
-> point is to have somewhere to put a reference the moment you see it, instead
-> of remembering it wrong a week later.
+**3. Install Audacity — <https://www.audacityteam.org/>**
+Audio editor. Free, open source, Windows / macOS / Linux.
+
+**Both before 25.08.** A session should not open with thirty people downloading
+an installer.
+
+> **Say:** A channel is a working surface, not a presentation — it is allowed to
+> be unfinished, contradictory and full of things you will throw away. The point
+> is to have somewhere to put a reference the moment you see it, instead of
+> remembering it wrong a week later.
+>
+> And the two editors are the other half of today. Everything you watched was
+> made by a model and then placed by a person: the sound was generated in four
+> layers and mixed by hand, the quotes were timed by hand. Shotcut and Audacity
+> are where you do that placing.
 
 **Optional, and it needs no GPU:** `HANDOUT.md` has the two exercises from
-today's levels 1 and 2 written out node by node, if you want to run them
-yourself.
+today's levels 1 and 2 written out node by node.
 
 *(5 min for S22–S23 — three and two.)*
