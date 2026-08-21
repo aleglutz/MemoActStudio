@@ -249,7 +249,7 @@ Media arrives through the file manager, documented in the handout — the ban is
 on the command line, not on Explorer. A drag-and-drop upload route is a
 nice-to-have, not scope.
 
-### D. Focus picker on the thumbnail (≈1.5 days)
+### D. Focus picker on the thumbnail — **DONE 2026-08-21**
 
 Drag a rectangle over the thumbnail; it writes the `focus` triple that
 `shots.csv` already accepts and `schedule.focus_window` already validates.
@@ -305,16 +305,19 @@ already says so; now there is a figure to apply it to.
 1. ~~**A** — the spine.~~ **Done 2026-08-21.**
 2. ~~**B** — the five nodes.~~ **Done 2026-08-21. The terminal-free path exists.**
 3. ~~**C** — the table widget.~~ **Done 2026-08-21**, seen working in a browser.
-4. **D** — focus picker. 1.5 d. **Next.**
+4. ~~**D** — focus picker.~~ **Done 2026-08-21**, and `schedule.focus_limits`
+   now states the rule next to the code that enforces it.
 5. **E** — per-shot effects. Mostly landed with A (schema 1.5, the column
    reaching the renderer) and C (a preset per row). What is left is the
-   cost multiplier shown on the row — hours, not a day.
+   cost multiplier shown on the row — hours, not a day. **Next.**
 6. **F** — template, starter project, handout. 1.5 d.
 7. **G** — machine A and the measurements. 1 d.
 
-A, B and C took one day rather than seven, largely because `memoacts_core` was
-already interface-agnostic and the drift, once named, was mechanical to remove.
-What remains is D, F and G — roughly four days — with E folded into D.
+A, B, C and D took one day rather than eight and a half, largely because
+`memoacts_core` was already interface-agnostic and the drift, once named, was
+mechanical to remove. What remains is the tail of E, then F and G — the
+teaching material and the machines, which is the half no amount of code
+substitutes for.
 
 ## What this plan does not touch
 

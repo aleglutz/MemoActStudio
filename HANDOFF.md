@@ -53,14 +53,19 @@ render — which is what `GAPS.md` has been asking for.
 
 ## What the next session does first
 
-**Item D of `docs/PLAN.md`** — the focus picker: drag a rectangle on the
-thumbnail, write the `focus` triple, update `max_zoom` and `clamped` live. The
-detail strip is already the place it goes and already computes what it needs.
+**The tail of item E** — the render-cost multiplier on a row that names an
+effect preset, so the one decision that costs minutes says so where it is made.
+Hours, not a day.
 
-E is nearly closed by A and C (schema, renderer, per-row dropdown); what is left
-is showing the render-cost multiplier on the row. Then **F** — the template
-workflow, a short starter project, and the handout in the register of
-`projects/module03/HANDOUT.md` — and **G**, machine A.
+Then **F** — the template workflow, a short starter project, and the handout in
+the register of `projects/module03/HANDOUT.md` — and **G**, machine A. Those two
+are the teaching material and the machines, which is the half no amount of code
+substitutes for.
+
+**D landed 2026-08-21**: drag on the thumbnail to say what a shot is about.
+`schedule.focus_limits` states what a focus may be, beside the code that
+enforces it, and the panel refuses to invite a rectangle that cannot mean
+anything — true of five of this reel's twenty shots.
 
 ## Two things worth knowing before touching the UI
 
@@ -69,11 +74,16 @@ workflow, a short starter project, and the handout in the register of
   page succeeds. The way in is to open any other local page and set
   `location.href`. Not a ComfyUI problem: loopback, port and server were each
   ruled out separately.
-- **A DOM widget reports `{minWidth: 0}`**, and `computeLayoutSize` cannot be
-  overridden to say otherwise — not on what `addDOMWidget` returns, not on the
-  widget looked up from `node.widgets`, not later from a timeout. So a node
-  holding a table can be dragged narrower than its columns; the table scrolls
-  inside it instead.
+- **Nothing outside the frontend can give a node a minimum size.** A DOM widget
+  reports `{minWidth: 0}` for itself; `computeLayoutSize` cannot be overridden —
+  not on what `addDOMWidget` returns, not on the widget from `node.widgets`, not
+  later from a timeout — and `node.computeSize` is reassigned back over any
+  override. Each was read back off the live node and each had reverted. A
+  relayout can therefore shrink the node to a sliver; dragging it wide again is
+  the cure, and the table scrolls inside whatever it is given.
+- **The extension's synthesised drag does not reach a DOM widget.** The picker
+  was exercised with dispatched `PointerEvent`s instead, which is what a real
+  device sends.
 
 ## What is open, carried over unchanged
 
