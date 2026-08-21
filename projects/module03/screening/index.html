@@ -1,40 +1,37 @@
 <!--
-  Module 03 — screening page.
+  Module 03 — the whole module as one page.
 
-  Self-contained on purpose: one folder, one HTML file, one media/ directory.
-  Open index.html in a browser and everything plays, with no server and no
-  network. Drop the whole folder into euromancer as e.g. /module-03/ and it
-  works there too, because every path inside is relative.
+  Self-contained: one HTML file, one media/ directory, no server and no
+  network. Every path inside is relative, so the folder drops into euromancer
+  as-is, or becomes an Eleventy page by keeping <main> and the <style> block
+  and adding front matter with a layout.
 
-  To make it an Eleventy page instead: keep <main> and the <style> block,
-  delete <html>/<head>/<body>, and add front matter naming your layout.
+  Under every video there is a spec block and nothing else: model, settings,
+  machine, time, and what was done to the archive. No commentary, no
+  conclusions — those belong to the room, not to the page.
 
-  The media/ files are re-encoded copies. Originals live in
-  projects/module03/out/ and projects/legends_of_surrender/out/ and are the
-  ones to project if a beamer disagrees with a laptop.
+  media/ is re-encoded. Originals are in ../out/ and
+  ../../legends_of_surrender/out/. See REBUILD.md.
 
-  Rights: the archival footage is Museum Berlin-Karlshorst material. Screening
-  it in a seminar and publishing it on a public site are different acts.
+  Rights: the footage is Museum Berlin-Karlshorst material. Screening it in a
+  seminar and publishing it on a public site are different acts.
 -->
 <!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Module 03 — Screening</title>
+<title>Module 03 — Intervening in Archival Footage</title>
 <style>
 :root {
-  /* Paper — warm off-white, like aged typewriter stock */
   --bg: #f5f0e6;
   --bg-warm: #ede7d9;
   --border: #e4ddd0;
 
-  /* Ink — typewriter ribbon */
   --fg: #1a1a18;
   --fg-dim: #4a4a46;
   --fg-faint: #8a8a84;
 
-  /* Blue ribbon */
   --accent: #2f6f9c;
   --accent-faint: rgba(47, 111, 156, 0.15);
 
@@ -53,7 +50,6 @@
 }
 
 * { box-sizing: border-box; }
-
 html { -webkit-text-size-adjust: 100%; }
 
 body {
@@ -73,7 +69,7 @@ main {
 
 .measure { max-width: var(--measure); }
 
-/* ---------------------------------------------------------------- masthead */
+/* --------------------------------------------------------------- masthead */
 
 header.masthead {
   border-bottom: 1px solid var(--fg);
@@ -89,16 +85,10 @@ header.masthead {
   margin: 0 0 var(--space-xs);
 }
 
-h1 {
-  font-size: 26px;
-  line-height: 1.25;
-  margin: 0 0 var(--space-sm);
-  font-weight: 700;
-}
-
+h1 { font-size: 26px; line-height: 1.25; margin: 0 0 var(--space-sm); }
 .standfirst { color: var(--fg-dim); margin: 0; }
 
-/* ------------------------------------------------------------------ runlist */
+/* ---------------------------------------------------------------- runlist */
 
 nav.runlist {
   border: 1px solid var(--border);
@@ -115,46 +105,34 @@ nav.runlist p {
   text-transform: uppercase;
 }
 
-nav.runlist ol {
-  margin: 0;
-  padding-left: 1.6em;
-  columns: 2;
-  column-gap: var(--space-md);
-}
-
+nav.runlist ol { margin: 0; padding-left: 1.6em; columns: 2; column-gap: var(--space-md); }
 @media (max-width: 640px) { nav.runlist ol { columns: 1; } }
-
 nav.runlist li { margin-bottom: 2px; break-inside: avoid; }
 
-a {
-  color: var(--accent);
-  text-decoration: none;
-}
-
+a { color: var(--accent); text-decoration: none; }
 a::before { content: "["; color: var(--fg-faint); }
 a::after  { content: "]"; color: var(--fg-faint); }
-
-a:hover, a:focus {
-  background: var(--accent);
-  color: var(--bg);
-  outline: none;
-}
-
+a:hover, a:focus { background: var(--accent); color: var(--bg); outline: none; }
 a:hover::before, a:hover::after,
 a:focus::before, a:focus::after { color: var(--bg); }
 
-/* ------------------------------------------------------------------ clips */
+/* --------------------------------------------------------------- sections */
 
-section.clip {
-  margin-bottom: var(--space-xl);
-  scroll-margin-top: var(--space-sm);
-}
+section { margin-bottom: var(--space-xl); scroll-margin-top: var(--space-sm); }
 
 h2 {
   color: var(--accent);
   letter-spacing: 0.06em;
   font-size: 18px;
   margin: 0 0 var(--space-xs);
+}
+
+h3 {
+  font-size: 14px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--fg-dim);
+  margin: var(--space-md) 0 var(--space-xs);
 }
 
 .meta {
@@ -165,39 +143,91 @@ h2 {
   margin: 0 0 var(--space-sm);
 }
 
-/* The video sits on ink, not on paper — a bright field around a projected
-   clip is glare, and the ribbon colour is already in the palette. */
+p, ul, ol { max-width: var(--measure); }
+p { margin: 0 0 var(--space-sm); }
+ul, ol { padding-left: 1.2em; margin: 0 0 var(--space-sm); }
+li { margin-bottom: var(--space-xs); }
+
+/* ------------------------------------------------------------------ video */
+
 .frame {
   background: var(--fg);
   border: 1px solid var(--fg);
   padding: var(--space-xs);
-  margin-bottom: var(--space-sm);
+  margin-bottom: var(--space-xs);
 }
 
-video {
-  display: block;
-  width: 100%;
-  height: auto;
-  max-height: 74vh;
-  margin: 0 auto;
-  background: #000;
-}
-
+video { display: block; width: 100%; height: auto; max-height: 74vh; margin: 0 auto; background: #000; }
 .frame.portrait video { max-width: 420px; }
 
-.note { margin: 0 0 var(--space-sm); max-width: var(--measure); }
-
-.note strong { font-weight: 700; }
-
-ul.points {
-  max-width: var(--measure);
+.caption {
+  color: var(--fg-faint);
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
   margin: 0 0 var(--space-sm);
-  padding-left: 1.2em;
 }
 
-ul.points li { margin-bottom: var(--space-xs); }
+/* ------------------------------------------------------------------- spec */
 
-/* ------------------------------------------------------------- discussion */
+dl.spec {
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  margin: 0 0 var(--space-md);
+  padding: var(--space-xs) 0;
+  font-size: 13px;
+  display: grid;
+  grid-template-columns: 190px 1fr;
+  gap: 2px var(--space-sm);
+  max-width: var(--measure);
+}
+
+@media (max-width: 560px) { dl.spec { grid-template-columns: 1fr; gap: 0 0; } }
+
+dl.spec dt {
+  color: var(--fg-faint);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-size: 11px;
+  padding-top: 3px;
+}
+
+dl.spec dd { margin: 0; color: var(--fg-dim); }
+dl.spec dd code { color: var(--fg); }
+
+code {
+  background: var(--bg-warm);
+  padding: 0 3px;
+  font-size: 0.94em;
+}
+
+/* ------------------------------------------------------------------ table */
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 13px;
+  margin: 0 0 var(--space-md);
+}
+
+th, td {
+  text-align: left;
+  padding: 6px var(--space-xs);
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+
+thead th {
+  color: var(--fg-faint);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--fg);
+}
+
+td.num { text-align: right; font-variant-numeric: tabular-nums; }
+
+/* -------------------------------------------------------------- discussion */
 
 details {
   border-top: 1px solid var(--border);
@@ -218,24 +248,9 @@ summary::-webkit-details-marker { display: none; }
 summary::before { content: "+ "; color: var(--accent); }
 details[open] summary::before { content: "− "; }
 summary:hover { color: var(--accent); }
+details ol { padding-left: 1.4em; margin-top: var(--space-xs); }
 
-details ol { padding-left: 1.4em; }
-details li { margin-bottom: var(--space-xs); }
-
-/* ---------------------------------------------------------------- pullquote */
-
-blockquote {
-  margin: 0 0 var(--space-sm);
-  padding-left: var(--space-sm);
-  border-left: 3px solid var(--accent);
-  background: var(--accent-faint);
-  padding: var(--space-xs) var(--space-sm);
-  max-width: var(--measure);
-}
-
-blockquote p { margin: 0; }
-
-/* ------------------------------------------------------------------ footer */
+/* ----------------------------------------------------------------- footer */
 
 footer {
   border-top: 1px solid var(--fg);
@@ -247,11 +262,7 @@ footer {
 
 footer p { margin: 0 0 var(--space-xs); }
 
-hr.rule {
-  border: 0;
-  border-top: 1px solid var(--border);
-  margin: var(--space-lg) 0;
-}
+hr.rule { border: 0; border-top: 1px solid var(--border); margin: var(--space-lg) 0; }
 </style>
 </head>
 <body>
@@ -261,96 +272,195 @@ hr.rule {
   <p class="kicker">MemoActs 2026 · online intensive · 21.08</p>
   <h1>Module 03 — Ethics and Techniques of Intervening in Archival Footage</h1>
   <p class="standfirst measure">
-    Everything screened today, in order, on one page. Thirty seconds of one
-    archival film put through four rising degrees of intervention — quoted,
-    sounded, sharpened, coloured — after the finished reel that all of it was
-    made for.
+    Thirty seconds of one archival film, put through four operations of rising
+    intervention. Every clip on this page was produced on a local ComfyUI
+    install; each carries what model made it, at what settings, on what machine,
+    in what time, and what was done to the source.
   </p>
 </header>
 
 <nav class="runlist">
-  <p>Run order</p>
+  <p>Contents</p>
   <ol>
-    <li><a href="#reel">The reel — Signed After Midnight</a></li>
-    <li><a href="#L1">Level 1 — quotes</a></li>
-    <li><a href="#L2">Level 2 — sound</a></li>
-    <li><a href="#L3">Level 3 — upscale</a></li>
-    <li><a href="#L3split">Level 3 — the split frame</a></li>
-    <li><a href="#L4">Level 4 — colour</a></li>
+    <li><a href="#where">Where this sits</a></li>
+    <li><a href="#reel">The reel</a></li>
+    <li><a href="#identity">Visual identity</a></li>
+    <li><a href="#film">The film</a></li>
+    <li><a href="#ladder">Four levels</a></li>
+    <li><a href="#L1">1 — quotes</a></li>
+    <li><a href="#L2">2 — sound</a></li>
+    <li><a href="#L3">3 — upscale</a></li>
+    <li><a href="#L4">4 — colour</a></li>
+    <li><a href="#close">Close and homework</a></li>
   </ol>
 </nav>
 
-<!-- ------------------------------------------------------------- the reel -->
+<!-- ------------------------------------------------------------- S1–S3 -->
 
-<section class="clip" id="reel">
-  <h2>The reel — <em>Signed After Midnight</em></h2>
-  <p class="meta">2:49 · 1080×1920 · twenty shots · Museum Berlin-Karlshorst</p>
+<section id="where">
+  <h2>Where this sits</h2>
+  <p class="meta">S1–S3 · 5 min</p>
 
-  <div class="frame portrait">
-    <video controls preload="metadata" playsinline poster="" src="media/reel.mp4"></video>
-  </div>
+  <h3>Creator's workflow</h3>
+  <ol>
+    <li>Idea and the topic</li>
+    <li>Research to collect and verify materials</li>
+    <li><strong>Decide how to present the document — you are here</strong></li>
+    <li>Write a screenplay and record the voiceover</li>
+    <li>Assemble the visuals</li>
+    <li>Polish: subtitles, visual effects, sound design</li>
+    <li>Pre-publishing screening and evaluation</li>
+  </ol>
 
-  <p class="note">
-    What the end of the workflow looks like. Three things worth naming
-    <strong>after</strong> it plays, not before:
-  </p>
-
-  <ul class="points">
-    <li><strong>Every subtitle is verbatim from the script.</strong> Not one line
-      was transcribed off the audio by a machine.</li>
-    <li><strong>At 1:01 it uses the archival film below</strong> — the German
-      delegation arriving at Tempelhof, from the same Karlshorst reel.</li>
-    <li><strong>And it refuses to enlarge it.</strong> Cropping that shot to
-      vertical would need a 2.4× blow-up, so it sits full width with bands
-      instead. A decision from today's session is already in the finished
-      thing — and the honest option was the one that looks less impressive.</li>
-  </ul>
+  <h3>Schedule</h3>
+  <table>
+    <tbody>
+      <tr><td>14.08</td><td>01 Introduction and Finding the Focus</td></tr>
+      <tr><td>18.08</td><td>02 Research Phase — AI-powered or AI-distorted</td></tr>
+      <tr><td><strong>21.08</strong></td><td><strong>03 Ethics and Techniques of Intervening in Archival Footage + Creating a Moodboard</strong></td></tr>
+      <tr><td>25.08</td><td>04 Editing as a Way of Thinking Through a Fragmented Reality</td></tr>
+      <tr><td>27.08</td><td>05 Tools Implementation: Choose What Works or Build Your Own</td></tr>
+      <tr><td>02.09</td><td>06 Production: Visual Effects and Sound Design</td></tr>
+      <tr><td>07.09</td><td>07 Final Screening and Wrap Up</td></tr>
+    </tbody>
+  </table>
 </section>
 
 <hr class="rule">
 
-<!-- ---------------------------------------------------------------- level 1 -->
+<!-- --------------------------------------------------------------- S4 -->
 
-<section class="clip" id="L1">
-  <h2>Level 1 — quotes</h2>
-  <p class="meta">30 s · 1068×800 · no model, no GPU</p>
+<section id="reel">
+  <h2>The reel — <em>Signed After Midnight</em></h2>
+  <p class="meta">S4 · 8 min</p>
+
+  <div class="frame portrait">
+    <video controls preload="metadata" playsinline src="media/reel.mp4"></video>
+  </div>
+
+  <dl class="spec">
+    <dt>Format</dt><dd>1080×1920, 2:49, 20 shots</dd>
+    <dt>Narration</dt><dd>recorded human voice, passed through unre-encoded</dd>
+    <dt>Subtitles</dt><dd>verbatim from the script; timings computed by forced alignment (stable-ts), text never transcribed from audio</dd>
+    <dt>Archive in it</dt><dd>at 1:01, KAPFILM footage, Museum Berlin-Karlshorst, in-point 0:40 — full width with bands, at native size, no enlargement</dd>
+    <dt>Built with</dt><dd><code>memoacts_core</code> + ffmpeg, from <code>shots.csv</code></dd>
+  </dl>
+</section>
+
+<hr class="rule">
+
+<!-- --------------------------------------------------------------- S5 -->
+
+<section id="identity">
+  <h2>Visual identity and the moodboard</h2>
+  <p class="meta">S5 · 22 min · designer</p>
+  <p>Presented live. Slides supplied separately.</p>
+</section>
+
+<hr class="rule">
+
+<!-- ------------------------------------------------------------ S6–S7 -->
+
+<section id="film">
+  <h2>The film</h2>
+  <p class="meta">S6–S7 · 10 min</p>
+
+  <dl class="spec">
+    <dt>Source</dt><dd>Museum Berlin-Karlshorst, KAPFILM, 7:36</dd>
+    <dt>Working cut</dt><dd>04:14–04:44 — the signing. 901 frames at 30 fps</dd>
+    <dt>Frame</dt><dd>transfer is 1280×800; picture is 1068×800 at x=106. Pillarboxed; the cut is de-pillarboxed by <code>crop=1068:800:106:0</code></dd>
+    <dt>Audio</dt><dd>−91 dB mean <em>and</em> max end to end, every sample in one histogram bin. Dropped from the working cut</dd>
+    <dt>Colour</dt><dd>the scan carries a constant warm offset, a few levels more red than green throughout</dd>
+    <dt>Also present</dt><dd>the museum's own burned-in trilingual captions elsewhere in the reel, absent from this stretch</dd>
+  </dl>
+
+  <details>
+    <summary>Discussion</summary>
+    <ol>
+      <li>The crop, the transfer, the tint and the museum's captions all arrived
+        as decisions someone else made. Does that make your changes more
+        defensible, or less?</li>
+      <li>This stretch was chosen partly because the museum's captions are absent
+        from it. Is choosing the convenient thirty seconds already an edit?</li>
+      <li>Nothing in this film is signed — no cameraman, no editor, no scanning
+        technician. What can you honestly say about provenance?</li>
+    </ol>
+  </details>
+</section>
+
+<hr class="rule">
+
+<!-- --------------------------------------------------------------- S8 -->
+
+<section id="ladder">
+  <h2>Four levels</h2>
+  <p class="meta">S8 · 5 min</p>
+
+  <table>
+    <thead>
+      <tr><th>Level</th><th>Operation</th><th>Model</th><th>Cost</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>1 — quotes</td>
+        <td>text composited over the frame</td>
+        <td>none</td>
+        <td class="num">CPU</td>
+      </tr>
+      <tr>
+        <td>2 — sound</td>
+        <td>audio generated from text, mixed to picture</td>
+        <td>Stable Audio Open 1.0</td>
+        <td class="num">6 s / layer</td>
+      </tr>
+      <tr>
+        <td>3 — upscale</td>
+        <td>1068×800 → 2136×1600</td>
+        <td>4x_foolhardy_Remacri (ESRGAN)</td>
+        <td class="num">3.66 s / frame</td>
+      </tr>
+      <tr>
+        <td>4 — colour</td>
+        <td>instruction edit, then chroma transplanted onto the original</td>
+        <td>Qwen-Image-Edit (Apache-2.0)</td>
+        <td class="num">117–156 s / frame</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p>All four ran on a local ComfyUI install, RTX 3090 Ti, 24 GB.</p>
+</section>
+
+<hr class="rule">
+
+<!-- ------------------------------------------------------------ S9–S10 -->
+
+<section id="L1">
+  <h2>1 — quotes</h2>
+  <p class="meta">S9–S10 · 15 min</p>
 
   <div class="frame">
     <video controls preload="metadata" playsinline src="media/L1_quotes.mp4"></video>
   </div>
+  <p class="caption">Three quotes over the working cut</p>
 
-  <blockquote>
-    <p>The document is the ground truth. A workflow decides <em>when</em> a line
-    appears. It never decides <em>what</em> it says.</p>
-  </blockquote>
-
-  <p class="note">
-    The three quotes are transcribed from the signed English copy of the Act of
-    Military Surrender. Not from the footage, not from memory, not from a
-    paraphrase. That rule is what separates this from the auto-subtitle button
-    in any editor.
-  </p>
-
-  <p class="note">
-    The stock graph can do the same thing visibly worse, and both limits are
-    the argument for building a tool: one node holds one string over one frame
-    range, so three captions are three runs; and its background colour draws no
-    real plate, so only a drop shadow stands between white text and the picture.
-    <strong>That second limit never shows on this film</strong> — the strip
-    where the caption sits measures 14 to 65 out of 255 across the whole cut.
-    Dark everywhere. A flaw your material happens to conceal is the expensive
-    kind.
-  </p>
+  <dl class="spec">
+    <dt>Model</dt><dd>none</dd>
+    <dt>Render</dt><dd>ffmpeg, libass filter, one pass over 30 s. Seconds, on CPU</dd>
+    <dt>Graph version</dt><dd><code>VHS_LoadVideo → DrawText+ → VHS_VideoCombine</code>, one run per quote, ComfyUI local</dd>
+    <dt>Text source</dt><dd>transcribed by hand from the signed English copy of the Act of Military Surrender. Not read off the footage</dd>
+    <dt>Done to the archive</dt><dd>nothing. Pixels unmodified; text composited on top</dd>
+    <dt>Caption band</dt><dd>measured 14–65 of 255 across the cut, so white text with a shadow stays legible without a plate</dd>
+  </dl>
 
   <details>
     <summary>Discussion</summary>
     <ol>
       <li>A caption is a verbatim quote from a real document. Does putting it
-        over a different moment of the film make it a lie? Nothing in the words
-        changed. Where does timing stop being editing and start being a claim?</li>
-      <li>This reel already carries the museum's own burned-in captions. If
-        yours contradicts theirs on the same frame, whose survives — and who
-        decides?</li>
+        over a different moment of the film make it a lie? Where does timing
+        stop being editing and start being a claim?</li>
+      <li>The reel carries the museum's own burned-in captions. If yours
+        contradicts theirs on the same frame, whose survives?</li>
       <li>Does a quote belong on screen if you cannot also show where it came
         from?</li>
     </ol>
@@ -359,54 +469,52 @@ hr.rule {
 
 <hr class="rule">
 
-<!-- ---------------------------------------------------------------- level 2 -->
+<!-- ----------------------------------------------------------- S12–S15 -->
 
-<section class="clip" id="L2">
-  <h2>Level 2 — sound</h2>
-  <p class="meta">30 s · four generated layers · 6 s of GPU each · ≈3 cents</p>
+<section id="L2">
+  <h2>2 — sound</h2>
+  <p class="meta">S12–S15 · 15 min</p>
 
   <div class="frame">
     <video controls preload="metadata" playsinline src="media/L2_sound.mp4"></video>
   </div>
+  <p class="caption">The working cut with four generated layers mixed under it</p>
 
-  <p class="note">
-    <strong>Ask before explaining anything: did that sound like a recording?</strong>
-    Not one sample of it existed before it was generated. The film's own audio
-    track measures −91 dB mean <em>and</em> max, end to end — every sample in
-    one histogram bin. It is silent, not quiet. There was nothing to rescue.
-  </p>
+  <dl class="spec">
+    <dt>Model</dt><dd>Stable Audio Open 1.0, open weights, with T5-base as a separate text encoder</dd>
+    <dt>Where</dt><dd>ComfyUI local, RTX 3090 Ti</dd>
+    <dt>Sampler</dt><dd>50 steps, cfg 4.98, <code>dpmpp_3m_sde_gpu</code>, <code>exponential</code>, denoise 1.0</dd>
+    <dt>Generation time</dt><dd>≈6 s of GPU per layer, independent of requested length</dd>
+    <dt>Done to the archive</dt><dd>picture untouched. The source audio track was discarded; all four layers are generated from text</dd>
+    <dt>Mix</dt><dd>ffmpeg — <code>atrim</code>, <code>adelay</code>, per-layer gain, <code>amix normalize=0</code>, <code>loudnorm I=-20 TP=-2 LRA=11</code></dd>
+  </dl>
 
-  <blockquote>
-    <p>Nobody captions a room tone. A generated hall murmur is received as
-    atmosphere rather than as content, and it passes unchallenged where an
-    invented image would be caught immediately.</p>
-  </blockquote>
+  <h3>The four layers</h3>
+  <table>
+    <thead><tr><th>Layer</th><th class="num">Sec</th><th class="num">Seed</th><th>Prompt</th></tr></thead>
+    <tbody>
+      <tr><td>bed</td><td class="num">32</td><td class="num">550919</td><td>Ambience of a crowded hall: many men murmuring quietly at a distance, low indistinct voices, occasional cough and chair creak, reverberant, no music.</td></tr>
+      <tr><td>paper</td><td class="num">14</td><td class="num">220805</td><td>A single sheet of stiff dry paper lifted from a wooden table, held, turned over, and set down again. Close, dry, detailed, in a quiet room.</td></tr>
+      <tr><td>cameras</td><td class="num">16</td><td class="num">880431</td><td>Sharp mechanical camera shutter clicks and clacks, film advance ratchet winding, a flashbulb pop, spaced out with silence between them, recorded in a large reverberant room. Dry transient clicks, no continuous tone.</td></tr>
+      <tr><td>steps</td><td class="num">12</td><td class="num">440108</td><td>A heavy wooden chair scraping back on a parquet floor, then several slow leather-soled footsteps on parquet in a large echoing room. Close and dry.</td></tr>
+    </tbody>
+  </table>
 
-  <p class="note">
-    Two of the four layers are second attempts, and the rewriting is the real
-    craft. The first bed came back flat broadband hiss — a bad recording rather
-    than a room — and the rewrite named what was <em>in</em> the room. The first
-    press cameras came back a tonal hum, and the rewrite named the shape of the
-    sound in time: <em>spaced out with silence between them, no continuous
-    tone</em>. Both fixes were words, not seeds.
-  </p>
-
-  <p class="note">
-    <strong>Nothing in the graph places a sound at a timecode.</strong> The
-    model makes material; a person still decides when the shutter fires and
-    whether the footsteps land on the man who is walking.
-  </p>
+  <p>Negative prompt on all four:
+    <code>music, melody, singing, instruments, rhythm, beat, speech, dialogue, narration</code>.
+    Bed and cameras are second takes — the prompt was rewritten, the seed
+    changed with it.</p>
 
   <details>
     <summary>Discussion</summary>
     <ol>
-      <li>Nobody captions a room tone. Should they? What would an honest sound
-        credit look like on a thirty-second video — and would anyone read it?</li>
-      <li>The narration in the reel is a real recorded human voice. If it were
-        synthetic, would you disclose that? Does your answer change for the
-        crowd murmur? If it does, what is the difference you are pointing at?</li>
+      <li>Nobody captions a room tone. Should they? What would a sound credit
+        look like on a thirty-second video, and would anyone read it?</li>
+      <li>The narration in the reel is a recorded human voice. If it were
+        synthetic, would you disclose that? Does the answer change for the crowd
+        murmur?</li>
       <li>Stable Audio Open is trained largely on Freesound's CC0 library —
-        sounds people recorded and gave away. So whose coughs are in that 1945
+        sounds people recorded and gave away. Whose coughs are in that 1945
         hall?</li>
     </ol>
   </details>
@@ -414,155 +522,168 @@ hr.rule {
 
 <hr class="rule">
 
-<!-- ---------------------------------------------------------------- level 3 -->
+<!-- ----------------------------------------------------------- S16–S18 -->
 
-<section class="clip" id="L3">
-  <h2>Level 3 — upscale</h2>
-  <p class="meta">30 s · same patch of the signing table · plain enlargement left, restored right</p>
+<section id="L3">
+  <h2>3 — upscale</h2>
+  <p class="meta">S16–S18 · 15 min</p>
 
   <div class="frame">
     <video controls preload="metadata" playsinline src="media/L3_ab_zoom.mp4"></video>
   </div>
-
-  <p class="note">
-    Two things happen and only one is the one people expect. Edges get
-    sharper — buttons, braid, the line of a cap. And the grain disappears,
-    because to the model grain looks like noise.
-  </p>
-
-  <blockquote>
-    <p>The grain is the film. Replacing it with smooth cloth and clean skin is a
-    decision about how the record should look. It is not a repair.</p>
-  </blockquote>
-
-  <p class="note">
-    <strong>These faces are about twenty pixels tall in the original.</strong>
-    No model can recover a face that small; it can only make one up. Which model
-    you choose decides how much gets invented — measured on one face, plain
-    lanczos adds nothing by definition, Remacri adds 3 %, and NMKD-Siax adds
-    41 % by painting speckled grain onto a forehead that has none.
-  </p>
-
-  <p class="note">
-    And then the awkward part: <strong>the careful model is not available on
-    Comfy Cloud.</strong> Two of the ones that are available are the two that
-    document rejects.
-  </p>
-
-  <details>
-    <summary>Discussion</summary>
-    <ol>
-      <li>The grain is the film. Is removing it restoration, or retouching? The
-        same operation is called both, depending on who is selling it.</li>
-      <li>Your platform offers two upscalers and both invent grain on skin that
-        has none. You cannot install the careful one. Do you use what is there,
-        or do you not upscale at all? Answer as if the deadline is tomorrow.</li>
-      <li>Jackson's argument is legibility: at native size and speed, nobody
-        watches, so nobody learns anything. Is that worth the invention? The
-        reel above answered no — and lost part of its frame to bands for it.</li>
-    </ol>
-  </details>
-</section>
-
-<section class="clip" id="L3split">
-  <h2>Level 3 — the split frame</h2>
-  <p class="meta">30 s · one frame cut down the middle · left plain, right restored</p>
+  <p class="caption">Same 1000×800 patch from each — left: lanczos enlargement · right: Remacri</p>
 
   <div class="frame">
     <video controls preload="metadata" playsinline src="media/L3_split.mp4"></video>
   </div>
+  <p class="caption">One frame cut down the middle — left: lanczos · right: Remacri</p>
 
-  <p class="note">
-    The same comparison without the crop, for anyone who suspects the zoom of
-    choosing a flattering patch. The line on the seam is drawn, not a coincidence
-    of the image.
-  </p>
+  <dl class="spec">
+    <dt>Model</dt><dd><code>4x_foolhardy_Remacri</code>, ESRGAN architecture</dd>
+    <dt>Where</dt><dd>ComfyUI local, RTX 3090 Ti, <code>--disable-pinned-memory --cache-none</code></dd>
+    <dt>Graph</dt><dd><code>VHS_LoadVideo → UpscaleModelLoader → ImageUpscaleWithModel → ImageScaleBy → SaveImage</code>, 8 frames per submission</dd>
+    <dt>Generation time</dt><dd>3.66 s per frame · 901 frames · ≈55 min total</dd>
+    <dt>Done to the archive</dt><dd>the model runs at its trained 4× (4272×3200), then one lanczos reduction to 2× (2136×1600). Edges are reconstructed; film grain is removed as noise</dd>
+    <dt>Baseline</dt><dd>the same frames enlarged with lanczos only, which adds no detail</dd>
+  </dl>
+
+  <h3>Detail added, measured on one face at the delivered 2×</h3>
+  <table>
+    <thead><tr><th>Model</th><th class="num">Detail</th><th class="num">Over baseline</th></tr></thead>
+    <tbody>
+      <tr><td>lanczos (baseline)</td><td class="num">2.27</td><td class="num">—</td></tr>
+      <tr><td><code>4x_foolhardy_Remacri</code></td><td class="num">2.34</td><td class="num">+3 %</td></tr>
+      <tr><td><code>4xlsdirplus_v1</code></td><td class="num">2.35</td><td class="num">+4 %</td></tr>
+      <tr><td><code>4x-UltraSharp</code></td><td class="num">2.51</td><td class="num">+11 %</td></tr>
+      <tr><td><code>4x_NMKD-Siax_200k</code></td><td class="num">3.19</td><td class="num">+41 %</td></tr>
+    </tbody>
+  </table>
+
+  <p>Faces in the source are about twenty pixels tall. Remacri is not available
+    on Comfy Cloud; <code>4x-UltraSharp</code> and <code>4x_NMKD-Siax</code>
+    are.</p>
+
+  <details>
+    <summary>Discussion</summary>
+    <ol>
+      <li>The grain is part of the recording. Is removing it restoration, or
+        retouching?</li>
+      <li>Your platform offers two upscalers and both add grain to skin that has
+        none. You cannot install the careful one. Do you use what is there, or
+        not upscale at all?</li>
+      <li>Legibility against invention: at native size and speed nobody watches.
+        Is that worth it? The reel above answered no.</li>
+    </ol>
+  </details>
 </section>
 
 <hr class="rule">
 
-<!-- ---------------------------------------------------------------- level 4 -->
+<!-- ----------------------------------------------------------- S19–S21 -->
 
-<section class="clip" id="L4">
-  <h2>Level 4 — colour</h2>
-  <p class="meta">6 s · three panels — the film, the model's redraw, the restrained version</p>
+<section id="L4">
+  <h2>4 — colour</h2>
+  <p class="meta">S19–S21 · 15 min</p>
+
+  <p>The same seconds of the signing, three times.</p>
 
   <div class="frame">
-    <video controls preload="metadata" playsinline src="media/L4_ab.mp4"></video>
+    <video controls preload="metadata" playsinline src="media/L4_1_original.mp4"></video>
   </div>
+  <p class="caption">1 — original</p>
 
-  <p class="note">
-    <strong>Asked to colourise, the model redrew.</strong> One frame came back as
-    a different man: a new face, re-invented medals, no film grain, the room
-    re-lit — a plausible modern photograph standing where a document had been.
-    And there is no setting in between. At lower denoise the archival frame
-    survives intact and almost no colour arrives; colour needs full denoise, and
-    full denoise is what makes it redraw.
-  </p>
+  <div class="frame">
+    <video controls preload="metadata" playsinline src="media/L4_2_colour_over_original.mp4"></video>
+  </div>
+  <p class="caption">2 — colour laid over the original</p>
 
-  <p class="note">
-    So the model is demoted. Keep the archival frame's luminance untouched, take
-    only the colour from the generation, and no edge, no face and no grain can
-    move — the shapes come from the film. <strong>It does not fix a colour that
-    landed on the wrong object.</strong> Where the model put red on men's backs,
-    the method faithfully preserves the wrong colour with crisper edges. Bleeding
-    is fixable; misplacement is not.
-  </p>
+  <div class="frame">
+    <video controls preload="metadata" playsinline src="media/L4_3_reinvented.mp4"></video>
+  </div>
+  <p class="caption">3 — each frame re-invented by the model</p>
 
-  <p class="note">
-    Nothing enforces consistency between frames, so each frame picks its own
-    palette. Measured against the film's own frame-to-frame noise as the floor,
-    the tunic swings 4×, a face 4.6×, and a blank plaster wall
-    <strong>17.6×</strong>. The model is least stable exactly where it is most
-    free.
-  </p>
+  <dl class="spec">
+    <dt>Model</dt><dd>Qwen-Image-Edit fp8 (Apache-2.0), with <code>qwen_2.5_vl_7b_fp8_scaled</code> and <code>qwen_image_vae</code></dd>
+    <dt>Where</dt><dd>ComfyUI local, RTX 3090 Ti, one frame per submission</dd>
+    <dt>Sampler</dt><dd>20 steps, cfg 2.5, <code>euler</code>, <code>simple</code>, denoise 1.0, <code>ModelSamplingAuraFlow</code> shift 3.0, at 1068×800</dd>
+    <dt>Generation time</dt><dd>117–156 s per frame, warm</dd>
+    <dt>Playback</dt><dd>10 fps, 6 s. All three clips are the same span of film</dd>
+    <dt>Clip 1</dt><dd>the source frames, unmodified</dd>
+    <dt>Clip 3</dt><dd>the model's output as returned. Denoise 1.0 is required — at 0.6, 0.4 and 0.25 the frame survives but almost no colour arrives</dd>
+    <dt>Clip 2</dt><dd>the source frame's L channel kept, a and b taken from the generation and fitted to the source luminance with a guided filter (radius 12, eps 1e-3). Shapes, edges and grain come from the film; only chroma comes from the model</dd>
+    <dt>Colourisation prompt</dt><dd>names olive-brown tunics, gold shoulder boards, red collar tabs, field grey, dark panelling, tungsten light — a historical claim typed by the operator</dd>
+  </dl>
+
+  <h3>Frame-to-frame variation, against the film's own noise floor</h3>
+  <table>
+    <thead><tr><th>Region</th><th class="num">Variation</th></tr></thead>
+    <tbody>
+      <tr><td>tunic</td><td class="num">4×</td></tr>
+      <tr><td>face</td><td class="num">4.6×</td></tr>
+      <tr><td>blank plaster wall</td><td class="num">17.6×</td></tr>
+    </tbody>
+  </table>
+
+  <p>Nothing in the pipeline enforces consistency between frames; each frame is
+    generated independently. There is no colourisation model on Comfy Cloud —
+    clip 2 is produced by <code>tools/module03_colorize.py</code>, outside
+    ComfyUI.</p>
 
   <details>
     <summary>Discussion</summary>
     <ol>
       <li>The model returned a plausible modern photograph where a document had
         been, and reported success. Nothing failed. What in your process would
-        have caught it? Be concrete: name the step.</li>
+        have caught it? Name the step.</li>
       <li>Keeping the film's luminance means no shape can move. Does that make
-        the colour honest — or only make the invention harder to see?</li>
-      <li>The blank wall flickers 17.6× the film's own noise. Is that a defect to
-        fix — or the only visible sign the viewer gets that this is generated?
-        Would you smooth it if you could?</li>
+        the colour honest, or only make the invention harder to see?</li>
+      <li>The blank wall varies 17.6× the film's own noise. Is that a defect to
+        fix, or the only visible sign the viewer gets that this is generated?</li>
     </ol>
   </details>
 </section>
 
 <hr class="rule">
 
-<!-- ------------------------------------------------------------------ close -->
+<!-- ---------------------------------------------------------- S22–S23 -->
 
-<section class="clip" id="close">
-  <h2>Where would you have stopped?</h2>
+<section id="close">
+  <h2>Close</h2>
+  <p class="meta">S22–S23 · 5 min</p>
 
-  <ul class="points">
-    <li><strong>1.</strong> Added nothing to the image; took its words from a
-      document.</li>
-    <li><strong>2.</strong> Manufactured something the film never carried — and
-      nobody will question it.</li>
-    <li><strong>3.</strong> Invented texture inside the image, and removed the
-      grain that was evidence.</li>
-    <li><strong>4.</strong> Invented the image.</li>
-  </ul>
+  <table>
+    <thead><tr><th>Level</th><th>What was added to the record</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>Words from a document. No pixel of the image changed.</td></tr>
+      <tr><td>2</td><td>A soundtrack. The source carried none.</td></tr>
+      <tr><td>3</td><td>Texture and edges no camera recorded; the grain removed.</td></tr>
+      <tr><td>4</td><td>Colour — and, in clip 3, the image itself.</td></tr>
+    </tbody>
+  </table>
 
-  <blockquote>
-    <p>No tool anywhere in this session said that a line had been crossed. Every
-    one of them reported success.</p>
-  </blockquote>
+  <p>One sentence each: which level is the last one you would use on your own
+    subject, and what would you have to write down for the next person to trust
+    it?</p>
+
+  <h3>Homework</h3>
+  <table>
+    <tbody>
+      <tr><td><em>They Shall Not Grow Old</em></td><td>full film recommended; required excerpt 22:18–32:52</td></tr>
+      <tr><td><em>Babi Yar. Context</em></td><td>full film recommended; required excerpt 52:46–1:08:36</td></tr>
+    </tbody>
+  </table>
+
+  <p>For each film: which of the four levels its makers used, and which they
+    refused.</p>
 </section>
 
 <footer>
-  <p><strong>Footage:</strong> Museum Berlin-Karlshorst. The quoted lines are
+  <p><strong>Footage:</strong> Museum Berlin-Karlshorst. Quoted lines
   transcribed from the signed English copy of the Act of Military Surrender.</p>
-  <p><strong>Clips on this page are re-encoded for the web.</strong> The
-  originals are in <code>projects/module03/out/</code> and
-  <code>projects/legends_of_surrender/out/</code>.</p>
-  <p>MemoActs 2026 · Module 03 · built from
-  <code>projects/module03/Slides for Module 03.md</code></p>
+  <p><strong>Machine:</strong> local ComfyUI, RTX 3090 Ti 24 GB, Windows.
+  Clips on this page are re-encoded for the web; originals are in
+  <code>projects/module03/out/</code>.</p>
+  <p>MemoActs 2026 · Module 03</p>
 </footer>
 
 </main>
