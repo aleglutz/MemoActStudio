@@ -67,3 +67,7 @@ projects/module03/quotes.ass
 # A reference document whose provenance was never written down. Kept on disk,
 # out of a public repository until it is known who made it.
 archive/script-framework.pdf
+
+# Module 03 screening page: the HTML is versioned, the re-encoded video is not.
+# `projects/module03/screening/REBUILD.md` regenerates media/ from out/.
+projects/module03/screening/media/

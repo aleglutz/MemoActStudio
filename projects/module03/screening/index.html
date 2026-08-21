@@ -1,0 +1,570 @@
+<!--
+  Module 03 — screening page.
+
+  Self-contained on purpose: one folder, one HTML file, one media/ directory.
+  Open index.html in a browser and everything plays, with no server and no
+  network. Drop the whole folder into euromancer as e.g. /module-03/ and it
+  works there too, because every path inside is relative.
+
+  To make it an Eleventy page instead: keep <main> and the <style> block,
+  delete <html>/<head>/<body>, and add front matter naming your layout.
+
+  The media/ files are re-encoded copies. Originals live in
+  projects/module03/out/ and projects/legends_of_surrender/out/ and are the
+  ones to project if a beamer disagrees with a laptop.
+
+  Rights: the archival footage is Museum Berlin-Karlshorst material. Screening
+  it in a seminar and publishing it on a public site are different acts.
+-->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Module 03 — Screening</title>
+<style>
+:root {
+  /* Paper — warm off-white, like aged typewriter stock */
+  --bg: #f5f0e6;
+  --bg-warm: #ede7d9;
+  --border: #e4ddd0;
+
+  /* Ink — typewriter ribbon */
+  --fg: #1a1a18;
+  --fg-dim: #4a4a46;
+  --fg-faint: #8a8a84;
+
+  /* Blue ribbon */
+  --accent: #2f6f9c;
+  --accent-faint: rgba(47, 111, 156, 0.15);
+
+  --space-xs: 8px;
+  --space-sm: 16px;
+  --space-md: 32px;
+  --space-lg: 64px;
+  --space-xl: 96px;
+
+  --measure: 680px;
+  --page: 960px;
+
+  --mono: "Cascadia Mono", "IBM_VGA_8x16", "Syne Mono",
+          "Andale Mono Regular", ui-monospace, "SFMono-Regular",
+          Menlo, Consolas, monospace;
+}
+
+* { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--mono);
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+main {
+  max-width: var(--page);
+  margin: 0 auto;
+  padding: var(--space-lg) var(--space-md) var(--space-xl);
+}
+
+.measure { max-width: var(--measure); }
+
+/* ---------------------------------------------------------------- masthead */
+
+header.masthead {
+  border-bottom: 1px solid var(--fg);
+  padding-bottom: var(--space-sm);
+  margin-bottom: var(--space-md);
+}
+
+.kicker {
+  color: var(--accent);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  font-size: 12px;
+  margin: 0 0 var(--space-xs);
+}
+
+h1 {
+  font-size: 26px;
+  line-height: 1.25;
+  margin: 0 0 var(--space-sm);
+  font-weight: 700;
+}
+
+.standfirst { color: var(--fg-dim); margin: 0; }
+
+/* ------------------------------------------------------------------ runlist */
+
+nav.runlist {
+  border: 1px solid var(--border);
+  background: var(--bg-warm);
+  padding: var(--space-sm);
+  margin-bottom: var(--space-lg);
+}
+
+nav.runlist p {
+  margin: 0 0 var(--space-xs);
+  color: var(--fg-faint);
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+nav.runlist ol {
+  margin: 0;
+  padding-left: 1.6em;
+  columns: 2;
+  column-gap: var(--space-md);
+}
+
+@media (max-width: 640px) { nav.runlist ol { columns: 1; } }
+
+nav.runlist li { margin-bottom: 2px; break-inside: avoid; }
+
+a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+a::before { content: "["; color: var(--fg-faint); }
+a::after  { content: "]"; color: var(--fg-faint); }
+
+a:hover, a:focus {
+  background: var(--accent);
+  color: var(--bg);
+  outline: none;
+}
+
+a:hover::before, a:hover::after,
+a:focus::before, a:focus::after { color: var(--bg); }
+
+/* ------------------------------------------------------------------ clips */
+
+section.clip {
+  margin-bottom: var(--space-xl);
+  scroll-margin-top: var(--space-sm);
+}
+
+h2 {
+  color: var(--accent);
+  letter-spacing: 0.06em;
+  font-size: 18px;
+  margin: 0 0 var(--space-xs);
+}
+
+.meta {
+  color: var(--fg-faint);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin: 0 0 var(--space-sm);
+}
+
+/* The video sits on ink, not on paper — a bright field around a projected
+   clip is glare, and the ribbon colour is already in the palette. */
+.frame {
+  background: var(--fg);
+  border: 1px solid var(--fg);
+  padding: var(--space-xs);
+  margin-bottom: var(--space-sm);
+}
+
+video {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 74vh;
+  margin: 0 auto;
+  background: #000;
+}
+
+.frame.portrait video { max-width: 420px; }
+
+.note { margin: 0 0 var(--space-sm); max-width: var(--measure); }
+
+.note strong { font-weight: 700; }
+
+ul.points {
+  max-width: var(--measure);
+  margin: 0 0 var(--space-sm);
+  padding-left: 1.2em;
+}
+
+ul.points li { margin-bottom: var(--space-xs); }
+
+/* ------------------------------------------------------------- discussion */
+
+details {
+  border-top: 1px solid var(--border);
+  padding-top: var(--space-xs);
+  max-width: var(--measure);
+}
+
+summary {
+  cursor: pointer;
+  color: var(--fg-dim);
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  list-style: none;
+}
+
+summary::-webkit-details-marker { display: none; }
+summary::before { content: "+ "; color: var(--accent); }
+details[open] summary::before { content: "− "; }
+summary:hover { color: var(--accent); }
+
+details ol { padding-left: 1.4em; }
+details li { margin-bottom: var(--space-xs); }
+
+/* ---------------------------------------------------------------- pullquote */
+
+blockquote {
+  margin: 0 0 var(--space-sm);
+  padding-left: var(--space-sm);
+  border-left: 3px solid var(--accent);
+  background: var(--accent-faint);
+  padding: var(--space-xs) var(--space-sm);
+  max-width: var(--measure);
+}
+
+blockquote p { margin: 0; }
+
+/* ------------------------------------------------------------------ footer */
+
+footer {
+  border-top: 1px solid var(--fg);
+  padding-top: var(--space-sm);
+  color: var(--fg-dim);
+  font-size: 13px;
+  max-width: var(--measure);
+}
+
+footer p { margin: 0 0 var(--space-xs); }
+
+hr.rule {
+  border: 0;
+  border-top: 1px solid var(--border);
+  margin: var(--space-lg) 0;
+}
+</style>
+</head>
+<body>
+<main>
+
+<header class="masthead">
+  <p class="kicker">MemoActs 2026 · online intensive · 21.08</p>
+  <h1>Module 03 — Ethics and Techniques of Intervening in Archival Footage</h1>
+  <p class="standfirst measure">
+    Everything screened today, in order, on one page. Thirty seconds of one
+    archival film put through four rising degrees of intervention — quoted,
+    sounded, sharpened, coloured — after the finished reel that all of it was
+    made for.
+  </p>
+</header>
+
+<nav class="runlist">
+  <p>Run order</p>
+  <ol>
+    <li><a href="#reel">The reel — Signed After Midnight</a></li>
+    <li><a href="#L1">Level 1 — quotes</a></li>
+    <li><a href="#L2">Level 2 — sound</a></li>
+    <li><a href="#L3">Level 3 — upscale</a></li>
+    <li><a href="#L3split">Level 3 — the split frame</a></li>
+    <li><a href="#L4">Level 4 — colour</a></li>
+  </ol>
+</nav>
+
+<!-- ------------------------------------------------------------- the reel -->
+
+<section class="clip" id="reel">
+  <h2>The reel — <em>Signed After Midnight</em></h2>
+  <p class="meta">2:49 · 1080×1920 · twenty shots · Museum Berlin-Karlshorst</p>
+
+  <div class="frame portrait">
+    <video controls preload="metadata" playsinline poster="" src="media/reel.mp4"></video>
+  </div>
+
+  <p class="note">
+    What the end of the workflow looks like. Three things worth naming
+    <strong>after</strong> it plays, not before:
+  </p>
+
+  <ul class="points">
+    <li><strong>Every subtitle is verbatim from the script.</strong> Not one line
+      was transcribed off the audio by a machine.</li>
+    <li><strong>At 1:01 it uses the archival film below</strong> — the German
+      delegation arriving at Tempelhof, from the same Karlshorst reel.</li>
+    <li><strong>And it refuses to enlarge it.</strong> Cropping that shot to
+      vertical would need a 2.4× blow-up, so it sits full width with bands
+      instead. A decision from today's session is already in the finished
+      thing — and the honest option was the one that looks less impressive.</li>
+  </ul>
+</section>
+
+<hr class="rule">
+
+<!-- ---------------------------------------------------------------- level 1 -->
+
+<section class="clip" id="L1">
+  <h2>Level 1 — quotes</h2>
+  <p class="meta">30 s · 1068×800 · no model, no GPU</p>
+
+  <div class="frame">
+    <video controls preload="metadata" playsinline src="media/L1_quotes.mp4"></video>
+  </div>
+
+  <blockquote>
+    <p>The document is the ground truth. A workflow decides <em>when</em> a line
+    appears. It never decides <em>what</em> it says.</p>
+  </blockquote>
+
+  <p class="note">
+    The three quotes are transcribed from the signed English copy of the Act of
+    Military Surrender. Not from the footage, not from memory, not from a
+    paraphrase. That rule is what separates this from the auto-subtitle button
+    in any editor.
+  </p>
+
+  <p class="note">
+    The stock graph can do the same thing visibly worse, and both limits are
+    the argument for building a tool: one node holds one string over one frame
+    range, so three captions are three runs; and its background colour draws no
+    real plate, so only a drop shadow stands between white text and the picture.
+    <strong>That second limit never shows on this film</strong> — the strip
+    where the caption sits measures 14 to 65 out of 255 across the whole cut.
+    Dark everywhere. A flaw your material happens to conceal is the expensive
+    kind.
+  </p>
+
+  <details>
+    <summary>Discussion</summary>
+    <ol>
+      <li>A caption is a verbatim quote from a real document. Does putting it
+        over a different moment of the film make it a lie? Nothing in the words
+        changed. Where does timing stop being editing and start being a claim?</li>
+      <li>This reel already carries the museum's own burned-in captions. If
+        yours contradicts theirs on the same frame, whose survives — and who
+        decides?</li>
+      <li>Does a quote belong on screen if you cannot also show where it came
+        from?</li>
+    </ol>
+  </details>
+</section>
+
+<hr class="rule">
+
+<!-- ---------------------------------------------------------------- level 2 -->
+
+<section class="clip" id="L2">
+  <h2>Level 2 — sound</h2>
+  <p class="meta">30 s · four generated layers · 6 s of GPU each · ≈3 cents</p>
+
+  <div class="frame">
+    <video controls preload="metadata" playsinline src="media/L2_sound.mp4"></video>
+  </div>
+
+  <p class="note">
+    <strong>Ask before explaining anything: did that sound like a recording?</strong>
+    Not one sample of it existed before it was generated. The film's own audio
+    track measures −91 dB mean <em>and</em> max, end to end — every sample in
+    one histogram bin. It is silent, not quiet. There was nothing to rescue.
+  </p>
+
+  <blockquote>
+    <p>Nobody captions a room tone. A generated hall murmur is received as
+    atmosphere rather than as content, and it passes unchallenged where an
+    invented image would be caught immediately.</p>
+  </blockquote>
+
+  <p class="note">
+    Two of the four layers are second attempts, and the rewriting is the real
+    craft. The first bed came back flat broadband hiss — a bad recording rather
+    than a room — and the rewrite named what was <em>in</em> the room. The first
+    press cameras came back a tonal hum, and the rewrite named the shape of the
+    sound in time: <em>spaced out with silence between them, no continuous
+    tone</em>. Both fixes were words, not seeds.
+  </p>
+
+  <p class="note">
+    <strong>Nothing in the graph places a sound at a timecode.</strong> The
+    model makes material; a person still decides when the shutter fires and
+    whether the footsteps land on the man who is walking.
+  </p>
+
+  <details>
+    <summary>Discussion</summary>
+    <ol>
+      <li>Nobody captions a room tone. Should they? What would an honest sound
+        credit look like on a thirty-second video — and would anyone read it?</li>
+      <li>The narration in the reel is a real recorded human voice. If it were
+        synthetic, would you disclose that? Does your answer change for the
+        crowd murmur? If it does, what is the difference you are pointing at?</li>
+      <li>Stable Audio Open is trained largely on Freesound's CC0 library —
+        sounds people recorded and gave away. So whose coughs are in that 1945
+        hall?</li>
+    </ol>
+  </details>
+</section>
+
+<hr class="rule">
+
+<!-- ---------------------------------------------------------------- level 3 -->
+
+<section class="clip" id="L3">
+  <h2>Level 3 — upscale</h2>
+  <p class="meta">30 s · same patch of the signing table · plain enlargement left, restored right</p>
+
+  <div class="frame">
+    <video controls preload="metadata" playsinline src="media/L3_ab_zoom.mp4"></video>
+  </div>
+
+  <p class="note">
+    Two things happen and only one is the one people expect. Edges get
+    sharper — buttons, braid, the line of a cap. And the grain disappears,
+    because to the model grain looks like noise.
+  </p>
+
+  <blockquote>
+    <p>The grain is the film. Replacing it with smooth cloth and clean skin is a
+    decision about how the record should look. It is not a repair.</p>
+  </blockquote>
+
+  <p class="note">
+    <strong>These faces are about twenty pixels tall in the original.</strong>
+    No model can recover a face that small; it can only make one up. Which model
+    you choose decides how much gets invented — measured on one face, plain
+    lanczos adds nothing by definition, Remacri adds 3 %, and NMKD-Siax adds
+    41 % by painting speckled grain onto a forehead that has none.
+  </p>
+
+  <p class="note">
+    And then the awkward part: <strong>the careful model is not available on
+    Comfy Cloud.</strong> Two of the ones that are available are the two that
+    document rejects.
+  </p>
+
+  <details>
+    <summary>Discussion</summary>
+    <ol>
+      <li>The grain is the film. Is removing it restoration, or retouching? The
+        same operation is called both, depending on who is selling it.</li>
+      <li>Your platform offers two upscalers and both invent grain on skin that
+        has none. You cannot install the careful one. Do you use what is there,
+        or do you not upscale at all? Answer as if the deadline is tomorrow.</li>
+      <li>Jackson's argument is legibility: at native size and speed, nobody
+        watches, so nobody learns anything. Is that worth the invention? The
+        reel above answered no — and lost part of its frame to bands for it.</li>
+    </ol>
+  </details>
+</section>
+
+<section class="clip" id="L3split">
+  <h2>Level 3 — the split frame</h2>
+  <p class="meta">30 s · one frame cut down the middle · left plain, right restored</p>
+
+  <div class="frame">
+    <video controls preload="metadata" playsinline src="media/L3_split.mp4"></video>
+  </div>
+
+  <p class="note">
+    The same comparison without the crop, for anyone who suspects the zoom of
+    choosing a flattering patch. The line on the seam is drawn, not a coincidence
+    of the image.
+  </p>
+</section>
+
+<hr class="rule">
+
+<!-- ---------------------------------------------------------------- level 4 -->
+
+<section class="clip" id="L4">
+  <h2>Level 4 — colour</h2>
+  <p class="meta">6 s · three panels — the film, the model's redraw, the restrained version</p>
+
+  <div class="frame">
+    <video controls preload="metadata" playsinline src="media/L4_ab.mp4"></video>
+  </div>
+
+  <p class="note">
+    <strong>Asked to colourise, the model redrew.</strong> One frame came back as
+    a different man: a new face, re-invented medals, no film grain, the room
+    re-lit — a plausible modern photograph standing where a document had been.
+    And there is no setting in between. At lower denoise the archival frame
+    survives intact and almost no colour arrives; colour needs full denoise, and
+    full denoise is what makes it redraw.
+  </p>
+
+  <p class="note">
+    So the model is demoted. Keep the archival frame's luminance untouched, take
+    only the colour from the generation, and no edge, no face and no grain can
+    move — the shapes come from the film. <strong>It does not fix a colour that
+    landed on the wrong object.</strong> Where the model put red on men's backs,
+    the method faithfully preserves the wrong colour with crisper edges. Bleeding
+    is fixable; misplacement is not.
+  </p>
+
+  <p class="note">
+    Nothing enforces consistency between frames, so each frame picks its own
+    palette. Measured against the film's own frame-to-frame noise as the floor,
+    the tunic swings 4×, a face 4.6×, and a blank plaster wall
+    <strong>17.6×</strong>. The model is least stable exactly where it is most
+    free.
+  </p>
+
+  <details>
+    <summary>Discussion</summary>
+    <ol>
+      <li>The model returned a plausible modern photograph where a document had
+        been, and reported success. Nothing failed. What in your process would
+        have caught it? Be concrete: name the step.</li>
+      <li>Keeping the film's luminance means no shape can move. Does that make
+        the colour honest — or only make the invention harder to see?</li>
+      <li>The blank wall flickers 17.6× the film's own noise. Is that a defect to
+        fix — or the only visible sign the viewer gets that this is generated?
+        Would you smooth it if you could?</li>
+    </ol>
+  </details>
+</section>
+
+<hr class="rule">
+
+<!-- ------------------------------------------------------------------ close -->
+
+<section class="clip" id="close">
+  <h2>Where would you have stopped?</h2>
+
+  <ul class="points">
+    <li><strong>1.</strong> Added nothing to the image; took its words from a
+      document.</li>
+    <li><strong>2.</strong> Manufactured something the film never carried — and
+      nobody will question it.</li>
+    <li><strong>3.</strong> Invented texture inside the image, and removed the
+      grain that was evidence.</li>
+    <li><strong>4.</strong> Invented the image.</li>
+  </ul>
+
+  <blockquote>
+    <p>No tool anywhere in this session said that a line had been crossed. Every
+    one of them reported success.</p>
+  </blockquote>
+</section>
+
+<footer>
+  <p><strong>Footage:</strong> Museum Berlin-Karlshorst. The quoted lines are
+  transcribed from the signed English copy of the Act of Military Surrender.</p>
+  <p><strong>Clips on this page are re-encoded for the web.</strong> The
+  originals are in <code>projects/module03/out/</code> and
+  <code>projects/legends_of_surrender/out/</code>.</p>
+  <p>MemoActs 2026 · Module 03 · built from
+  <code>projects/module03/Slides for Module 03.md</code></p>
+</footer>
+
+</main>
+</body>
+</html>
