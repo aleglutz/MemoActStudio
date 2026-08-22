@@ -118,6 +118,26 @@ PALETTES: dict[str, dict] = {
         "land": (216, 206, 188), "coast": (244, 238, 224),
         "border": (126, 120, 106), "flag_alpha": 0.55, "relief_gain": 1.20,
     },
+    # Paper land as `sepia` leaves it, but the water is the archivist's blue
+    # pencil -- the "10" in the corner of page 1 of the act. Measured off
+    # GIoS_Wehrmacht_Signed_Ru_p1.jpg (the mark occupies x 904-961, y 54-108):
+    # 1061 pencil pixels, core 113,140,154, median 151,175,182, palest
+    # 197,215,214, against paper at 239,234,210. That is hue 200 degrees at a
+    # saturation of only 0.27 -- a soft blue-grey, because it is pencil on a
+    # bright page.
+    #
+    # Used literally it would put water LIGHTER than land and reverse the
+    # coastline the wrong way, so what carries over is the hue and the shade
+    # ramp, not the values: hue held at 200, saturation raised to 1.5x the
+    # measured figure (at 0.27 a blue this dark reads as plain grey), value
+    # taken down to 0.20 for the deep and 0.36 for the shelf. Land, coast,
+    # border and flag wash are `sepia`'s untouched -- the land and the flags
+    # were the part that already worked.
+    "pencil": {
+        "sea_deep": (31, 44, 51), "sea_shelf": (55, 79, 92),
+        "land": (198, 181, 154), "coast": (238, 226, 204),
+        "border": (160, 140, 118), "flag_alpha": 0.62, "relief_gain": 1.10,
+    },
 }
 
 

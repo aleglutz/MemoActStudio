@@ -8,28 +8,34 @@ commands live here rather than the files living in git.
 Run from the repository root with the environment active (`README.md` §0).
 Nothing here needs ComfyUI, torch or a GPU — only Pillow, numpy and ffmpeg.
 
-## Map plates — palette `sepia` (SOURCES: sampled from the act scans)
+## Map plates — palette `pencil` (SOURCES: sampled from the act scans)
 
-Was `ink` until 2026-08-22. `ink` kept the signature blue-black in the water;
-`sepia` carries the paper-and-ink reading into the sea as well, so the only
-blue left anywhere on these plates is the flag wash itself. All three plates
-move together — a single plate left on `ink` is visible against the other two.
+Two moves on 2026-08-22. `ink` (signature blue-black sea) went to `sepia`, to
+take the blue out of everything but the flag wash; `sepia`'s tea-stained water
+then read badly against the land, so the water was resampled from the
+archivist's **blue pencil "10"** in the corner of page 1 of the act — hue 200°,
+carried down the pencil's own shade ramp to water depth. Land, coast, border
+and flag wash are `sepia`'s, unchanged: that half already worked. The full
+measurement is in the `pencil` entry in `tools/render_map.py`.
+
+All three plates move together — a single plate left on an older palette is
+visible against the other two.
 
 `render_map.py` corrects Crimea and Sevastopol to Ukraine before drawing, and
 refuses to render if the correction fails. It prints the check; the plates
 committed here were rendered with `moved Russia part #100 -> Ukraine`.
 
     python tools/render_map.py --out projects/legends_of_surrender/sources/maps \
-        --name map_baltics --frames 360 --palette sepia \
+        --name map_baltics --frames 360 --palette pencil \
         --highlight Latvia Estonia Lithuania
 
     python tools/render_map.py --out projects/legends_of_surrender/sources/maps \
-        --name map_poland_ukraine --frames 360 --palette sepia \
+        --name map_poland_ukraine --frames 360 --palette pencil \
         --highlight Poland Ukraine --already Latvia Estonia Lithuania
 
     python tools/render_map.py --out projects/legends_of_surrender/sources/maps \
         --name map_france_reims --highlight France --context 1.5 --scale 2 \
-        --palette sepia --marker "4.0317,49.2583,Reims"
+        --palette pencil --marker "4.0317,49.2583,Reims"
 
 `--scale 2` is what lets the 0:23 shot push in 2.5x without enlarging anything;
 the tool prints the `focus` triple that `shots.csv` uses, so it is never
