@@ -185,7 +185,7 @@ where the ribbon skipped.
     python tools/render_page.py \
         --page projects/legends_of_surrender/sources/hook_page.md \
         --out projects/legends_of_surrender/sources/composites/hook_page.png \
-        --anchor "M E M O A C T S" --anchor "8, 9" --anchor pencil
+        --anchor "M E M O A C T S" --anchor "8,9" --anchor pencil
 
 It prints the three `render_move.py` keys below rather than leaving them to be
 measured off the image by eye, exactly as `render_map.py` prints its `focus`.
@@ -196,9 +196,9 @@ above the wordmark moves every anchor under it.
         --image hook_page.png --name S00_hook --frames 144 --ease cosine \
         --shutter 0.5 --subframes 384 \
         --caption-from projects/legends_of_surrender/script.md \
-        --key 0.000:0.504,0.814,1.00 --key 0.112:0.504,0.814,1.00 \
+        --key 0.000:0.505,0.812,1.00 --key 0.112:0.505,0.812,1.00 \
         --key 0.231:-2.833,1.627,1.00 --key 0.545:-2.833,1.627,1.00 \
-        --key 0.622:-0.989,0.179,1.00 --key 1.000:-0.989,0.179,1.00
+        --key 0.622:-0.412,0.172,1.00 --key 1.000:-0.412,0.172,1.00
 
 **The holds are cut to the read, not to a feel.** The take was measured on its
 own envelope — 50 ms buckets, not by ear — and the move was fitted to what came
@@ -209,8 +209,8 @@ back:
 | 0.00–0.54 s | held on **M E M O A C T S**, typed among the working notes | | |
 | 0.54–1.11 s | up and right across the header | 6 880 px/s | |
 | 1.11–2.62 s | held on the pencilled **67** in the corner | | 1.20–2.60 |
-| 2.62–2.99 s | back down and left | 9 250 px/s | |
-| 2.99–4.80 s | held on **8, 9** in the enumeration | | 2.95–4.45 |
+| 2.62–2.99 s | back down and left | 10 350 px/s | |
+| 2.99–4.80 s | held on **8,9** in the enumeration | | 2.95–4.45 |
 
 Each line is on screen from just before its first syllable to just after its
 last. **The 0.30 s the reader left between the two sentences is the whole
@@ -227,10 +227,21 @@ Five things about it are load-bearing:
   drawn with. It also makes the two whips cheap, since a frame is a paste.
 - **The camera never zooms**, because the model is a sheet on a bed and paper
   does not swell — the same rule the act shot follows. That is what forces the
-  enumeration into display type: one type size cannot both fit fifteen cells of
-  wordmark in a 1080 px frame and fill it with two numerals. `display 3.9` is
-  the ceiling — at 4.2 the **8** is against the left edge of the frame and the
-  comma after the **9** is sliced by the right one.
+  enumeration into display type: one type size cannot both hold the wordmark in
+  a 1080 px frame and fill it with two numerals. Both sizes were reset on
+  **2026-08-22**. The wordmark is `display 1.12` — fifteen cells, 1065 px of the
+  1080, the widest it can be and still be whole; it was `center` (1.00, 960 px)
+  and simply read small on the opening hold. The enumeration is typed
+  `1,2,3,…` **without spaces**: with `, ` between them the anchor was four cells
+  and 998 px, so the **8** and the **9** sat pinned against opposite edges of a
+  1080 px frame with a comma marooned between them. Closed up they are three
+  cells and 749 px, and read as one pair. `display` stays at **3.9** — the
+  numerals did not change size, only their spacing.
+  The second whip travels further for it (10 350 px/s, was 9 250), so the
+  subframe ceiling was re-checked rather than assumed: rendering the same move
+  at `--subframes 768` gives a frame-for-frame identical clip, so 384 is not
+  binding and the smear is still sampled by distance.
+
 - **`--shutter 0.5`** is what makes the whips read as speed rather than as a
   stutter: at 9 250 px/s the sheet crosses nearly a third of the frame between
   frames, and the second whip is only eleven frames long. It is off by default,
@@ -282,14 +293,30 @@ once.
 
 ## The whole reel — 20 shots behind the hook, 168.97 s
 
+**`out/reel.mp4` is the finished film, hook included** — changed 2026-08-22.
+It used to be the hookless body, with `out/reel_with_hook.mp4` as the joined
+cut; now the body is an intermediate under `generated/` and the join lands on
+`out/reel.mp4`. Two consequences worth knowing before running this:
+
+- `out/reel_with_hook.mp4` **is no longer produced by this file.** The copy on
+  disk is a frozen artefact, deliberately kept: it is the last cut rendered
+  with Natural Earth's uncorrected border, where Crimea reads as Russia. Do not
+  overwrite it — it is the evidence the correction was needed.
+- The body cannot be written to `out/reel.mp4` any more, because the assemble
+  step reads it. It goes to `generated/`, which is the compiler's own output
+  and deletable by design.
+
+    python tools/render_reel.py --project projects/legends_of_surrender \
+        --out projects/legends_of_surrender/generated/reel_body.mp4
+
     python tools/assemble_reel.py \
         --clip projects/legends_of_surrender/sources/composites/S00_hook.mp4 \
-        --clip projects/legends_of_surrender/out/reel.mp4 \
+        --clip projects/legends_of_surrender/generated/reel_body.mp4 \
         --narration projects/legends_of_surrender/sources/voiceover.wav \
         --narration-under 1 \
         --subs projects/legends_of_surrender/sources/composites/S00_hook.srt \
-        --subs projects/legends_of_surrender/out/reel.srt \
-        --out projects/legends_of_surrender/out/reel_with_hook.mp4
+        --subs projects/legends_of_surrender/generated/reel_body.srt \
+        --out projects/legends_of_surrender/out/reel.mp4
 
 5 069 frames — 144 and 4 925, joined without re-encoding a single one, because
 both clips come out of `memoacts_core.render.encode` and so already agree on

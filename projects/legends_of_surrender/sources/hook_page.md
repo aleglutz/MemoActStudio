@@ -20,7 +20,7 @@ The numbers below are the only ones this reel is about. The one in the corner wa
 by whoever filed the sheet, and means nothing at all.
 
 
-<!-- center -->
+<!-- display 1.12 -->
 M E M O A C T S
 
 <!--
@@ -38,7 +38,7 @@ M E M O A C T S
 
 
 <!-- display 3.9 -->
-1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11
+1,2,3,4,5,6,7,8,9,10,11
 
 ---
 

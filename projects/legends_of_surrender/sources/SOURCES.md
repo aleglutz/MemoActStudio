@@ -64,7 +64,6 @@ means to.
 | Download date | 2026-08-10 (`assets/geo/SOURCE.md`) |
 | Licence | Public domain. No permission, fee or attribution required |
 | Verification status | **Corrected and verified 2026-08-22.** The shipped geometry assigned Crimea and Sevastopol to Russia; `correct_crimea()` in `tools/render_map.py` reassigns the peninsula to Ukraine and re-tests seven towns across it on every render, refusing to draw if the check fails. Plates above rendered with `moved Russia part #100 -> Ukraine` |
-| Attribution plate | Base map: Natural Earth (public domain) |
 
 ### Why the correction is in the build script and not in the data file
 
