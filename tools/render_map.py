@@ -118,6 +118,26 @@ PALETTES: dict[str, dict] = {
         "land": (216, 206, 188), "coast": (244, 238, 224),
         "border": (126, 120, 106), "flag_alpha": 0.55, "relief_gain": 1.20,
     },
+    # Paper land as `sepia` leaves it, but the water is the archivist's blue
+    # pencil -- the "10" in the corner of page 1 of the act. Measured off
+    # GIoS_Wehrmacht_Signed_Ru_p1.jpg (the mark occupies x 904-961, y 54-108):
+    # 1061 pencil pixels, core 113,140,154, median 151,175,182, palest
+    # 197,215,214, against paper at 239,234,210. That is hue 200 degrees at a
+    # saturation of only 0.27 -- a soft blue-grey, because it is pencil on a
+    # bright page.
+    #
+    # Used literally it would put water LIGHTER than land and reverse the
+    # coastline the wrong way, so what carries over is the hue and the shade
+    # ramp, not the values: hue held at 200, saturation raised to 1.5x the
+    # measured figure (at 0.27 a blue this dark reads as plain grey), value
+    # taken down to 0.20 for the deep and 0.36 for the shelf. Land, coast,
+    # border and flag wash are `sepia`'s untouched -- the land and the flags
+    # were the part that already worked.
+    "pencil": {
+        "sea_deep": (31, 44, 51), "sea_shelf": (55, 79, 92),
+        "land": (198, 181, 154), "coast": (238, 226, 204),
+        "border": (160, 140, 118), "flag_alpha": 0.62, "relief_gain": 1.10,
+    },
 }
 
 
@@ -155,6 +175,156 @@ def name_of(props: dict) -> str:
         if props.get(key):
             return props[key]
     return ""
+
+
+# --- Crimea and Sevastopol ---------------------------------------------------
+#
+# Natural Earth's admin-0 country layer assigns the Crimean peninsula to
+# RUSSIA, and the committed 1:50m file is no exception. Verified against it on
+# 2026-08-22: Sevastopol, Simferopol, Yalta, Kerch, Yevpatoria, Dzhankoi and
+# Feodosia all fall inside the Russia polygon, and the peninsula is a single
+# discrete part of that MultiPolygon (bounds 32.51,44.39 - 36.58,46.22) which
+# touches no Russian mainland.
+#
+# Left alone this is not a subtle cartographic quibble -- it is visible in the
+# finished plate. The 2:18 shot washes Ukraine in its flag colours, so an
+# uncorrected Crimea renders as unhighlighted land: a hole punched in Ukraine,
+# under a line about Ukraine moving its commemoration date.
+#
+# So the geometry is corrected here rather than accepted. Germany, the EU and
+# UN General Assembly Resolution 68/262 do not recognise the 2014 annexation,
+# and this project is funded by the Auswaertiges Amt -- this is a compliance
+# requirement, not a style preference.
+#
+# The correction is deliberately written to VERIFY rather than assume, because
+# Natural Earth's handling has moved between releases: it locates the offending
+# part by probe points instead of by index, does nothing if a future release
+# already assigns the peninsula to Ukraine, and raises if the result still
+# fails the check. A silent no-op here would be the worst outcome.
+
+#: Towns spread across the peninsula, including Sevastopol, which is
+#: administratively separate from the Autonomous Republic of Crimea.
+CRIMEA_PROBES: list[tuple[str, float, float]] = [
+    ("Sevastopol", 33.5333, 44.6000),
+    ("Simferopol", 34.1000, 44.9521),
+    ("Yalta",      34.1667, 44.5000),
+    ("Kerch",      36.4700, 45.3600),
+    ("Yevpatoria", 33.3667, 45.1900),
+    ("Dzhankoi",   34.3931, 45.7086),
+    ("Feodosia",   35.3800, 45.0300),
+]
+
+#: Generous box around the peninsula. A part is only ever moved if it lies
+#: WHOLLY inside this and carries a probe, so a polygon that also held Russian
+#: mainland could never be reassigned by accident.
+CRIMEA_ENVELOPE = (31.9, 43.9, 37.1, 46.6)
+
+
+def _point_in_ring(lon: float, lat: float, ring) -> bool:
+    """Ray casting against one closed ring of (lon, lat) pairs."""
+    inside = False
+    n = len(ring)
+    j = n - 1
+    for i in range(n):
+        xi, yi = ring[i][0], ring[i][1]
+        xj, yj = ring[j][0], ring[j][1]
+        if (yi > lat) != (yj > lat):
+            if lon < (xj - xi) * (lat - yi) / (yj - yi) + xi:
+                inside = not inside
+        j = i
+    return inside
+
+
+def _polygon_parts(geom: dict) -> list:
+    """GeoJSON geometry -> list of polygons, each [exterior, *holes].
+
+    Unlike rings() above, this keeps the holes: the renderer can ignore them,
+    but a containment test that ignored them would be wrong.
+    """
+    if geom["type"] == "Polygon":
+        return [geom["coordinates"]]
+    if geom["type"] == "MultiPolygon":
+        return list(geom["coordinates"])
+    return []
+
+
+def _covers(geom: dict, lon: float, lat: float) -> bool:
+    for poly in _polygon_parts(geom):
+        if _point_in_ring(lon, lat, poly[0]) and not any(
+                _point_in_ring(lon, lat, h) for h in poly[1:]):
+            return True
+    return False
+
+
+def _within_envelope(poly) -> bool:
+    x0, y0, x1, y1 = CRIMEA_ENVELOPE
+    return all(x0 <= x <= x1 and y0 <= y <= y1
+               for ring in poly for x, y in ((p[0], p[1]) for p in ring))
+
+
+def correct_crimea(features: list[dict], verbose: bool = True) -> list[dict]:
+    """Render Crimea and Sevastopol as Ukraine, whatever the source file says.
+
+    Moves any admin-0 part that sits wholly inside the Crimea envelope and
+    carries one of the probe towns out of every other country and into
+    Ukraine, then re-tests every probe and raises if the fix did not take.
+    """
+    by_name = {name_of(f["properties"]): f for f in features}
+    ukraine = by_name.get("Ukraine")
+    if ukraine is None:
+        raise SystemExit("crimea check: no Ukraine feature in the geodata")
+
+    moved: list[tuple[str, int]] = []
+    claimed: list = []
+    for feat in features:
+        owner = name_of(feat["properties"])
+        if owner == "Ukraine":
+            continue
+        parts = _polygon_parts(feat["geometry"])
+        keep = []
+        for idx, poly in enumerate(parts):
+            is_crimea = _within_envelope(poly) and any(
+                _point_in_ring(lon, lat, poly[0])
+                for _, lon, lat in CRIMEA_PROBES)
+            if is_crimea:
+                claimed.append(poly)
+                moved.append((owner, idx))
+            else:
+                keep.append(poly)
+        if len(keep) != len(parts):
+            feat["geometry"] = {"type": "MultiPolygon", "coordinates": keep}
+
+    if claimed:
+        ua_parts = _polygon_parts(ukraine["geometry"]) + claimed
+        ukraine["geometry"] = {"type": "MultiPolygon", "coordinates": ua_parts}
+
+    # Verify, always -- including when nothing was moved, which is the case a
+    # future Natural Earth release would produce and must still be checked.
+    failures = []
+    for label, lon, lat in CRIMEA_PROBES:
+        in_ua = _covers(ukraine["geometry"], lon, lat)
+        others = [name_of(f["properties"]) for f in features
+                  if name_of(f["properties"]) != "Ukraine"
+                  and _covers(f["geometry"], lon, lat)]
+        if verbose:
+            verdict = "Ukraine" if in_ua else (", ".join(others) or "<nothing>")
+            print(f"  crimea check  {label:<11} -> {verdict}")
+        if not in_ua or others:
+            failures.append((label, in_ua, others))
+
+    if verbose:
+        if moved:
+            where = ", ".join(f"{o} part #{i}" for o, i in moved)
+            print(f"  crimea check  corrected: moved {where} -> Ukraine")
+        else:
+            print("  crimea check  source already assigns Crimea to Ukraine; "
+                  "no correction needed")
+
+    if failures:
+        raise SystemExit(
+            "crimea check FAILED -- refusing to render a map that does not "
+            f"show Crimea as Ukraine: {failures}")
+    return features
 
 
 def projected_rings(feature: dict) -> list[np.ndarray]:
@@ -594,6 +764,9 @@ def main() -> int:
 
     markers = [parse_marker(m) for m in args.marker]
     data = json.loads(args.geojson.read_text(encoding="utf-8"))
+    # Not optional and deliberately without a --skip flag: every plate this
+    # tool draws must show Crimea and Sevastopol as Ukraine. See above.
+    correct_crimea(data["features"])
     if args.frames:
         if markers:
             print("markers are drawn on stills only; ignoring --marker")

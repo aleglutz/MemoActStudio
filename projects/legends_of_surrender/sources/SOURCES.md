@@ -11,6 +11,7 @@ has **not** been checked — that is a gap, not a clearance.
 |---|---|---|---|
 | `Truman_Churchill_Potsdam.jpg` | Wikimedia Commons, from Imperial War Museums **BU 8944**. Photographer Capt. W. T. Lockeyear, No. 5 Army Film & Photographic Unit | **Public domain** (`PD-UKGov`) | Churchill and Truman shaking hands on the steps of Truman's residence, Kaiser Strasse, Babelsberg, **16 July 1945**, during the Potsdam conference |
 | `Loznitca_VDay_Treptov.jpg` | Frame from **Sergei Loznitsa, *Victory Day*, 2018** | **Not public domain — unresolved.** See below | 9 May commemoration at Treptower Park, Berlin: Night Wolves colours, a Donetsk People's Republic flag, St George ribbons, Immortal Regiment portraits |
+| `map_france_reims.png`, `map_baltics.mp4`, `map_poland_ukraine.mp4` | Drawn by `tools/render_map.py` from Natural Earth 1:50m Admin 0 Countries (`assets/geo/`, see `assets/geo/SOURCE.md`) | **Public domain** (Natural Earth). Authored graphics, not generated imagery | Europe: France with a Reims pin; the Baltic states; Poland and Ukraine |
 
 ## The one shot that is not ours or public domain
 
@@ -47,3 +48,31 @@ announcement. But this film is specifically about how the memory of the war's
 end gets bent, so the compromise is written down here rather than left to be
 noticed later: **if a May 1945 photograph of the two turns up, it is the better
 picture**, and not for legal reasons.
+
+## The map plates and their base data
+
+Recorded here because the maps are the only material in the reel the project
+draws itself, and a drawn map makes a claim about borders whether or not it
+means to.
+
+| Field | Value |
+|---|---|
+| Files | `sources/maps/map_france_reims.png`, `map_baltics.mp4`, `map_poland_ukraine.mp4` |
+| Source | Natural Earth 1:50m Admin 0 Countries, via `nvkelso/natural-earth-vector` (`geojson/`) |
+| Upstream | https://www.naturalearthdata.com/ |
+| Dataset version | Not stamped in the file. Pinned instead by content hash of the committed copy: `sha256:3e458fc036ad0a66411f2c1e6cac49c5d7bfb81cb1123bc513b22511a2b7fdeb` |
+| Download date | 2026-08-10 (`assets/geo/SOURCE.md`) |
+| Licence | Public domain. No permission, fee or attribution required |
+| Verification status | **Corrected and verified 2026-08-22.** The shipped geometry assigned Crimea and Sevastopol to Russia; `correct_crimea()` in `tools/render_map.py` reassigns the peninsula to Ukraine and re-tests seven towns across it on every render, refusing to draw if the check fails. Plates above rendered with `moved Russia part #100 -> Ukraine` |
+
+### Why the correction is in the build script and not in the data file
+
+The committed geojson is left byte-for-byte as downloaded, so its hash still
+matches upstream and the provenance line above stays checkable. The border
+correction lives in the tool, where it is visible, commented, re-verified on
+every run, and cannot be silently lost by re-downloading the dataset.
+
+Germany, the EU and UN General Assembly Resolution 68/262 do not recognise the
+2014 annexation. For a film funded by the Auswärtiges Amt this is a compliance
+requirement rather than an editorial preference, which is why the check raises
+instead of warning.
