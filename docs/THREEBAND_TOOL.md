@@ -100,6 +100,12 @@ two-band geometry.
 Using it is unrestricted and the frames you make are yours. But **shipping it
 inside `comfyui-memoacts`, or inside a cloned image for the workshop machines,
 is redistribution and is not permitted as things stand.** Recorded in
-`SURVEY.md §3`; `HARDENING.md` blocks machine imaging on the decision. The
-cheapest resolution is to ask the author, who explicitly invites gray-area
+`SURVEY.md §3`.
+
+**This no longer blocks machine imaging (2026-08-29).** The focus picker inside
+the shot-table widget does the framing job within the pack, so the September
+image does not need to carry DragCrop at all, and the question stops being a
+gate and becomes an author's convenience on this dev machine. If it is ever
+reinstated on the taught path, the licence comes back with it, and the cheapest
+resolution is still to ask the author, who explicitly invites gray-area
 questions.

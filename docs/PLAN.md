@@ -121,19 +121,23 @@ One thing worth adding, and it is cheap (item I): write **`generated/mix.wav`**
 finished mix exists only inside the MP4. A lossless master is what you hand a
 sound designer, and what you re-cut from a year later.
 
-**Amendment to a non-negotiable.** `CLAUDE.md` says *"Narration audio passes
-through untouched — never re-encoded avoidably, never time-stretched."*
-Workflow 1 changes speed and pitch, so the rule needs one clause:
+**A non-negotiable came out.** `CLAUDE.md` used to carry *"Narration audio
+passes through untouched — never re-encoded avoidably, never time-stretched."*
+Workflow 1 changes speed and pitch, which the rule forbade outright, and the
+rule was **removed on 2026-08-29** rather than qualified — cheaper than
+expanding it, and the thing it protected is protected by the order of the
+workflows instead:
 
-> …never re-encoded avoidably, and **never time-stretched after alignment**.
-> Workflow 1 may change the read's speed and pitch: that is an authored
-> decision, taken once, upstream, and everything downstream — alignment
-> included — listens to its result. The rule is about **ordering**. Nothing
-> after Align may re-time the voice, because every timing in the reel is
-> measured against the recording Align heard.
+> The voice is authored once, in workflow 1, and **alignment listens to the
+> result**. Every timing in the reel is measured against the recording Align
+> heard, so nothing after Align can re-time the voice without invalidating all
+> of them — which is a fact about the pipeline, not a rule anybody has to keep.
 
-That ordering is the whole safety argument for putting the sound workflow first,
-and it belongs in `SPEC.md` rather than in somebody's memory.
+That is the whole safety argument for putting the sound workflow first, and it
+is why the order in this plan is the order and not a preference.
+
+The rule's other half — *never re-encoded avoidably* — survives as a design
+fact, described above: one AAC encode, at the end, on the deliverable.
 
 ---
 
@@ -171,8 +175,8 @@ from not existing, and it will not be on machine A in September.
   `example_workflows/voice.json` — a student's machine has no `user/default`
   of yours.
 
-For `HARDENING.md`: pedalboard is a compiled wheel. Check that it installs on
-the September image *before* the September image is made.
+Recorded in `docs/WORKSHOP_MACHINE_SETUP.md` §3.3: pedalboard is a compiled
+wheel. Check that it installs on the September image *before* the image is made.
 
 ### I. The narration seam (≈0.5 d)
 
@@ -261,9 +265,19 @@ The August intensive (`docs/P1_GRAPH.md`, `projects/module03/`,
 
 ## Still open, carried forward
 
-- `New_York_May-8_1945.jpg` has no `SOURCES.md` entry and unchecked rights.
-  Fifth plan or handoff in a row. It is in the reel.
-- Student work isolation on a shared machine, Whisper pre-seeding across an
-  image, the `--use-sage-attention` trap: all in `HARDENING.md`, all undecided.
-- No project has an `sfx.csv`, and `sources/sfx/` is empty everywhere. The sound
-  design works as a mechanism and has never been used as material.
+- ~~`New_York_May-8_1945.jpg` has no `SOURCES.md` entry and unchecked rights.~~
+  **Closed 2026-08-29.** Recorded in the project's `SOURCES.md`: Museum
+  Berlin-Karlshorst's own page, credited *"unknown, akg images, Berlin"*, and
+  carried on the commissioning museum's licence. One email to MBK would close it
+  in writing rather than on judgement; a screening outside the museum needs that
+  email.
+- ~~`HARDENING.md`~~ **retired 2026-08-29** into
+  `docs/WORKSHOP_MACHINE_SETUP.md`. Student work isolation and machine reset are
+  now that document's §7, written out rather than deferred; the
+  `--use-sage-attention` trap is §3.5 with its detection in §6.5; Whisper
+  pre-seeding is §3.7. All three are still **undecided or unexecuted** — they
+  moved to where they will be read, not to where they are done.
+- No project has an `sfx.csv`. `sources/sfx/` now exists in the two live
+  projects with a README explaining what belongs in it, so the folder is no
+  longer the thing standing in the way. The sound design still works as a
+  mechanism and has never been used as material.

@@ -1,9 +1,16 @@
 # Workshop machine setup — September offline workshop
 
-Provisioning procedure for the **two rented machines** (SPEC §0, `HARDENING.md`).
-Build machine A by following this exactly, verify with §6, then image it onto
-machine B. Do not hand-install twice — divergence between the two machines is
-the failure mode that costs workshop time on the day.
+Provisioning procedure for the **two rented machines** (SPEC §0). Build machine
+A by following this exactly, verify with §6, then image it onto machine B. Do
+not hand-install twice — divergence between the two machines is the failure mode
+that costs workshop time on the day.
+
+**This document absorbed `HARDENING.md` on 2026-08-29.** That file was a list of
+deferred portability items, and once the audience became two project-controlled
+machines rather than sixteen personal ones, every item still alive in it was a
+step in *this* procedure. It is now `archive/20260829_HARDENING.md`; nothing was
+dropped without a line saying so. `SPEC.md` still names it in prose — read those
+mentions as pointing here.
 
 **Status: written 2026-07-28 against the dev machine, NOT yet executed on a
 clean box.** Every step below is what the dev environment actually contains,
@@ -59,7 +66,7 @@ arbitrary:
 3. **Python dependencies** into the embedded interpreter:
 
    ```
-   .\python_embeded\python.exe -m pip install stable-ts num2words
+   .\python_embeded\python.exe -m pip install stable-ts num2words pedalboard pyloudnorm
    ```
 
    ⚠ `stable-ts` pulls `openai-whisper` and depends on torch, which ComfyUI
@@ -67,7 +74,42 @@ arbitrary:
    reinstall or upgrade torch; if it tries, stop and pin instead, because a
    torch swap can break the ComfyUI install itself.
 
-4. **ffmpeg with libass.** Confirm before relying on it:
+   ⚠ `pedalboard` is a **compiled wheel** (Rubber Band + JUCE DSP), needed by
+   the voiceover nodes. If no wheel exists for the machine's Python, this is
+   the step that fails, and it fails *here* rather than mid-workshop only if
+   somebody runs it. `pyloudnorm` is pure Python; `scipy` ships with ComfyUI.
+
+   **This list is the whole list.** It was previously true only of the dev
+   machine, by hand, unrecorded — which is exactly how two machines diverge.
+   `requirements.txt` in the pack is the authority; if it and this line
+   disagree, the file wins and this line is stale.
+
+4. ⚠ **`ComfyUI_essentials`** was hand-cloned into `custom_nodes` on the dev
+   machine, with its heavy requirements deliberately *not* installed. Check
+   whether anything still needs it before cloning it onto A — the subtitle font
+   dependency that justified it is gone (step 7). If nothing needs it, do not
+   install it.
+
+5. ⚠ **Do not put `--use-sage-attention` in the launch command, and check it is
+   absent from anything cloned off the dev box.**
+
+   On the dev machine, ComfyUI started with that flag renders **pure black**
+   from Qwen-Image-Edit — 2–4 KB PNGs, zero luminance variance — while the job
+   reports `success`. Nine consecutive runs were void before the pattern was
+   spotted; every void run carried the flag and every good one did not. There
+   is no error, no warning and no clue in the log.
+
+   The danger is not the black frame, which is obvious once looked at. It is
+   that the flag is a **four-fold speedup** — 42 s a frame against 156 s — so a
+   provisioning pass that benchmarks the machines will find it and keep it, and
+   a student whose graph returns black will reasonably blame their own prompt.
+
+   Scope is unverified beyond Qwen-Image-Edit on that GPU; ESRGAN upscaling and
+   Stable Audio were unaffected in the same session. Either test every model the
+   workshop uses under the flag, or leave it off and accept the slower figure.
+   §6 step 5 is the check that catches it.
+
+6. **ffmpeg with libass.** Confirm before relying on it:
 
    ```
    ffmpeg -hide_banner -version | findstr enable-libass
@@ -78,30 +120,45 @@ arbitrary:
    install time — the worst moment to discover it. Put ffmpeg on `PATH`;
    `memoacts_core.render.ffmpeg_exe()` looks there first.
 
-5. **Pre-seed the Whisper model** so nothing downloads during the workshop. Run
+7. **Pre-seed the Whisper model** so nothing downloads during the workshop. Run
    one alignment on machine A (§6 step 2) — the model is fetched once and cached
    into the user profile, and the image then carries it.
 
    ⚠ Confirm where it caches and that the cache survives imaging; if the image
    is applied under a different user account, the cache path may not carry over.
 
-6. **Fonts: nothing to do.** The pack ships Share Tech Mono under SIL OFL 1.1 in
+8. **Fonts: nothing to do.** The pack ships Share Tech Mono under SIL OFL 1.1 in
    `assets/fonts/`, and burn-in resolves against that directory by default. Do
    *not* install the font system-wide — the point is that a fresh machine
    renders identical captions with no provisioning step.
 
 ## 4. What the facilitator runs vs what students run
 
-Alignment needs the speech model and is a *preparation* step, not a workshop
-step (SPEC §4, prepared-inputs model):
+⚠ **Revised 2026-08-21, and the change is load-bearing for imaging.** This
+section used to say students never run alignment, because P1's prepared-inputs
+model had a facilitator produce `shots.json` in advance. That is no longer true:
+the graph is the teaching surface (`docs/INTERFACE_BRIEF.md`, `docs/PLAN.md`),
+and **students press Run on `MemoActs — Align` themselves**, on their own
+recording.
+
+Consequences for the machine:
+
+- The Whisper model must be **on both machines, pre-seeded, working offline**
+  (§3.7). It is no longer a facilitator-only dependency that could be broken on
+  B without anybody noticing until after the workshop.
+- Alignment is ~90 s of CPU per student per re-record, and it lands in the
+  rotation budget (§5) alongside the render.
+- The facilitator's CLI (`tools/`) stays installed and stays working — it is the
+  reference implementation and the recovery path — but nothing a student sees,
+  types or is examined on is a terminal command.
+
+The facilitator path, for reference and for §6:
 
 ```
 python tools/generate_shots.py --project projects/<name> --lang en
 ```
 
-→ `generated/shots.json`, a file a human can read and edit. Students start from
-there. Keep this in mind when imaging: students never need to run alignment, so
-a model problem on machine B is a facilitator problem, not a workshop blocker.
+→ `generated/shots.json`, a file a human can read and edit.
 
 ## 5. Rotation budget — check this before the day
 
@@ -134,7 +191,7 @@ discovering it live** — a shorter reel teaches the same pipeline.
    `UserWarning` on stderr; the pipeline now collects it so the graph can show
    it too, and the CLI prints it with the same prefix the nodes use.)
 
-2. **Alignment produces timings** (this also seeds the model, §3.5):
+2. **Alignment produces timings** (this also seeds the model, §3.7):
 
    ```
    python tools/generate_shots.py --project projects/demo_en --lang en
@@ -149,11 +206,79 @@ discovering it live** — a shorter reel teaches the same pipeline.
    need not be identical (encoder threading can differ), but frame count and
    duration must match exactly.
 
-## 7. Known gaps in this document
+5. **A rendered frame is not black.** The `--use-sage-attention` failure (§3.5)
+   reports `success` and writes a file, so the only way to catch it is to look
+   at the pixels: **a frame whose luminance standard deviation is ~0 is not an
+   image.** Assert it on one generated frame, not by eye — the whole point is
+   that it passes every other check.
 
-- Not yet executed on a clean machine — see the status note at the top.
-- The ComfyUI node layer is not built yet, so §6 verifies the **core library and
-  CLI**, not the nodes students will actually use. Extend §6 once the pack's
-  nodes exist.
-- Student work isolation and machine reset between rotations are unresolved
-  (`HARDENING.md`).
+6. **The node path, not only the CLI.** Every step above except this one
+   exercises `memoacts_core` through `tools/`. Students use the graph, so open
+   ComfyUI and confirm:
+
+   - the pack loads and its nodes are listed under `memoacts` — the count is in
+     `__init__.py`, and a node missing from the menu means an import failed
+     silently at startup;
+   - `Project → Align → Shot Table → Subtitles → Render Reel` runs end to end on
+     `projects/demo_en` and produces the same frame count and duration as step 1;
+   - the shot table draws as a table inside its node, with thumbnails, and a
+     focus rectangle dragged on a thumbnail changes one line of `shots.csv`.
+
+## 7. Shared machines: student work, and resetting between rotations
+
+Eight students per machine, one after another, and none of them should be able
+to damage or lose another's work. **Undecided, and it must be decided before
+imaging** — it changes the folder layout, so it is not a workshop-morning fix.
+
+The questions, in the order they have to be answered:
+
+- **Where does a student's project live?** `projects/<name>/` under the pack is
+  what every document assumes and what the Project node's picker reads. Eight
+  folders side by side is the simplest thing that works; it also means every
+  student can see and overwrite every other student's edit.
+- **What is reset between rotations, and what is kept?** Renders accumulate in
+  ComfyUI's `output/`, which is shared and unnamed. A student's reel must be
+  identifiable and recoverable after they have left the seat.
+- **How does a student take their work home?** They arrive with their own
+  script, recording and images and should leave with the reel and the folder
+  that produced it.
+
+None of this needs code. It needs a decision written down here, and then the
+folder made that way on machine A before it is imaged.
+
+## 8. Known gaps in this document
+
+- **Not yet executed on a clean machine** — see the status note at the top. This
+  is still the largest gap and everything else is downstream of it.
+- ~~The ComfyUI node layer is not built yet, so §6 verifies the core library and
+  CLI.~~ **Closed 2026-08-21**: the nodes exist and §6 step 6 verifies them.
+- Student work isolation and machine reset between rotations are unresolved —
+  now §7, with the questions written out rather than deferred to another file.
+- **The three numbers that size the exercise have never been measured on the
+  rented hardware**: one clean render, one `archive_soft` render, one alignment
+  from cold. §2 and §5 carry dev-machine figures standing in for them.
+- The Whisper cache location and whether it survives imaging (§3.7) is written
+  from inspection, not from having imaged a machine.
+
+### Retired here, from `HARDENING.md`
+
+Recorded so they are not rediscovered as open questions:
+
+- **USB model distribution and museum-Wi-Fi download contention** — retired
+  2026-07-28. They solved the sixteen-personal-machines problem, which no longer
+  exists. Replaced by pre-seeding (§3.7).
+- **Dependency audit against unknown hardware** — same reason, replaced by §3.
+- **Armenian narration alignment** — dropped with translation, SPEC v3.1.
+- **The subtitle font** — closed 2026-07-28. Share Tech Mono is vendored into
+  `assets/fonts/` under SIL OFL 1.1 and resolves by default (§3.8).
+- **`ComfyUI-Olm-DragCrop` redistribution licence** (`SURVEY.md §3`) — no longer
+  blocks imaging. The focus picker in the shot-table widget does that job inside
+  the pack, so the machine image does not need to carry a package it may not
+  redistribute. If DragCrop is ever reinstated, the licence question comes back
+  with it.
+- **Local-vs-Cloud behaviour differences** — not a machine-setup concern.
+  They live in `GAPS.md` (#4 content-addressed uploads, #5 zeroed telemetry),
+  which is where the two recorded so far already are.
+- **An explicit local model path for `nodes_align.py`** — a code item, not a
+  provisioning one. It is worth doing for reproducibility and it makes §3.7
+  trivial, but it is now the pack's business rather than this document's.

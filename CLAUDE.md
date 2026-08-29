@@ -38,7 +38,7 @@ reverses SPEC §0's "`nodes_layers.py` is the designated first cut" the same way
 
 ## Priority principle
 
-**A working end-to-end PoC beats portability.** Install weight, model size and offline-install concerns never block an implementation decision now — note them in `HARDENING.md` and move on. Offline deployment is a September task.
+**A working end-to-end PoC beats portability.** Install weight, model size and offline-install concerns never block an implementation decision now — note them in `docs/WORKSHOP_MACHINE_SETUP.md` and move on. Offline deployment is a September task.
 
 ## Environment
 
@@ -65,7 +65,7 @@ reverses SPEC §0's "`nodes_layers.py` is the designated first cut" the same way
 | `SURVEY.md` | Existing-node survey + Comfy Cloud coverage, adopt/wrap/build decisions |
 | `ALIGNERS.md` | Aligner evaluation. Decided: stable-ts primary, behind an `Aligner` interface |
 | `GAPS.md` | Every compromise forced by stock nodes in P1 — this is the P2 backlog |
-| `HARDENING.md` | Deferred portability items (much reduced — students are on Cloud, not local) |
+| ~~`HARDENING.md`~~ | **Retired 2026-08-29.** Everything live in it moved into `docs/WORKSHOP_MACHINE_SETUP.md`; the file is `archive/20260829_HARDENING.md`. `SPEC.md` still names it in prose — read those as pointing at the setup document |
 | `README.md` | The public front door: what this is, install, the five nodes. Written for a stranger arriving from GitHub |
 | `HANDOFF.md` | Where the last session stopped and what the next one does first. Rewritten, not appended to; superseded versions go to `archive/handoffs/` |
 | `docs/` | Working documents: `PLAN.md` (current task list), `WORKSHOP_HANDOUT.md` (what a September student is given), `CLI.md` (the author's terminal path, cold start to rendered reel), `P1_GRAPH.md` + `PARTICIPANT_GRAPH_RECIPE.md` (August intensive), `WORKSHOP_MACHINE_SETUP.md` (September), `SHOTS_SCHEMA.md`, `THREEBAND_TOOL.md`, `UPSCALE.md`, `EDITING.md`, `INTERFACE_BRIEF.md` (the brief for the student-facing interface — paste it to open that session) |
@@ -104,5 +104,4 @@ folders precisely so the `.md` files survive.
 - **Open source end to end** on anything production-critical — the grant (Auswärtiges Amt, Zuwendungsbescheid) commits the project to open-source AI tools. Non-commercial-licensed components are tolerable for demos and fallbacks only, and every adopted component's licence goes in `SURVEY.md`.
 - **Subtitles are never transcribed.** The script is ground truth; alignment computes timings only. Verbatim script text reaches the screen. (This survives v3.1 unchanged — it is *why* the workflow beats CapCut's auto-subtitles, independent of language count.)
 - **Never silently upscale** an image beyond its native resolution.
-- **Narration audio passes through untouched** — never re-encoded avoidably, never time-stretched.
 - Cloud runs cost credits per GPU-second. Iterate locally, validate on Cloud.
