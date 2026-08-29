@@ -1,3 +1,20 @@
+> **RETIRED 2026-08-29. Not authoritative, not maintained.**
+>
+> Everything still live in this file moved into `docs/WORKSHOP_MACHINE_SETUP.md`,
+> which is now the single provisioning document: the dependency list and the
+> `pedalboard` wheel into §3.3, the hand-added packs into §3.4, the
+> `--use-sage-attention` trap into §3.5 with its detection into §6.5, Whisper
+> pre-seeding into §3.7, ffmpeg/libass into §3.6, shared-machine hygiene into a
+> section of its own (§7), and every retired item into §8 with the reason it was
+> retired.
+>
+> Two items did not go there, on purpose. Local-vs-Cloud behaviour differences
+> belong in `GAPS.md`, where #4 and #5 already are. An explicit local model path
+> for `nodes_align.py` is a code item and belongs in `docs/PLAN.md`.
+>
+> Kept for its reasoning, per `archive/README.md`. The `[ ]` boxes below are
+> historical; do not tick them here.
+
 # HARDENING.md — deferred portability / offline items (P3, September)
 
 Per SPEC.md §0: these never block an implementation decision now.

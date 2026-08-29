@@ -10,5 +10,5 @@
 
 Committed rather than downloaded on demand so `tools/render_map.py` works with
 no network. The September workshop machines are provisioned offline
-(`HARDENING.md`), and a map tool that needs the internet on the day is a map
+(`docs/WORKSHOP_MACHINE_SETUP.md`), and a map tool that needs the internet on the day is a map
 tool that fails on the day.

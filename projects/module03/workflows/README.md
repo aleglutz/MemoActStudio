@@ -200,6 +200,6 @@ invention, and the model is least stable exactly where it is most free. That is
 not a defect to apologise for; it is the argument, visible and measurable.
 
 **Cost.** 117–156 s per frame warm on a 3090 Ti, which is why the clip is twenty
-frames shown at 10 fps rather than thirty seconds. See `HARDENING.md` before
+frames shown at 10 fps rather than thirty seconds. See `docs/WORKSHOP_MACHINE_SETUP.md` before
 trusting any faster figure: `--use-sage-attention` quadruples the speed and
 renders black.

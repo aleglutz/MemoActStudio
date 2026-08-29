@@ -116,5 +116,5 @@ steps, the handout is not finished.
 - **`New_York_May-8_1945.jpg` still has no `SOURCES.md` entry**, and its rights
   are unchecked. Carried from the previous three handoffs.
 - Student work isolation on a shared machine, Whisper pre-seeding across an
-  image, and the `--use-sage-attention` trap are all in `HARDENING.md` and all
+  image, and the `--use-sage-attention` trap are all in `docs/WORKSHOP_MACHINE_SETUP.md` and all
   still undecided.

@@ -12,12 +12,15 @@ has **not** been checked — that is a gap, not a clearance.
 | `Truman_Churchill_Potsdam.jpg` | Wikimedia Commons, from Imperial War Museums **BU 8944**. Photographer Capt. W. T. Lockeyear, No. 5 Army Film & Photographic Unit | **Public domain** (`PD-UKGov`) | Churchill and Truman shaking hands on the steps of Truman's residence, Kaiser Strasse, Babelsberg, **16 July 1945**, during the Potsdam conference |
 | `Loznitca_VDay_Treptov.jpg` | Frame from **Sergei Loznitsa, *Victory Day*, 2018** | **Not public domain — unresolved.** See below | 9 May commemoration at Treptower Park, Berlin: Night Wolves colours, a Donetsk People's Republic flag, St George ribbons, Immortal Regiment portraits |
 | `map_france_reims.png`, `map_baltics.mp4`, `map_poland_ukraine.mp4` | Drawn by `tools/render_map.py` from Natural Earth 1:50m Admin 0 Countries (`assets/geo/`, see `assets/geo/SOURCE.md`) | **Public domain** (Natural Earth). Authored graphics, not generated imagery | Europe: France with a Reims pin; the Baltic states; Poland and Ukraine |
+| `New_York_May-8_1945.jpg` | **Museum Berlin-Karlshorst**, from the page *The German surrender in May 1945*, https://www.museum-karlshorst.de/english-the-german-surrender-in-may-1945/ . Credited there: **"unknown, akg images, Berlin"** | **Agency-licensed, cleared by the commissioning museum** — see below | VE Day on Wall Street, New York, 8 May 1945 |
 
 ## The one shot that is not ours or public domain
 
 `Loznitca_VDay_Treptov.jpg` is a frame from a copyrighted documentary still in
-distribution, and it is the only such shot in the reel. Everything else is
-public domain, project-drawn, or footage the project holds.
+distribution, and it is the only shot in the reel with **no route to clearance
+yet identified**. The rest is public domain, project-drawn, footage the project
+holds, or — in the New York picture's case — carried on the commissioning
+museum's own agency licence.
 
 Two things follow, and neither is settled by this file:
 
@@ -35,6 +38,25 @@ Two things follow, and neither is settled by this file:
 Not a reason to drop the shot — it is the strongest image in the reel for the
 line it sits under, and Loznitsa's film is *about* this exact phenomenon. It is
 a reason not to let it reach a public screening unresolved.
+
+## The New York picture, and why it is recorded rather than cleared
+
+`New_York_May-8_1945.jpg` was taken from Museum Berlin-Karlshorst's own English
+page on the surrender, where it appears credited *"unknown, akg images,
+Berlin"*. Resolved 2026-08-29 on the project owner's judgement: **the reel is
+made for MBK, the picture is already published by MBK, and it travels back into
+the museum on the museum's own licence.**
+
+That is a defensible position and it is the one this project takes. What it is
+not is a licence held by us: akg-images is a rights-managed agency, and a
+licence for a web page is not automatically a licence for a film. The single
+action that closes this properly costs one email — **ask MBK to confirm the akg
+licence covers the reel**, and, if the film is ever screened outside the museum,
+ask again for that use. Until then the entry above says "cleared by the
+commissioning museum", which is precisely as far as it goes.
+
+The photographer is recorded as unknown, so the on-screen credit, if one is
+given, is the agency: *akg-images, Berlin*.
 
 ## Where a picture and its line disagree
 
