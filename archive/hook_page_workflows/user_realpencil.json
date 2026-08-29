@@ -1,0 +1,1327 @@
+{
+  "id": "d8a03e37-b825-446f-ada9-600e7de6e881",
+  "revision": 0,
+  "last_node_id": 27,
+  "last_link_id": 42,
+  "nodes": [
+    {
+      "id": 2,
+      "type": "MemoActsPaperMask",
+      "pos": [
+        -40,
+        -310
+      ],
+      "size": [
+        330,
+        240
+      ],
+      "flags": {},
+      "order": 9,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "image",
+          "name": "image",
+          "type": "IMAGE",
+          "link": 1
+        },
+        {
+          "localized_name": "ink",
+          "name": "ink",
+          "type": "FLOAT",
+          "widget": {
+            "name": "ink"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "blue",
+          "name": "blue",
+          "type": "FLOAT",
+          "widget": {
+            "name": "blue"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "grow",
+          "name": "grow",
+          "type": "INT",
+          "widget": {
+            "name": "grow"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "keep_border",
+          "name": "keep_border",
+          "type": "FLOAT",
+          "widget": {
+            "name": "keep_border"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "keep_left_from",
+          "name": "keep_left_from",
+          "type": "FLOAT",
+          "widget": {
+            "name": "keep_left_from"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "keep_left_to",
+          "name": "keep_left_to",
+          "type": "FLOAT",
+          "widget": {
+            "name": "keep_left_to"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "mask_image",
+          "name": "mask_image",
+          "type": "IMAGE",
+          "slot_index": 0,
+          "links": [
+            3
+          ]
+        },
+        {
+          "localized_name": "mask",
+          "name": "mask",
+          "type": "MASK",
+          "slot_index": 1,
+          "links": []
+        },
+        {
+          "localized_name": "report",
+          "name": "report",
+          "type": "STRING",
+          "slot_index": 2,
+          "links": []
+        }
+      ],
+      "title": "2 · what on it is not paper",
+      "properties": {
+        "aux_id": "aleglutz/MemoActStudio",
+        "ver": "e70831f742a18f3e0db0e4e165dac01320a9fea8",
+        "Node name for S&R": "MemoActsPaperMask"
+      },
+      "widgets_values": [
+        26,
+        18,
+        3,
+        0.02,
+        0.03,
+        0.12
+      ],
+      "widgets_values_named": {
+        "ink": 26,
+        "blue": 18,
+        "grow": 3,
+        "keep_border": 0.02,
+        "keep_left_from": 0.03,
+        "keep_left_to": 0.12
+      }
+    },
+    {
+      "id": 3,
+      "type": "LamaRemoverIMG",
+      "pos": [
+        320,
+        -330
+      ],
+      "size": [
+        300,
+        170
+      ],
+      "flags": {},
+      "order": 11,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "link": 2
+        },
+        {
+          "localized_name": "masks",
+          "name": "masks",
+          "type": "IMAGE",
+          "link": 3
+        },
+        {
+          "localized_name": "mask_threshold",
+          "name": "mask_threshold",
+          "type": "INT",
+          "widget": {
+            "name": "mask_threshold"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "gaussblur_radius",
+          "name": "gaussblur_radius",
+          "type": "INT",
+          "widget": {
+            "name": "gaussblur_radius"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "invert_mask",
+          "name": "invert_mask",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "invert_mask"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "slot_index": 0,
+          "links": [
+            5
+          ]
+        }
+      ],
+      "title": "3 · take the act off its paper",
+      "properties": {
+        "cnr_id": "comfyui-lama-remover",
+        "ver": "1.0.0",
+        "Node name for S&R": "LamaRemoverIMG"
+      },
+      "widgets_values": [
+        250,
+        3,
+        false
+      ],
+      "widgets_values_named": {
+        "mask_threshold": 250,
+        "gaussblur_radius": 3,
+        "invert_mask": false
+      }
+    },
+    {
+      "id": 4,
+      "type": "UpscaleModelLoader",
+      "pos": [
+        -30,
+        -20
+      ],
+      "size": [
+        300,
+        60
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "model_name",
+          "name": "model_name",
+          "type": "COMBO",
+          "widget": {
+            "name": "model_name"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "UPSCALE_MODEL",
+          "name": "UPSCALE_MODEL",
+          "type": "UPSCALE_MODEL",
+          "slot_index": 0,
+          "links": [
+            4,
+            37
+          ]
+        }
+      ],
+      "title": "Remacri, not Siax — Siax invents grain",
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.33.0",
+        "Node name for S&R": "UpscaleModelLoader"
+      },
+      "widgets_values": [
+        "4x_foolhardy_Remacri.safetensors"
+      ],
+      "widgets_values_named": {
+        "model_name": "4x_foolhardy_Remacri.safetensors"
+      }
+    },
+    {
+      "id": 25,
+      "type": "MarkdownNote",
+      "pos": [
+        1080,
+        -460
+      ],
+      "size": [
+        420,
+        690
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {},
+      "widgets_values": [
+        "### The number in the corner\n\nIt is not drawn. The plate is the act with its ink lifted off by LaMa; the scan\nabove is the same sheet with the ink still on it. Both go through the one\nupscaler, so they land on the same pixels, and the second Pencil Crop cuts the\nsame corner out of each. Pencil Lift subtracts one from the other and what is\nleft is the archivist's own mark -- pigment, its breaks, and the ink line that\ncrosses it, all photographed.\n\nThe number is therefore whatever the act carries. On the sheet it means nothing\nat all, which is the line the reel says about it.\n\n`pencil` and `pencil_height` on Page File still place the box it is laid into.\n"
+      ],
+      "widgets_values_named": {
+        "text": "### Trying number forms\n\nNode 8 is the whole experiment: type a number, pick what it is made of. Node 9's seed is **fixed** on purpose — change it deliberately and you can get a hand back that you liked.\n\nJudge on node 10's report, not on node 24. It says what fraction of the crop changed; over 8% means the model repainted the paper as well as writing on it, which looks fine in the preview and arrives on the sheet as a rectangle of somebody else's paper.\n\n**The reference carries a 1 and a 0.** Any other digit is the model transferring a manner, not copying a shape — that is the interesting case and also the one that fails. If a hand will not come out, 10, 13 or 31 sit in the frame exactly the same way.\n\n### Before the first run\n\n**Node 3:** `gaussblur_radius` = **3**, not its default 8. Node 2 has already grown the mask by 3 px; past ~12 px total the halo of one typed line meets the next and a paragraph becomes one hole.\n\n**Memory.** Past node 5 every IMAGE is 7440×10240 — about 900 MB of float32 each, and the typing holds three or four at once.\n\n**Nothing is resampled.** Remacri runs at its trained 4×, and the number it lands on is what the `page` directive names."
+      },
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 1,
+      "type": "LoadImage",
+      "pos": [
+        -460,
+        -350
+      ],
+      "size": [
+        320,
+        430
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "image",
+          "name": "image",
+          "type": "COMBO",
+          "widget": {
+            "name": "image"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "choose file to upload",
+          "name": "upload",
+          "type": "IMAGEUPLOAD",
+          "widget": {
+            "name": "upload"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "IMAGE",
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "slot_index": 0,
+          "links": [
+            1,
+            2,
+            38
+          ]
+        },
+        {
+          "localized_name": "MASK",
+          "name": "MASK",
+          "type": "MASK",
+          "slot_index": 1,
+          "links": []
+        }
+      ],
+      "title": "1 · the act — the signature page, 3.8% ink",
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.33.0",
+        "Node name for S&R": "LoadImage"
+      },
+      "widgets_values": [
+        "GIoS_Wehrmacht_Signed_Ru_p1.jpg",
+        "image"
+      ],
+      "widgets_values_named": {
+        "image": "GIoS_Wehrmacht_Signed_Ru_p1.jpg",
+        "upload": "image"
+      }
+    },
+    {
+      "id": 9,
+      "type": "MemoActsPageFile",
+      "pos": [
+        -610,
+        140
+      ],
+      "size": [
+        290,
+        60
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "path",
+          "name": "path",
+          "type": "STRING",
+          "widget": {
+            "name": "path"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "plate",
+          "name": "plate",
+          "type": "IMAGE",
+          "link": 36,
+          "shape": 7
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "text",
+          "name": "text",
+          "type": "STRING",
+          "slot_index": 0,
+          "links": [
+            8,
+            31,
+            41
+          ]
+        }
+      ],
+      "title": "5 · the sheet, from git",
+      "properties": {
+        "aux_id": "aleglutz/MemoActStudio",
+        "ver": "e70831f742a18f3e0db0e4e165dac01320a9fea8",
+        "Node name for S&R": "MemoActsPageFile"
+      },
+      "widgets_values": [
+        "projects/legends_of_surrender/sources/hook_page_2.md",
+        "",
+        false,
+        0.0095,
+        2.4,
+        0.038,
+        "10"
+      ],
+      "widgets_values_named": {
+        "path": "projects/legends_of_surrender/sources/hook_page_2.md"
+      },
+      "color": "#233",
+      "bgcolor": "#355"
+    },
+    {
+      "id": 13,
+      "type": "MemoActsPencilCrop",
+      "pos": [
+        -210,
+        320
+      ],
+      "size": [
+        210,
+        250
+      ],
+      "flags": {},
+      "order": 13,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "plate",
+          "name": "plate",
+          "type": "IMAGE",
+          "link": 6
+        },
+        {
+          "localized_name": "act",
+          "name": "act",
+          "type": "IMAGE",
+          "link": 7
+        },
+        {
+          "localized_name": "text",
+          "name": "text",
+          "type": "STRING",
+          "widget": {
+            "name": "text"
+          },
+          "link": 8
+        },
+        {
+          "localized_name": "size",
+          "name": "size",
+          "type": "INT",
+          "widget": {
+            "name": "size"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "ref_x",
+          "name": "ref_x",
+          "type": "FLOAT",
+          "widget": {
+            "name": "ref_x"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "ref_y",
+          "name": "ref_y",
+          "type": "FLOAT",
+          "widget": {
+            "name": "ref_y"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "ref_span",
+          "name": "ref_span",
+          "type": "FLOAT",
+          "widget": {
+            "name": "ref_span"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "fit",
+          "name": "fit",
+          "type": "COMBO",
+          "widget": {
+            "name": "fit"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "corner",
+          "name": "corner",
+          "type": "IMAGE",
+          "slot_index": 0,
+          "links": [
+            29
+          ]
+        },
+        {
+          "localized_name": "reference",
+          "name": "reference",
+          "type": "IMAGE",
+          "slot_index": 1,
+          "links": []
+        },
+        {
+          "localized_name": "report",
+          "name": "report",
+          "type": "STRING",
+          "slot_index": 2,
+          "links": []
+        }
+      ],
+      "title": "7 · the two crops",
+      "properties": {
+        "aux_id": "aleglutz/MemoActStudio",
+        "ver": "e70831f742a18f3e0db0e4e165dac01320a9fea8",
+        "Node name for S&R": "MemoActsPencilCrop"
+      },
+      "widgets_values": [
+        "",
+        1024,
+        0.91,
+        0.057,
+        0.16,
+        "strict"
+      ],
+      "widgets_values_named": {
+        "text": "",
+        "size": 1024,
+        "ref_x": 0.91,
+        "ref_y": 0.057,
+        "ref_span": 0.16,
+        "fit": "strict"
+      }
+    },
+    {
+      "id": 11,
+      "type": "SaveImage",
+      "pos": [
+        2020,
+        40
+      ],
+      "size": [
+        400,
+        460
+      ],
+      "flags": {},
+      "order": 22,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "link": 35
+        },
+        {
+          "localized_name": "filename_prefix",
+          "name": "filename_prefix",
+          "type": "STRING",
+          "widget": {
+            "name": "filename_prefix"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "links": []
+        }
+      ],
+      "title": "12 · the page",
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.33.0",
+        "Node name for S&R": "SaveImage"
+      },
+      "widgets_values": [
+        "hook/page"
+      ],
+      "widgets_values_named": {
+        "filename_prefix": "hook/page"
+      }
+    },
+    {
+      "id": 10,
+      "type": "MemoActsTypePage",
+      "pos": [
+        1650,
+        40
+      ],
+      "size": [
+        320,
+        460
+      ],
+      "flags": {},
+      "order": 21,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "plate",
+          "name": "plate",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": 32
+        },
+        {
+          "localized_name": "pencil",
+          "name": "pencil",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": 33
+        },
+        {
+          "localized_name": "pencil_alpha",
+          "name": "pencil_alpha",
+          "shape": 7,
+          "type": "MASK",
+          "link": 34
+        },
+        {
+          "localized_name": "text",
+          "name": "text",
+          "type": "STRING",
+          "widget": {
+            "name": "text"
+          },
+          "link": 31
+        },
+        {
+          "localized_name": "font",
+          "name": "font",
+          "type": "COMBO",
+          "widget": {
+            "name": "font"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "seed",
+          "name": "seed",
+          "type": "INT",
+          "widget": {
+            "name": "seed"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "anchors",
+          "name": "anchors",
+          "type": "STRING",
+          "widget": {
+            "name": "anchors"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "fit",
+          "name": "fit",
+          "type": "COMBO",
+          "widget": {
+            "name": "fit"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "page",
+          "name": "page",
+          "type": "IMAGE",
+          "slot_index": 0,
+          "links": [
+            35
+          ]
+        },
+        {
+          "localized_name": "report",
+          "name": "report",
+          "type": "STRING",
+          "slot_index": 1,
+          "links": []
+        }
+      ],
+      "title": "11 · typed onto it",
+      "properties": {
+        "aux_id": "aleglutz/MemoActStudio",
+        "ver": "e70831f742a18f3e0db0e4e165dac01320a9fea8",
+        "Node name for S&R": "MemoActsTypePage"
+      },
+      "widgets_values": [
+        "",
+        "SpecialElite-Regular.ttf",
+        8945,
+        "M E M O A C T S\npencil",
+        "strict"
+      ],
+      "widgets_values_named": {
+        "text": "",
+        "font": "SpecialElite-Regular.ttf",
+        "seed": 8945,
+        "control_after_generate": "M E M O A C T S\npencil",
+        "anchors": "",
+        "fit": "strict"
+      }
+    },
+    {
+      "id": 5,
+      "type": "ImageUpscaleWithModel",
+      "pos": [
+        680,
+        -160
+      ],
+      "size": [
+        320,
+        50
+      ],
+      "flags": {},
+      "order": 12,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "upscale_model",
+          "name": "upscale_model",
+          "type": "UPSCALE_MODEL",
+          "link": 4
+        },
+        {
+          "localized_name": "image",
+          "name": "image",
+          "type": "IMAGE",
+          "link": 5
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "IMAGE",
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "slot_index": 0,
+          "links": [
+            6,
+            32,
+            36
+          ]
+        }
+      ],
+      "title": "4 · the plate — 4x, so 7440x10240 exactly",
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.33.0",
+        "Node name for S&R": "ImageUpscaleWithModel"
+      }
+    },
+    {
+      "id": 6,
+      "type": "LoadImage",
+      "pos": [
+        -630,
+        650
+      ],
+      "size": [
+        360,
+        420
+      ],
+      "flags": {},
+      "order": 8,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "image",
+          "name": "image",
+          "type": "COMBO",
+          "widget": {
+            "name": "image"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "choose file to upload",
+          "name": "upload",
+          "type": "IMAGEUPLOAD",
+          "widget": {
+            "name": "upload"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "IMAGE",
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "slot_index": 0,
+          "links": [
+            7,
+            40
+          ]
+        },
+        {
+          "localized_name": "MASK",
+          "name": "MASK",
+          "type": "MASK",
+          "slot_index": 1,
+          "links": []
+        }
+      ],
+      "title": "6 · a real archival number to copy the hand from",
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.33.0",
+        "Node name for S&R": "LoadImage"
+      },
+      "widgets_values": [
+        "pencil_ref.png",
+        "image"
+      ],
+      "widgets_values_named": {
+        "image": "pencil_ref.png",
+        "upload": "image"
+      }
+    },
+    {
+      "id": 8,
+      "type": "MemoActsPencilLift",
+      "pos": [
+        1190,
+        450
+      ],
+      "size": [
+        300,
+        130
+      ],
+      "flags": {},
+      "order": 20,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "before",
+          "name": "before",
+          "type": "IMAGE",
+          "link": 29
+        },
+        {
+          "localized_name": "after",
+          "name": "after",
+          "type": "IMAGE",
+          "link": 42
+        },
+        {
+          "localized_name": "floor",
+          "name": "floor",
+          "type": "FLOAT",
+          "widget": {
+            "name": "floor"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "gain",
+          "name": "gain",
+          "type": "FLOAT",
+          "widget": {
+            "name": "gain"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "pigment",
+          "name": "pigment",
+          "type": "IMAGE",
+          "slot_index": 0,
+          "links": [
+            33
+          ]
+        },
+        {
+          "localized_name": "alpha",
+          "name": "alpha",
+          "type": "MASK",
+          "slot_index": 1,
+          "links": [
+            34
+          ]
+        },
+        {
+          "localized_name": "report",
+          "name": "report",
+          "type": "STRING",
+          "slot_index": 2,
+          "links": []
+        }
+      ],
+      "title": "10 · the difference, as pigment + alpha",
+      "properties": {
+        "aux_id": "aleglutz/MemoActStudio",
+        "ver": "e70831f742a18f3e0db0e4e165dac01320a9fea8",
+        "Node name for S&R": "MemoActsPencilLift"
+      },
+      "widgets_values": [
+        6,
+        110
+      ],
+      "widgets_values_named": {
+        "floor": 6,
+        "gain": 90
+      }
+    },
+    {
+      "id": 26,
+      "type": "ImageUpscaleWithModel",
+      "pos": [
+        680,
+        -60
+      ],
+      "size": [
+        320,
+        50
+      ],
+      "flags": {},
+      "order": 13,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "upscale_model",
+          "name": "upscale_model",
+          "type": "UPSCALE_MODEL",
+          "link": 37
+        },
+        {
+          "localized_name": "image",
+          "name": "image",
+          "type": "IMAGE",
+          "link": 38
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "IMAGE",
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "slot_index": 0,
+          "links": [
+            39
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ImageUpscaleWithModel"
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 27,
+      "type": "MemoActsPencilCrop",
+      "pos": [
+        300,
+        320
+      ],
+      "size": [
+        210,
+        250
+      ],
+      "flags": {},
+      "order": 15,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "plate",
+          "name": "plate",
+          "type": "IMAGE",
+          "link": 39
+        },
+        {
+          "localized_name": "act",
+          "name": "act",
+          "type": "IMAGE",
+          "link": 40
+        },
+        {
+          "localized_name": "text",
+          "name": "text",
+          "type": "STRING",
+          "widget": {
+            "name": "text"
+          },
+          "link": 41
+        },
+        {
+          "localized_name": "size",
+          "name": "size",
+          "type": "INT",
+          "widget": {
+            "name": "size"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "ref_x",
+          "name": "ref_x",
+          "type": "FLOAT",
+          "widget": {
+            "name": "ref_x"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "ref_y",
+          "name": "ref_y",
+          "type": "FLOAT",
+          "widget": {
+            "name": "ref_y"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "ref_span",
+          "name": "ref_span",
+          "type": "FLOAT",
+          "widget": {
+            "name": "ref_span"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "fit",
+          "name": "fit",
+          "type": "COMBO",
+          "widget": {
+            "name": "fit"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "corner",
+          "name": "corner",
+          "type": "IMAGE",
+          "slot_index": 0,
+          "links": [
+            42
+          ]
+        },
+        {
+          "localized_name": "reference",
+          "name": "reference",
+          "type": "IMAGE",
+          "slot_index": 1,
+          "links": []
+        },
+        {
+          "localized_name": "report",
+          "name": "report",
+          "type": "STRING",
+          "slot_index": 2,
+          "links": []
+        }
+      ],
+      "title": "7 · the two crops",
+      "properties": {
+        "aux_id": "aleglutz/MemoActStudio",
+        "ver": "e70831f742a18f3e0db0e4e165dac01320a9fea8",
+        "Node name for S&R": "MemoActsPencilCrop"
+      },
+      "widgets_values": [
+        "",
+        1024,
+        0.91,
+        0.057,
+        0.16,
+        "strict"
+      ],
+      "widgets_values_named": {
+        "text": "",
+        "size": 1024,
+        "ref_x": 0.91,
+        "ref_y": 0.057,
+        "ref_span": 0.16,
+        "fit": "strict"
+      }
+    }
+  ],
+  "links": [
+    [
+      1,
+      1,
+      0,
+      2,
+      0,
+      "IMAGE"
+    ],
+    [
+      2,
+      1,
+      0,
+      3,
+      0,
+      "IMAGE"
+    ],
+    [
+      3,
+      2,
+      0,
+      3,
+      1,
+      "IMAGE"
+    ],
+    [
+      4,
+      4,
+      0,
+      5,
+      0,
+      "UPSCALE_MODEL"
+    ],
+    [
+      5,
+      3,
+      0,
+      5,
+      1,
+      "IMAGE"
+    ],
+    [
+      6,
+      5,
+      0,
+      13,
+      0,
+      "IMAGE"
+    ],
+    [
+      7,
+      6,
+      0,
+      13,
+      1,
+      "IMAGE"
+    ],
+    [
+      8,
+      9,
+      0,
+      13,
+      2,
+      "STRING"
+    ],
+    [
+      29,
+      13,
+      0,
+      8,
+      0,
+      "IMAGE"
+    ],
+    [
+      31,
+      9,
+      0,
+      10,
+      3,
+      "STRING"
+    ],
+    [
+      32,
+      5,
+      0,
+      10,
+      0,
+      "IMAGE"
+    ],
+    [
+      33,
+      8,
+      0,
+      10,
+      1,
+      "IMAGE"
+    ],
+    [
+      34,
+      8,
+      1,
+      10,
+      2,
+      "MASK"
+    ],
+    [
+      35,
+      10,
+      0,
+      11,
+      0,
+      "IMAGE"
+    ],
+    [
+      36,
+      5,
+      0,
+      9,
+      1,
+      "IMAGE"
+    ],
+    [
+      37,
+      4,
+      0,
+      26,
+      0,
+      "UPSCALE_MODEL"
+    ],
+    [
+      38,
+      1,
+      0,
+      26,
+      1,
+      "IMAGE"
+    ],
+    [
+      39,
+      26,
+      0,
+      27,
+      0,
+      "IMAGE"
+    ],
+    [
+      40,
+      6,
+      0,
+      27,
+      1,
+      "IMAGE"
+    ],
+    [
+      41,
+      9,
+      0,
+      27,
+      2,
+      "STRING"
+    ],
+    [
+      42,
+      27,
+      0,
+      8,
+      1,
+      "IMAGE"
+    ]
+  ],
+  "groups": [
+    {
+      "id": 1,
+      "title": "The act's own paper, with the act taken off it",
+      "bounding": [
+        -70,
+        -410,
+        1110,
+        470
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    },
+    {
+      "id": 2,
+      "title": "The archivist's hand — Qwen-Image-Edit 2511",
+      "bounding": [
+        -640,
+        250,
+        2150,
+        780
+      ],
+      "color": "#88A",
+      "flags": {}
+    },
+    {
+      "id": 3,
+      "title": "A document of our own",
+      "bounding": [
+        1630,
+        -30,
+        850,
+        560
+      ],
+      "color": "#8A8",
+      "flags": {}
+    }
+  ],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 0.8390545288824046,
+      "offset": [
+        569.0590374518672,
+        -113.82891480832726
+      ]
+    }
+  },
+  "version": 0.4
+}

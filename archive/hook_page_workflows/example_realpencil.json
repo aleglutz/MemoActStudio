@@ -1,0 +1,1228 @@
+{
+  "revision": 0,
+  "last_node_id": 27,
+  "last_link_id": 42,
+  "nodes": [
+    {
+      "id": 1,
+      "type": "LoadImage",
+      "pos": [
+        40,
+        40
+      ],
+      "size": [
+        300,
+        320
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "image",
+          "name": "image",
+          "type": "COMBO",
+          "link": null,
+          "widget": {
+            "name": "image"
+          }
+        },
+        {
+          "localized_name": "upload",
+          "name": "upload",
+          "type": "IMAGEUPLOAD",
+          "link": null,
+          "widget": {
+            "name": "upload"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "IMAGE",
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "slot_index": 0,
+          "links": [
+            1,
+            2,
+            38
+          ]
+        },
+        {
+          "localized_name": "MASK",
+          "name": "MASK",
+          "type": "MASK",
+          "slot_index": 1,
+          "links": []
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadImage"
+      },
+      "widgets_values": [
+        "GIoS_Wehrmacht_Signed_Ru_p1.jpg",
+        "image"
+      ],
+      "title": "1 · the act — the signature page, 3.8% ink"
+    },
+    {
+      "id": 2,
+      "type": "MemoActsPaperMask",
+      "pos": [
+        380,
+        40
+      ],
+      "size": [
+        330,
+        240
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "image",
+          "name": "image",
+          "type": "IMAGE",
+          "link": 1
+        },
+        {
+          "localized_name": "ink",
+          "name": "ink",
+          "type": "FLOAT",
+          "link": null,
+          "widget": {
+            "name": "ink"
+          }
+        },
+        {
+          "localized_name": "blue",
+          "name": "blue",
+          "type": "FLOAT",
+          "link": null,
+          "widget": {
+            "name": "blue"
+          }
+        },
+        {
+          "localized_name": "grow",
+          "name": "grow",
+          "type": "INT",
+          "link": null,
+          "widget": {
+            "name": "grow"
+          }
+        },
+        {
+          "localized_name": "keep_border",
+          "name": "keep_border",
+          "type": "FLOAT",
+          "link": null,
+          "widget": {
+            "name": "keep_border"
+          }
+        },
+        {
+          "localized_name": "keep_left_from",
+          "name": "keep_left_from",
+          "type": "FLOAT",
+          "link": null,
+          "widget": {
+            "name": "keep_left_from"
+          }
+        },
+        {
+          "localized_name": "keep_left_to",
+          "name": "keep_left_to",
+          "type": "FLOAT",
+          "link": null,
+          "widget": {
+            "name": "keep_left_to"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "mask_image",
+          "name": "mask_image",
+          "type": "IMAGE",
+          "slot_index": 0,
+          "links": [
+            3
+          ]
+        },
+        {
+          "localized_name": "mask",
+          "name": "mask",
+          "type": "MASK",
+          "slot_index": 1,
+          "links": []
+        },
+        {
+          "localized_name": "report",
+          "name": "report",
+          "type": "STRING",
+          "slot_index": 2,
+          "links": []
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "MemoActsPaperMask"
+      },
+      "widgets_values": [
+        26.0,
+        18.0,
+        3,
+        0.02,
+        0.03,
+        0.12
+      ],
+      "title": "2 · what on it is not paper"
+    },
+    {
+      "id": 3,
+      "type": "LamaRemoverIMG",
+      "pos": [
+        750,
+        40
+      ],
+      "size": [
+        300,
+        170
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "link": 2
+        },
+        {
+          "localized_name": "masks",
+          "name": "masks",
+          "type": "IMAGE",
+          "link": 3
+        },
+        {
+          "localized_name": "mask_threshold",
+          "name": "mask_threshold",
+          "type": "INT",
+          "link": null,
+          "widget": {
+            "name": "mask_threshold"
+          }
+        },
+        {
+          "localized_name": "gaussblur_radius",
+          "name": "gaussblur_radius",
+          "type": "INT",
+          "link": null,
+          "widget": {
+            "name": "gaussblur_radius"
+          }
+        },
+        {
+          "localized_name": "invert_mask",
+          "name": "invert_mask",
+          "type": "BOOLEAN",
+          "link": null,
+          "widget": {
+            "name": "invert_mask"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "slot_index": 0,
+          "links": [
+            5
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LamaRemoverIMG"
+      },
+      "widgets_values": [
+        250,
+        3,
+        false
+      ],
+      "title": "3 · take the act off its paper"
+    },
+    {
+      "id": 4,
+      "type": "UpscaleModelLoader",
+      "pos": [
+        750,
+        250
+      ],
+      "size": [
+        300,
+        60
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "model_name",
+          "name": "model_name",
+          "type": "COMBO",
+          "link": null,
+          "widget": {
+            "name": "model_name"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "UPSCALE_MODEL",
+          "name": "UPSCALE_MODEL",
+          "type": "UPSCALE_MODEL",
+          "slot_index": 0,
+          "links": [
+            4,
+            37
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "UpscaleModelLoader"
+      },
+      "widgets_values": [
+        "4x_foolhardy_Remacri.safetensors"
+      ],
+      "title": "Remacri, not Siax — Siax invents grain"
+    },
+    {
+      "id": 5,
+      "type": "ImageUpscaleWithModel",
+      "pos": [
+        1090,
+        40
+      ],
+      "size": [
+        290,
+        60
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "upscale_model",
+          "name": "upscale_model",
+          "type": "UPSCALE_MODEL",
+          "link": 4
+        },
+        {
+          "localized_name": "image",
+          "name": "image",
+          "type": "IMAGE",
+          "link": 5
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "IMAGE",
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "slot_index": 0,
+          "links": [
+            6,
+            32,
+            36
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ImageUpscaleWithModel"
+      },
+      "widgets_values": [],
+      "title": "4 · the plate — 4x, so 7440x10240 exactly"
+    },
+    {
+      "id": 9,
+      "type": "MemoActsPageFile",
+      "pos": [
+        1090,
+        150
+      ],
+      "size": [
+        290,
+        90
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "path",
+          "name": "path",
+          "type": "STRING",
+          "link": null,
+          "widget": {
+            "name": "path"
+          }
+        },
+        {
+          "localized_name": "plate",
+          "name": "plate",
+          "type": "IMAGE",
+          "link": 36,
+          "shape": 7
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "text",
+          "name": "text",
+          "type": "STRING",
+          "slot_index": 0,
+          "links": [
+            8,
+            31,
+            41
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "MemoActsPageFile"
+      },
+      "widgets_values": [
+        "projects/legends_of_surrender/sources/hook_page_2.md",
+        "",
+        false,
+        0.0095,
+        2.4,
+        0.038,
+        "10"
+      ],
+      "title": "5 · the sheet, from git"
+    },
+    {
+      "id": 6,
+      "type": "LoadImage",
+      "pos": [
+        40,
+        470
+      ],
+      "size": [
+        300,
+        320
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "image",
+          "name": "image",
+          "type": "COMBO",
+          "link": null,
+          "widget": {
+            "name": "image"
+          }
+        },
+        {
+          "localized_name": "upload",
+          "name": "upload",
+          "type": "IMAGEUPLOAD",
+          "link": null,
+          "widget": {
+            "name": "upload"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "IMAGE",
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "slot_index": 0,
+          "links": [
+            7,
+            40
+          ]
+        },
+        {
+          "localized_name": "MASK",
+          "name": "MASK",
+          "type": "MASK",
+          "slot_index": 1,
+          "links": []
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadImage"
+      },
+      "widgets_values": [
+        "GIoS_Wehrmacht_Signed_Ru_p1.jpg",
+        "image"
+      ],
+      "title": "6 · a real archival number to copy the hand from"
+    },
+    {
+      "id": 13,
+      "type": "MemoActsPencilCrop",
+      "pos": [
+        380,
+        470
+      ],
+      "size": [
+        330,
+        240
+      ],
+      "flags": {},
+      "order": 7,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "plate",
+          "name": "plate",
+          "type": "IMAGE",
+          "link": 6
+        },
+        {
+          "localized_name": "act",
+          "name": "act",
+          "type": "IMAGE",
+          "link": 7
+        },
+        {
+          "localized_name": "text",
+          "name": "text",
+          "type": "STRING",
+          "link": 8,
+          "widget": {
+            "name": "text"
+          }
+        },
+        {
+          "localized_name": "size",
+          "name": "size",
+          "type": "INT",
+          "link": null,
+          "widget": {
+            "name": "size"
+          }
+        },
+        {
+          "localized_name": "ref_x",
+          "name": "ref_x",
+          "type": "FLOAT",
+          "link": null,
+          "widget": {
+            "name": "ref_x"
+          }
+        },
+        {
+          "localized_name": "ref_y",
+          "name": "ref_y",
+          "type": "FLOAT",
+          "link": null,
+          "widget": {
+            "name": "ref_y"
+          }
+        },
+        {
+          "localized_name": "ref_span",
+          "name": "ref_span",
+          "type": "FLOAT",
+          "link": null,
+          "widget": {
+            "name": "ref_span"
+          }
+        },
+        {
+          "localized_name": "fit",
+          "name": "fit",
+          "type": "COMBO",
+          "link": null,
+          "widget": {
+            "name": "fit"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "corner",
+          "name": "corner",
+          "type": "IMAGE",
+          "slot_index": 0,
+          "links": [
+            29
+          ]
+        },
+        {
+          "localized_name": "reference",
+          "name": "reference",
+          "type": "IMAGE",
+          "slot_index": 1,
+          "links": []
+        },
+        {
+          "localized_name": "report",
+          "name": "report",
+          "type": "STRING",
+          "slot_index": 2,
+          "links": []
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "MemoActsPencilCrop"
+      },
+      "widgets_values": [
+        "",
+        1024,
+        0.91,
+        0.057,
+        0.16,
+        "scale layout to plate"
+      ],
+      "title": "7 · the two crops"
+    },
+    {
+      "id": 8,
+      "type": "MemoActsPencilLift",
+      "pos": [
+        1840,
+        790
+      ],
+      "size": [
+        330,
+        160
+      ],
+      "flags": {},
+      "order": 19,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "before",
+          "name": "before",
+          "type": "IMAGE",
+          "link": 29
+        },
+        {
+          "localized_name": "after",
+          "name": "after",
+          "type": "IMAGE",
+          "link": 42
+        },
+        {
+          "localized_name": "floor",
+          "name": "floor",
+          "type": "FLOAT",
+          "link": null,
+          "widget": {
+            "name": "floor"
+          }
+        },
+        {
+          "localized_name": "gain",
+          "name": "gain",
+          "type": "FLOAT",
+          "link": null,
+          "widget": {
+            "name": "gain"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "pigment",
+          "name": "pigment",
+          "type": "IMAGE",
+          "slot_index": 0,
+          "links": [
+            33
+          ]
+        },
+        {
+          "localized_name": "alpha",
+          "name": "alpha",
+          "type": "MASK",
+          "slot_index": 1,
+          "links": [
+            34
+          ]
+        },
+        {
+          "localized_name": "report",
+          "name": "report",
+          "type": "STRING",
+          "slot_index": 2,
+          "links": []
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "MemoActsPencilLift"
+      },
+      "widgets_values": [
+        6.0,
+        110
+      ],
+      "title": "10 · the difference, as pigment + alpha"
+    },
+    {
+      "id": 10,
+      "type": "MemoActsTypePage",
+      "pos": [
+        1840,
+        40
+      ],
+      "size": [
+        380,
+        460
+      ],
+      "flags": {},
+      "order": 20,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "text",
+          "name": "text",
+          "type": "STRING",
+          "link": 31,
+          "widget": {
+            "name": "text"
+          }
+        },
+        {
+          "localized_name": "plate",
+          "name": "plate",
+          "type": "IMAGE",
+          "link": 32,
+          "shape": 7
+        },
+        {
+          "localized_name": "pencil",
+          "name": "pencil",
+          "type": "IMAGE",
+          "link": 33,
+          "shape": 7
+        },
+        {
+          "localized_name": "pencil_alpha",
+          "name": "pencil_alpha",
+          "type": "MASK",
+          "link": 34,
+          "shape": 7
+        },
+        {
+          "localized_name": "font",
+          "name": "font",
+          "type": "COMBO",
+          "link": null,
+          "widget": {
+            "name": "font"
+          }
+        },
+        {
+          "localized_name": "seed",
+          "name": "seed",
+          "type": "INT",
+          "link": null,
+          "widget": {
+            "name": "seed"
+          }
+        },
+        {
+          "localized_name": "anchors",
+          "name": "anchors",
+          "type": "STRING",
+          "link": null,
+          "widget": {
+            "name": "anchors"
+          }
+        },
+        {
+          "localized_name": "fit",
+          "name": "fit",
+          "type": "COMBO",
+          "link": null,
+          "widget": {
+            "name": "fit"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "page",
+          "name": "page",
+          "type": "IMAGE",
+          "slot_index": 0,
+          "links": [
+            35
+          ]
+        },
+        {
+          "localized_name": "report",
+          "name": "report",
+          "type": "STRING",
+          "slot_index": 1,
+          "links": []
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "MemoActsTypePage"
+      },
+      "widgets_values": [
+        "",
+        "SpecialElite-Regular.ttf",
+        8945,
+        "M E M O A C T S\npencil",
+        "scale layout to plate"
+      ],
+      "title": "11 · typed onto it"
+    },
+    {
+      "id": 11,
+      "type": "SaveImage",
+      "pos": [
+        2260,
+        40
+      ],
+      "size": [
+        400,
+        460
+      ],
+      "flags": {},
+      "order": 21,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "link": 35
+        },
+        {
+          "localized_name": "filename_prefix",
+          "name": "filename_prefix",
+          "type": "STRING",
+          "link": null,
+          "widget": {
+            "name": "filename_prefix"
+          }
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "Node name for S&R": "SaveImage"
+      },
+      "widgets_values": [
+        "hook/page"
+      ],
+      "title": "12 · the page"
+    },
+    {
+      "id": 25,
+      "type": "MarkdownNote",
+      "pos": [
+        2260,
+        540
+      ],
+      "size": [
+        400,
+        420
+      ],
+      "flags": {},
+      "order": 22,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {},
+      "color": "#432",
+      "bgcolor": "#653",
+      "widgets_values": [
+        "### The number in the corner\n\nIt is not drawn. The plate is the act with its ink lifted off by LaMa; the scan\nabove is the same sheet with the ink still on it. Both go through the one\nupscaler, so they land on the same pixels, and the second Pencil Crop cuts the\nsame corner out of each. Pencil Lift subtracts one from the other and what is\nleft is the archivist's own mark -- pigment, its breaks, and the ink line that\ncrosses it, all photographed.\n\nThe number is therefore whatever the act carries. On the sheet it means nothing\nat all, which is the line the reel says about it.\n\n`pencil` and `pencil_height` on Page File still place the box it is laid into.\n"
+      ]
+    },
+    {
+      "id": 26,
+      "type": "ImageUpscaleWithModel",
+      "pos": [
+        680,
+        -60
+      ],
+      "size": [
+        320,
+        50
+      ],
+      "flags": {},
+      "order": 13,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "upscale_model",
+          "name": "upscale_model",
+          "type": "UPSCALE_MODEL",
+          "link": 37
+        },
+        {
+          "localized_name": "image",
+          "name": "image",
+          "type": "IMAGE",
+          "link": 38
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "IMAGE",
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "slot_index": 0,
+          "links": [
+            39
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ImageUpscaleWithModel"
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 27,
+      "type": "MemoActsPencilCrop",
+      "pos": [
+        300,
+        320
+      ],
+      "size": [
+        330,
+        240
+      ],
+      "flags": {},
+      "order": 15,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "plate",
+          "name": "plate",
+          "type": "IMAGE",
+          "link": 39
+        },
+        {
+          "localized_name": "act",
+          "name": "act",
+          "type": "IMAGE",
+          "link": 40
+        },
+        {
+          "localized_name": "text",
+          "name": "text",
+          "type": "STRING",
+          "link": 41,
+          "widget": {
+            "name": "text"
+          }
+        },
+        {
+          "localized_name": "size",
+          "name": "size",
+          "type": "INT",
+          "link": null,
+          "widget": {
+            "name": "size"
+          }
+        },
+        {
+          "localized_name": "ref_x",
+          "name": "ref_x",
+          "type": "FLOAT",
+          "link": null,
+          "widget": {
+            "name": "ref_x"
+          }
+        },
+        {
+          "localized_name": "ref_y",
+          "name": "ref_y",
+          "type": "FLOAT",
+          "link": null,
+          "widget": {
+            "name": "ref_y"
+          }
+        },
+        {
+          "localized_name": "ref_span",
+          "name": "ref_span",
+          "type": "FLOAT",
+          "link": null,
+          "widget": {
+            "name": "ref_span"
+          }
+        },
+        {
+          "localized_name": "fit",
+          "name": "fit",
+          "type": "COMBO",
+          "link": null,
+          "widget": {
+            "name": "fit"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "corner",
+          "name": "corner",
+          "type": "IMAGE",
+          "slot_index": 0,
+          "links": [
+            42
+          ]
+        },
+        {
+          "localized_name": "reference",
+          "name": "reference",
+          "type": "IMAGE",
+          "slot_index": 1,
+          "links": []
+        },
+        {
+          "localized_name": "report",
+          "name": "report",
+          "type": "STRING",
+          "slot_index": 2,
+          "links": []
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "MemoActsPencilCrop"
+      },
+      "widgets_values": [
+        "",
+        1024,
+        0.91,
+        0.057,
+        0.16,
+        "scale layout to plate"
+      ],
+      "title": "7 · the two crops"
+    }
+  ],
+  "links": [
+    [
+      1,
+      1,
+      0,
+      2,
+      0,
+      "IMAGE"
+    ],
+    [
+      2,
+      1,
+      0,
+      3,
+      0,
+      "IMAGE"
+    ],
+    [
+      3,
+      2,
+      0,
+      3,
+      1,
+      "IMAGE"
+    ],
+    [
+      4,
+      4,
+      0,
+      5,
+      0,
+      "UPSCALE_MODEL"
+    ],
+    [
+      5,
+      3,
+      0,
+      5,
+      1,
+      "IMAGE"
+    ],
+    [
+      6,
+      5,
+      0,
+      13,
+      0,
+      "IMAGE"
+    ],
+    [
+      7,
+      6,
+      0,
+      13,
+      1,
+      "IMAGE"
+    ],
+    [
+      8,
+      9,
+      0,
+      13,
+      2,
+      "STRING"
+    ],
+    [
+      29,
+      13,
+      0,
+      8,
+      0,
+      "IMAGE"
+    ],
+    [
+      31,
+      9,
+      0,
+      10,
+      0,
+      "STRING"
+    ],
+    [
+      32,
+      5,
+      0,
+      10,
+      1,
+      "IMAGE"
+    ],
+    [
+      33,
+      8,
+      0,
+      10,
+      2,
+      "IMAGE"
+    ],
+    [
+      34,
+      8,
+      1,
+      10,
+      3,
+      "MASK"
+    ],
+    [
+      35,
+      10,
+      0,
+      11,
+      0,
+      "IMAGE"
+    ],
+    [
+      36,
+      5,
+      0,
+      9,
+      1,
+      "IMAGE"
+    ],
+    [
+      37,
+      4,
+      0,
+      26,
+      0,
+      "UPSCALE_MODEL"
+    ],
+    [
+      38,
+      1,
+      0,
+      26,
+      1,
+      "IMAGE"
+    ],
+    [
+      39,
+      26,
+      0,
+      27,
+      0,
+      "IMAGE"
+    ],
+    [
+      40,
+      6,
+      0,
+      27,
+      1,
+      "IMAGE"
+    ],
+    [
+      41,
+      9,
+      0,
+      27,
+      2,
+      "STRING"
+    ],
+    [
+      42,
+      27,
+      0,
+      8,
+      1,
+      "IMAGE"
+    ]
+  ],
+  "groups": [
+    {
+      "id": 1,
+      "title": "The act's own paper, with the act taken off it",
+      "bounding": [
+        30,
+        -34,
+        1360,
+        330
+      ],
+      "color": "#3f789e",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 2,
+      "title": "The archivist's hand — Qwen-Image-Edit 2511",
+      "bounding": [
+        30,
+        396,
+        2150,
+        780
+      ],
+      "color": "#88A",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 3,
+      "title": "A document of our own",
+      "bounding": [
+        1820,
+        -34,
+        850,
+        560
+      ],
+      "color": "#8A8",
+      "font_size": 24,
+      "flags": {}
+    }
+  ],
+  "config": {},
+  "extra": {},
+  "version": 0.4
+}

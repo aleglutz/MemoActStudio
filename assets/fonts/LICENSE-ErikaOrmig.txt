@@ -1,0 +1,42 @@
+Erika Ormig
+===========
+
+File:      erika-ormig.regular.ttf
+Designer:  Peter Wiegel
+Source:    https://www.1001fonts.com/erika-ormig-font.html
+Download:  https://st.1001fonts.net/download/font/erika-ormig.regular.ttf
+Retrieved: 2026-08-28
+
+Licence:   Creative Commons Attribution-NoDerivatives (CC BY-ND)
+           Free for personal use. Free for commercial use.
+           Full terms: https://creativecommons.org/licenses/by-nd/4.0/
+
+Attribution required wherever the font travels:
+
+    Erika Ormig by Peter Wiegel, CC BY-ND.
+
+NoDerivatives is the clause to watch. Setting type with the font is use, not
+derivation, and printing a sheet with it is fine. Modifying the file is not:
+no subsetting, no re-hinting, no format conversion, no merging glyphs from
+another face. If a future step needs any of that -- a web build that subsets,
+say -- the font has to be replaced rather than cut down.
+
+This clears the project's licence bar: the non-negotiable in CLAUDE.md rules
+out NON-COMMERCIAL components for production, and CC BY-ND permits commercial
+use. Record it in SURVEY.md alongside every other adopted component.
+
+Why this face. Erika was the Seidel & Naumann typewriter, made in Dresden and
+standard in German offices through the 1940s -- the machine a Wehrmacht
+document of May 1945 was actually typed on. Special Elite, which the sheet used
+until now, is an American face drawn from typed impressions; it reads as
+"typewriter" but not as this typewriter.
+
+Metrics, measured rather than assumed, against Special Elite on the widest
+glyph -- which is how memoacts_core.page sets its point size:
+
+    Special Elite     cap height / advance = 1.017
+    Erika Ormig       cap height / advance = 1.005
+
+Within 1.2% of each other, so it is a drop-in: at the same `type_width` the
+capitals land at the same height and a line holds the same number of
+characters. No retuning of the layout is needed to switch.

@@ -1,0 +1,40 @@
+{
+  "_comment": "The act's own paper, with the act taken off it. Source is the signature page (1860x2560, 3.8% ink -- the emptiest of the four scans in sources/images, and the largest). big-lama fills the strokes marked by tools/paper_plate.py; Remacri takes the result to 7440x10240, which is exactly 4x and so exactly the scan's ratio, 1:1.3763. Nothing is resampled anywhere in this graph: the upscaler runs at its trained factor and the number it lands on is the sheet size render_page.py is told to use. Run tools/paper_plate.py first -- it writes input/plate_mask.png.",
+
+  "_vram": "big-lama sees 4.8 MP in one pass. If it OOMs on 24 GB, halve the scan to 930x1280 before LoadImage and change the upscale to two passes of Remacri (8x) rather than raising the tile count -- the plate has no detail finer than the scanner's grain, so the second pass costs nothing that matters.",
+
+  "_after": "python tools/render_page.py --page projects/legends_of_surrender/sources/hook_page_2.md --out projects/legends_of_surrender/sources/composites/hook_page.png --paper output/plate/act_paper_00001_.png --anchor \"M E M O A C T S\" --anchor pencil",
+
+  "scan": {
+    "class_type": "LoadImage",
+    "inputs": {"image": "GIoS_Wehrmacht_Signed_Ru.jpg"}
+  },
+  "mask": {
+    "class_type": "LoadImage",
+    "inputs": {"image": "plate_mask.png"}
+  },
+  "strip": {
+    "_comment": "White removes, black keeps. mask_threshold 250 with a small blur is the node's own dilation; paper_plate.py has already grown the mask by 3 px, so 3 here rather than the default 8 -- past about 12 px the halo of one line meets the halo of the next and a paragraph becomes one hole, which is the failure mode this whole approach exists to avoid.",
+    "class_type": "LamaRemoverIMG",
+    "inputs": {
+      "images": ["scan", 0],
+      "masks": ["mask", 0],
+      "mask_threshold": 250,
+      "gaussblur_radius": 3,
+      "invert_mask": false
+    }
+  },
+  "upscaler": {
+    "class_type": "UpscaleModelLoader",
+    "inputs": {"model_name": "4x_foolhardy_Remacri.safetensors"}
+  },
+  "plate": {
+    "_comment": "Remacri and not NMKD-Siax: Siax invents grain, and on a sheet whose whole claim is that its grain is the scanner's own, invented grain is the one thing that cannot be allowed in. Same choice, same reason, as docs/UPSCALE.md.",
+    "class_type": "ImageUpscaleWithModel",
+    "inputs": {"upscale_model": ["upscaler", 0], "image": ["strip", 0]}
+  },
+  "save": {
+    "class_type": "SaveImage",
+    "inputs": {"images": ["plate", 0], "filename_prefix": "plate/act_paper"}
+  }
+}

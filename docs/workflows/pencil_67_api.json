@@ -1,0 +1,86 @@
+{
+  "_comment": "Two numerals, and nothing else in this project is generated. The sheet's eleven hundred characters are typed by render_page.py because no local model sets that much text without inventing some of it; two digits against a reference of two digits is the other side of that line, and the reference is the act's own pencilled 10. Run tools/pencil_layer.py cut first -- it writes input/pencil_corner.png (where the number goes, cut from the finished plate) and input/pencil_ref.png (the hand to copy). Then tools/pencil_layer.py lift takes the difference and hands render_page.py a pigment layer with an alpha, so the mark ends up on the sheet's real grain rather than on the model's idea of paper.",
+
+  "_pencil": "The act's mark is a blue copying pencil, not the violet render_page.PENCIL draws: measured over the 815 pixels where blue runs 18 levels over red, it is (147,171,180) and (122,148,160) through the core, and it stands 3.83% of the sheet high -- 392 px on a 10240 sheet, which is the `size` for the pencil directive.",
+
+  "_verify": "Node names are the stock Qwen-Image-Edit set; load this in the UI once before trusting it in a batch. The two settings that matter: cfg 1.0 and 4 steps, because the Lightning LoRA is a 4-step distillation and anything above cfg 1 with it comes back scorched.",
+
+  "_reroll": "Change `seed`. Judge on the lift, not on the picture: pencil_layer.py prints what fraction of the crop changed, and a run that repaints the paper as well as writing on it shows up there as a number over 8% while looking fine to the eye.",
+
+  "unet": {
+    "class_type": "UNETLoader",
+    "inputs": {"unet_name": "qwen_image_edit_2511_fp8mixed.safetensors", "weight_dtype": "default"}
+  },
+  "lora": {
+    "class_type": "LoraLoaderModelOnly",
+    "inputs": {
+      "model": ["unet", 0],
+      "lora_name": "Qwen-Image-Edit-2511-Lightning-4steps-V1.0-bf16.safetensors",
+      "strength_model": 1.0
+    }
+  },
+  "clip": {
+    "class_type": "CLIPLoader",
+    "inputs": {"clip_name": "qwen_2.5_vl_7b_fp8_scaled.safetensors", "type": "qwen_image"}
+  },
+  "vae": {
+    "class_type": "VAELoader",
+    "inputs": {"vae_name": "qwen_image_vae.safetensors"}
+  },
+  "corner": {
+    "class_type": "LoadImage",
+    "inputs": {"image": "pencil_corner.png"}
+  },
+  "reference": {
+    "class_type": "LoadImage",
+    "inputs": {"image": "pencil_ref.png"}
+  },
+  "positive": {
+    "_comment": "The prompt describes the medium, not the look: indelible pencil is a pigment that dissolves where the hand pressed damp, which is why the act's 10 has a violet halo round a near-black core. Ask for the halo and the break and the model draws a mark; ask for 'handwritten number' and it draws a font.",
+    "class_type": "TextEncodeQwenImageEditPlus",
+    "inputs": {
+      "clip": ["clip", 0],
+      "vae": ["vae", 0],
+      "image1": ["corner", 0],
+      "image2": ["reference", 0],
+      "prompt": "Write the number 67 on the blank paper in image1, in the same blue copying pencil and the same hand as the number in image2: the same pale blue-grey pigment, soft and slightly translucent, laid down in a broad blunt stroke that breaks over the grain of the paper and is not continuous. The same pressure, the same slight rightward slant, the same size. Change nothing else: the paper, its tone, its creases and its grain stay exactly as they are."
+    }
+  },
+  "negative": {
+    "class_type": "TextEncodeQwenImageEditPlus",
+    "inputs": {
+      "clip": ["clip", 0],
+      "vae": ["vae", 0],
+      "image1": ["corner", 0],
+      "image2": ["reference", 0],
+      "prompt": "printed digits, typeface, ballpoint, felt tip, clean even stroke, outline, drop shadow, new paper texture, redrawn background"
+    }
+  },
+  "latent": {
+    "class_type": "VAEEncode",
+    "inputs": {"pixels": ["corner", 0], "vae": ["vae", 0]}
+  },
+  "sample": {
+    "class_type": "KSampler",
+    "inputs": {
+      "model": ["lora", 0],
+      "positive": ["positive", 0],
+      "negative": ["negative", 0],
+      "latent_image": ["latent", 0],
+      "seed": 8945,
+      "steps": 4,
+      "cfg": 1.0,
+      "sampler_name": "euler",
+      "scheduler": "simple",
+      "denoise": 1.0
+    }
+  },
+  "decode": {
+    "class_type": "VAEDecode",
+    "inputs": {"samples": ["sample", 0], "vae": ["vae", 0]}
+  },
+  "save": {
+    "class_type": "SaveImage",
+    "inputs": {"images": ["decode", 0], "filename_prefix": "pencil/67"}
+  }
+}

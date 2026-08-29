@@ -1,0 +1,329 @@
+{
+  "1": {
+    "class_type": "LoadImage",
+    "inputs": {
+      "image": "GIoS_Wehrmacht_Signed_Ru_p1.jpg",
+      "upload": "image"
+    }
+  },
+  "2": {
+    "class_type": "MemoActsPaperMask",
+    "inputs": {
+      "image": [
+        "1",
+        0
+      ],
+      "ink": 26.0,
+      "blue": 18.0,
+      "grow": 3,
+      "keep_border": 0.02,
+      "keep_left_from": 0.03,
+      "keep_left_to": 0.12
+    }
+  },
+  "3": {
+    "class_type": "LamaRemoverIMG",
+    "inputs": {
+      "images": [
+        "1",
+        0
+      ],
+      "masks": [
+        "2",
+        0
+      ],
+      "mask_threshold": 250,
+      "gaussblur_radius": 3,
+      "invert_mask": false
+    }
+  },
+  "4": {
+    "class_type": "UpscaleModelLoader",
+    "inputs": {
+      "model_name": "4x_foolhardy_Remacri.safetensors"
+    }
+  },
+  "5": {
+    "class_type": "ImageUpscaleWithModel",
+    "inputs": {
+      "upscale_model": [
+        "4",
+        0
+      ],
+      "image": [
+        "3",
+        0
+      ]
+    }
+  },
+  "9": {
+    "class_type": "MemoActsPageFile",
+    "inputs": {
+      "path": "projects/legends_of_surrender/sources/hook_page_2.md",
+      "plate": [
+        "5",
+        0
+      ],
+      "text": "",
+      "save": false,
+      "type_width": 0.014,
+      "line_pitch": 1.9,
+      "pencil_height": 0.038,
+      "pencil": "67",
+      "top": 0.13
+    }
+  },
+  "6": {
+    "class_type": "LoadImage",
+    "inputs": {
+      "image": "GIoS_Wehrmacht_Signed_Ru_p1.jpg",
+      "upload": "image"
+    }
+  },
+  "13": {
+    "class_type": "MemoActsPencilCrop",
+    "inputs": {
+      "plate": [
+        "5",
+        0
+      ],
+      "act": [
+        "6",
+        0
+      ],
+      "text": [
+        "9",
+        0
+      ],
+      "size": 1024,
+      "ref_x": 0.91,
+      "ref_y": 0.057,
+      "ref_span": 0.16,
+      "fit": "scale layout to plate"
+    }
+  },
+  "14": {
+    "class_type": "MemoActsPencilPrompt",
+    "inputs": {
+      "number": "67",
+      "hand": "the act's own — blue copying pencil",
+      "extra": "",
+      "negative": ""
+    }
+  },
+  "15": {
+    "class_type": "UNETLoader",
+    "inputs": {
+      "unet_name": "qwen_image_edit_2511_fp8mixed.safetensors",
+      "weight_dtype": "default"
+    }
+  },
+  "16": {
+    "class_type": "LoraLoaderModelOnly",
+    "inputs": {
+      "model": [
+        "15",
+        0
+      ],
+      "lora_name": "Qwen-Image-Edit-2511-Lightning-4steps-V1.0-bf16.safetensors",
+      "strength_model": 0.7
+    }
+  },
+  "17": {
+    "class_type": "CLIPLoader",
+    "inputs": {
+      "clip_name": "qwen_2.5_vl_7b_fp8_scaled.safetensors",
+      "type": "qwen_image",
+      "device": "default"
+    }
+  },
+  "18": {
+    "class_type": "VAELoader",
+    "inputs": {
+      "vae_name": "qwen_image_vae.safetensors"
+    }
+  },
+  "19": {
+    "class_type": "TextEncodeQwenImageEditPlus",
+    "inputs": {
+      "clip": [
+        "17",
+        0
+      ],
+      "prompt": [
+        "14",
+        0
+      ],
+      "vae": [
+        "18",
+        0
+      ],
+      "image1": [
+        "13",
+        0
+      ],
+      "image2": [
+        "13",
+        1
+      ]
+    }
+  },
+  "20": {
+    "class_type": "TextEncodeQwenImageEditPlus",
+    "inputs": {
+      "clip": [
+        "17",
+        0
+      ],
+      "prompt": [
+        "14",
+        1
+      ],
+      "vae": [
+        "18",
+        0
+      ],
+      "image1": [
+        "13",
+        0
+      ],
+      "image2": [
+        "13",
+        1
+      ]
+    }
+  },
+  "21": {
+    "class_type": "VAEEncode",
+    "inputs": {
+      "pixels": [
+        "13",
+        0
+      ],
+      "vae": [
+        "18",
+        0
+      ]
+    }
+  },
+  "22": {
+    "class_type": "KSampler",
+    "inputs": {
+      "model": [
+        "16",
+        0
+      ],
+      "seed": 8945,
+      "steps": 6,
+      "cfg": 1.0,
+      "sampler_name": "euler",
+      "scheduler": "simple",
+      "positive": [
+        "19",
+        0
+      ],
+      "negative": [
+        "20",
+        0
+      ],
+      "latent_image": [
+        "21",
+        0
+      ],
+      "denoise": 1.0
+    }
+  },
+  "23": {
+    "class_type": "VAEDecode",
+    "inputs": {
+      "samples": [
+        "22",
+        0
+      ],
+      "vae": [
+        "18",
+        0
+      ]
+    }
+  },
+  "24": {
+    "class_type": "PreviewImage",
+    "inputs": {
+      "images": [
+        "23",
+        0
+      ]
+    }
+  },
+  "8": {
+    "class_type": "MemoActsPencilLift",
+    "inputs": {
+      "before": [
+        "13",
+        0
+      ],
+      "after": [
+        "23",
+        0
+      ],
+      "floor": 22.0,
+      "gain": 90.0
+    }
+  },
+  "10": {
+    "class_type": "MemoActsTypePage",
+    "inputs": {
+      "text": [
+        "9",
+        0
+      ],
+      "plate": [
+        "5",
+        0
+      ],
+      "pencil": [
+        "28",
+        0
+      ],
+      "pencil_alpha": [
+        "28",
+        1
+      ],
+      "font": "SpecialElite-Regular.ttf",
+      "seed": 8945,
+      "anchors": "M E M O A C T S\npencil",
+      "fit": "scale layout to plate"
+    }
+  },
+  "11": {
+    "class_type": "SaveImage",
+    "inputs": {
+      "images": [
+        "10",
+        0
+      ],
+      "filename_prefix": "hook/page"
+    }
+  },
+  "28": {
+    "class_type": "MemoActsPencilGraft",
+    "inputs": {
+      "mark": [
+        "8",
+        0
+      ],
+      "alpha": [
+        "8",
+        1
+      ],
+      "reference": [
+        "13",
+        1
+      ],
+      "stroke": -2.0,
+      "grain": 1.0,
+      "seed": 8945,
+      "tone": 0.5
+    }
+  }
+}

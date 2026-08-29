@@ -15,6 +15,11 @@ The workflow is five nodes, left to right, and each is one sentence:
                         Shot Table ─→ Preview Shot     one shot, seconds
     Effect Preset ─→ Grade ─→ Grain ─→ … ─→ Apply Effects ─┘
 
+    Load Image ─→ Paper Mask ─→ (LaMa, upscale) ─→ Type Page ─→ Save Image
+    "the act"     "what on it   "the act's paper    "a document
+                   is not        without the act     of our own"
+                   paper"        on it"
+
                         Shot Table ─→ Sound Design ─→ SFX Bed ─┐
                         "this scene needs a sound"             ↓
                                                         Render Reel (sfx)
@@ -31,6 +36,10 @@ from .nodes_layers import (MemoActsApplyEffects, MemoActsEffectPreset,
                            MemoActsFrameOverlay, MemoActsGrade,
                            MemoActsGrain, MemoActsShake, MemoActsSharpen,
                            MemoActsTexture)
+from .nodes_page import (MemoActsPageFile, MemoActsPaperMask,
+                         MemoActsPencilCrop, MemoActsPencilGraft,
+                         MemoActsPencilLift, MemoActsPencilPrompt,
+                         MemoActsTypePage)
 from .nodes_project import MemoActsProject
 from .nodes_shot import MemoActsSetImage, MemoActsSetMotion, MemoActsShotTable
 from .nodes_subs import MemoActsSubtitles
@@ -69,6 +78,13 @@ class MemoActsExtension(ComfyExtension):
             MemoActsShake,
             MemoActsSharpen,
             MemoActsApplyEffects,
+            MemoActsPaperMask,
+            MemoActsPencilCrop,
+            MemoActsPencilPrompt,
+            MemoActsPencilLift,
+            MemoActsPencilGraft,
+            MemoActsPageFile,
+            MemoActsTypePage,
         ]
 
 
