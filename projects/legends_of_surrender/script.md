@@ -1,31 +1,41 @@
-# Signed After Midnight
+# 89
 
-> **HOOK** — S00, the cold open. It is read at the head of `voiceover.wav` but
-> not in `narration.wav`, so it is not a shot: the cues below are measured from
-> that file, and two blocks it does not contain would shift every one of them. It is spoken over the two holds
-> of `S00_hook.mp4`, the pencilled 67 and the enumeration.
-> "Six-seven is dead."
-> "Let's talk eight-nine."
 
-**0:00** — The 8th of May. And the 9th. Both mark the end of the war in Europe.
+**0:00** — Six-seven is dead.
 
-**0:06** — One long day here, in the former Wehrmacht engineers' school in Berlin-Karlshorst, opened a fork that still runs across Europe.
+**0:03** — Let's talk eight-nine.
 
-**0:14** — And today it runs deeper than it has in decades.
+**0:06** — The 8th of May. And the 9th. Both mark the end of the war in Europe.
+
+**0:10** — One long day here, in the former Wehrmacht engineers' school 
+
+**0:13** — in Berlin-Karlshorst, opened a fork that still runs across Europe.
+
+**0:16** — And today it runs deeper than it has in decades.
 
 **0:18** — So how did one delayed signature ceremony produce two legitimate dates?
 
 **0:23** — To answer that question we have to go to Reims, France. On the 7th of May.
 
-**0:30** — Here Colonel General Alfred Jodl signs the unconditional surrender of the Wehrmacht. The guns are to fall silent at 23:01 on the 8th.
+**0:30** — Here Colonel General Alfred Jodl signs the unconditional surrender of the Wehrmacht.
 
-**0:42** — But Jodl is a staff officer with no real power of command. And the British remember how the First World War ended — when German generals walked away from defeat.
+**0:36** — The guns are to fall silent at 23:01 on the 8th.
 
-**0:54** — So the Reims protocol demands a second signature. From the men who actually give orders.
+**0:42** — But Jodl is a staff officer with no real power of command. 
 
-**1:01** — Both place and time were fixed: Soviet High Command headquarters in Berlin-Karlshorst. The 8th of May, afternoon.
+**0:48** — And the British remember how the First World War ended — when German generals walked away from defeat.
 
-**1:09** — But in order to secure an immediate ceasefire, President Truman and Prime Minister Churchill announce the surrender before the ratification has happened.
+**0:54** — So the Reims protocol demands a second signature. 
+
+**0:58** — From the men who actually give orders.
+
+**1:01** — Both place and time were fixed: Soviet High Command headquarters in Karlshorst. 
+
+**1:06** — The 8th of May, afternoon.
+
+**1:09** — But in order to secure an immediate ceasefire, 
+
+**1:15** — President Truman and Prime Minister Churchill announce the surrender before the ratification has happened.
 
 **1:21** — While London and Washington begin celebrating, Karlshorst stalls.
 
