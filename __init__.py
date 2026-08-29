@@ -5,8 +5,13 @@ which `tools/` calls in the same order with the same arguments (SPEC §3). That
 is deliberate and load-bearing: the two used to be separate implementations of
 the same sequence, and they drifted.
 
-The workflow is five nodes, left to right, and each is one sentence:
+The reel is five nodes, left to right, and each is one sentence. The voice
+arrives from a workflow of its own, through the node that names a project into
+existence and puts the recording inside it:
 
+    (voice workflow) ─→ Set Narration ─┐
+    "as I want it heard"  "into my      │
+                           project"     ↓
     Project ─→ Align ─→ Shot Table ─→ Subtitles ─→ Render Reel
     "my material"  "my words   "I decide   "the words   "the reel
                     become      what is     become       is made"
@@ -40,7 +45,7 @@ from .nodes_page import (MemoActsPageFile, MemoActsPaperMask,
                          MemoActsPencilCrop, MemoActsPencilGraft,
                          MemoActsPencilLift, MemoActsPencilPrompt,
                          MemoActsTypePage)
-from .nodes_project import MemoActsProject
+from .nodes_project import MemoActsProject, MemoActsSetNarration
 from .nodes_shot import MemoActsSetImage, MemoActsSetMotion, MemoActsShotTable
 from .nodes_subs import MemoActsSubtitles
 
@@ -58,6 +63,7 @@ class MemoActsExtension(ComfyExtension):
     @override
     async def get_node_list(self) -> list[type[io.ComfyNode]]:
         return [
+            MemoActsSetNarration,
             MemoActsProject,
             MemoActsAlign,
             MemoActsShotTable,

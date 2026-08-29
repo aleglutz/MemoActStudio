@@ -159,6 +159,135 @@ class RenderResult:
     warnings: list[str] = field(default_factory=list)
 
 
+#: What a project is before anybody has put anything in it: four folders, the
+#: media folders inside one of them, and the two files a person fills in.
+#:
+#: Named once, here, because there are now two doors onto making one — the
+#: `POST /memoacts/project` route and the Set Narration node — and two lists of
+#: "what a project is" is one too many. "sources" is named alongside
+#: `MEDIA_DIRS` even though it prefixes all of them, so that a project with no
+#: pictures yet still has somewhere to put the recording.
+PROJECT_DIRS = ("sources", *MEDIA_DIRS, "generated", "out", "archive")
+
+
+def create_project(folder: Path) -> bool:
+    """Make an empty project. True if it was made, False if it already existed.
+
+    Idempotent, which is the whole difference between this and a wizard: the
+    Set Narration node calls it on every queue, and a second take must not be
+    an error. An existing folder is left exactly as it is.
+
+    Deliberately not a template with placeholder shots. An empty `script.md` is
+    honest about what has to happen next; a pretend one gets rendered by
+    accident and teaches nothing. `shots.csv` gets its header and no rows,
+    because the header is the format and rows would be somebody's guesses.
+    """
+    from .shotlist import ShotTable, write_table
+
+    if folder.is_dir():
+        return False
+    for d in PROJECT_DIRS:
+        (folder / d).mkdir(parents=True, exist_ok=True)
+    (folder / "script.md").write_text("", encoding="utf-8")
+    write_table(folder / "shots.csv", ShotTable())
+    return True
+
+
+@dataclass
+class NarrationWrite:
+    """What `set_narration` did, in the terms the report needs."""
+    path: Path
+    created: bool                   # the project folder was made just now
+    changed: bool                   # what is on disk is not what was there
+    seconds: float
+    channels: int
+    sample_rate: int
+    superseded: list[Path] = field(default_factory=list)
+    warnings: list[str] = field(default_factory=list)
+
+
+def set_narration(project: Path, data, sample_rate: int, *,
+                  create: bool = True) -> NarrationWrite:
+    """Put a recording into a project as `sources/narration.wav`.
+
+    This is the seam between the voice workflow and the reel, and it exists
+    because the alternative is a person dragging a file out of ComfyUI's output
+    folder into a project — a terminal's job done with a mouse, which is the
+    thing the interface is supposed to remove.
+
+    Three things it does that a plain save node cannot, each for a failure that
+    has actually happened here:
+
+    **It writes WAV and only WAV.** `find_narration` globs `narration.*` and
+    takes the first alphabetically, so a `narration.mp3` left in the folder
+    beats a `narration.wav` written after it, silently and for as long as both
+    exist. Every other `narration.*` beside it is moved into `archive/` —
+    moved, never deleted — and named in the report.
+
+    **It leaves the file alone when the samples are identical.** Alignment is
+    cached on this file's mtime, so a re-queued graph that rewrote the same
+    audio would cost ninety seconds of Whisper for nothing. That is also why
+    the comparison goes through a temporary file: what has to match is the
+    encoded form, not the array.
+
+    **It keeps the rate and the channel count it was given.** The sound-design
+    bed is resampled to 44.1 kHz stereo because it is being mixed; a narration
+    is muxed, not mixed, and the one thing this project asks of the voice is
+    that nothing happens to it that nobody asked for.
+    """
+    import numpy as np
+
+    created = create_project(project) if create else False
+    if not project.is_dir():
+        raise ProjectError(f"no such project folder: {project}")
+    for d in PROJECT_DIRS:          # an older project may predate a folder
+        (project / d).mkdir(parents=True, exist_ok=True)
+
+    arr = np.ascontiguousarray(np.asarray(data, dtype=np.float32))
+    if arr.ndim == 1:
+        arr = arr[None, :]
+    if arr.ndim != 2 or not arr.size:
+        raise ProjectError("the audio arrived with no samples in it")
+
+    path = project / "sources" / "narration.wav"
+    tmp = path.with_suffix(".wav.tmp")
+    sfxlib.write_wav(tmp, arr, int(sample_rate))
+    changed = not (path.exists() and path.read_bytes() == tmp.read_bytes())
+    if changed:
+        tmp.replace(path)
+    else:
+        tmp.unlink()
+
+    superseded: list[Path] = []
+    for other in sorted((project / "sources").glob("narration.*")):
+        if other == path:
+            continue
+        dest = project / "archive" / f"superseded_{other.name}"
+        n = 2
+        while dest.exists():
+            dest = (project / "archive"
+                    / f"superseded_{other.stem}_{n}{other.suffix}")
+            n += 1
+        other.replace(dest)
+        superseded.append(dest)
+
+    warnings: list[str] = []
+    # find_narration reads sources/ first, so one at the project root cannot win
+    # any more. But it is still a second recording in the project and somebody
+    # put it there on purpose: say so, do not move somebody's file for them.
+    stray = sorted(p.name for p in project.glob("narration.*") if p.is_file())
+    if stray:
+        warnings.append(
+            f"there is also {', '.join(stray)} in the project root; sources/ "
+            f"is read first, so it is dead weight now rather than a hazard")
+
+    return NarrationWrite(
+        path=path, created=created, changed=changed,
+        seconds=arr.shape[1] / float(sample_rate), channels=int(arr.shape[0]),
+        sample_rate=int(sample_rate), superseded=superseded,
+        warnings=warnings)
+
+
 def read_project(project: Path) -> ProjectRead:
     """Read the script, the media and the shot list. No model, no ffmpeg.
 

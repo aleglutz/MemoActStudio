@@ -63,10 +63,14 @@ student who has to drag a `.wav` out of `ComfyUI/output/` into
 `projects/<name>/sources/` is doing a terminal's work with a mouse, which is
 what `docs/INTERFACE_BRIEF.md` exists to forbid.
 
-Today there is exactly one missing seam: **nothing writes the narration into the
-project.** Workflow 1 ends in an `AUDIO` socket, and `SaveAudio` puts it in the
-wrong folder under the wrong name. That is item I below, and it is the only new
-node the three-workflow shape requires.
+There was exactly one missing seam, and it had two ends. Nothing wrote the
+narration into a project — workflow 1 ends in an `AUDIO`, and ComfyUI's save
+nodes sanitise `filename_prefix` so it cannot point outside `output/`. And
+nothing **made** a project either: the route existed, no button called it. Both
+came out as "carry a file by hand".
+
+`MemoActs — Set Narration` closes both, and it is the only new node the
+three-workflow shape required. Item I.
 
 ### 3. The script loses its timecodes
 
@@ -137,7 +141,10 @@ That is the whole safety argument for putting the sound workflow first, and it
 is why the order in this plan is the order and not a preference.
 
 The rule's other half — *never re-encoded avoidably* — survives as a design
-fact, described above: one AAC encode, at the end, on the deliverable.
+fact, described above: one AAC encode, at the end, on the deliverable. Item I
+adds the other half of that in practice: the voice reaches the project as 24-bit
+PCM at whatever rate it was authored in, never resampled and never re-encoded on
+the way.
 
 ---
 
@@ -145,16 +152,16 @@ fact, described above: one AAC encode, at the end, on the deliverable.
 
 Effort in working days on this machine.
 
-### L. Commit what is already built (hours) — **before anything else**
+### L. Commit what is already built — **DONE 2026-08-29**
 
-Eleven MemoActs nodes exist only as untracked files: `nodes_audio.py`,
-`nodes_page.py`, `memoacts_core/sfx.py`, `memoacts_core/page.py`, alongside
-edits to seven tracked files, `docs/SOUND_DESIGN.md` and two example workflows.
-Beside them sit `page.py.bak`, `.bak2`, `.bak3`, `__init__.py.bak`,
-`sound_design.json.bak` and five `.bak-*` of `hook_page_2.md`.
+Eleven MemoActs nodes existed only as untracked files, alongside seven more
+tools, the Sound Design frontend, ten archived graphs and a font — one bad
+`git checkout` from gone. Committed in four: sound, page, the "89" script
+rewrite, module03. Twenty `.bak` files deleted and the pattern added to
+`.gitignore`, so the next batch stays out of `git status` on its own.
 
-One bad `git checkout` and a fortnight is gone. Commit the work; delete the
-`.bak` files — that is what git is for.
+Both typewriter faces got their `SURVEY.md` rows in the process, which
+`LICENSE-ErikaOrmig.txt` had been asking for in writing.
 
 ### H. Bring the audio pack inside (≈0.5 d)
 
@@ -178,24 +185,56 @@ from not existing, and it will not be on machine A in September.
 Recorded in `docs/WORKSHOP_MACHINE_SETUP.md` §3.3: pedalboard is a compiled
 wheel. Check that it installs on the September image *before* the image is made.
 
-### I. The narration seam (≈0.5 d)
+### I. The door in — **BUILT 2026-08-29**
 
-One node, `MemoActs — Set Narration`: takes `AUDIO` and a project, writes
-`sources/narration.wav` as PCM, and outputs `PROJECT`, so workflow 1 ends where
-workflow 2 begins.
+The start of the pipeline had no door at either end, and it was one gap rather
+than two. A student could not **make a project** from the interface — the
+`POST /memoacts/project` route existed and no button called it — and could not
+**put the voice into one**, because the voice workflow ends in an `AUDIO` and
+ComfyUI's save nodes sanitise `filename_prefix` so it cannot point outside
+`output/`. Both ends came out as: carry a file by hand. That is a terminal's job
+done with a mouse, which `docs/INTERFACE_BRIEF.md` exists to forbid.
 
-Three things it must do, each because of a specific trap:
+**One node closes both.** `MemoActs — Set Narration` takes `AUDIO` and a name,
+creates the project if that name is new, writes `sources/narration.wav`, and
+outputs `PROJECT`. Naming the folder is not a decision a student thinks about
+separately from putting their voice in it, so it is not a separate node — it is
+the same sentence: *"my voice goes into my project."*
 
-1. **Write WAV, never MP3.** `find_narration` globs `narration.*` and returns
-   `sorted(...)[0]` — with both files present, `narration.mp3` wins silently.
-   The node should say so when it finds one, and offer to move it aside.
-2. **Report the length**, against the script's scene count, so "I saved the
-   wrong take" is caught here rather than 90 seconds into an alignment.
-3. **Not rewrite the file when nothing changed**, or it invalidates the
-   alignment cache for free — the exact hazard decision 1 splits the graphs to
-   avoid.
+`pipeline.create_project` holds what a project is; the route now calls it too,
+so there is one list of the folders and not two. The route keeps its one
+difference: it **refuses** a name that exists, because a route called "new" that
+hands back somebody else's project is how a student overwrites a neighbour on a
+shared machine. The node is idempotent instead, because it runs on every queue.
 
-Same item, same code path: `generated/mix.wav` as a render byproduct (§4).
+Four traps, each closed and each verified against a real filesystem:
+
+1. **WAV, never MP3.** `find_narration` globs `narration.*` and takes
+   `sorted(...)[0]`, so `narration.mp3` beats `narration.wav` silently and for
+   as long as both exist. Every other `narration.*` in `sources/` is **moved to
+   `archive/`** — moved, never deleted — and named in the report. One at the
+   project root is only warned about: `sources/` is read first so it cannot win,
+   and it is somebody's file.
+2. **The file is left alone when the samples match.** The encoded bytes are
+   compared through a temp file and the write is skipped, so a re-queued graph
+   does not touch the mtime that alignment is cached on. Verified: second run,
+   `st_mtime_ns` unchanged.
+3. **`fingerprint_inputs` is not `float("nan")`.** Always-run is the obvious
+   answer and the wrong one — this node feeds Align, and a node that always
+   re-runs re-runs everything downstream. It keys on the written file instead,
+   so an emptied folder re-runs and an unchanged one does not.
+4. **The rate and channel count survive.** Not `audio_to_numpy`, which forces
+   44.1 kHz stereo for the mix bed. Verified: 48 kHz stereo in, 48 kHz stereo
+   24-bit PCM out.
+
+The node also reports what is still missing — scenes in `script.md`, pictures in
+`sources/images/` — because it is the only step that knows the project is brand
+new, and therefore the only one that can say what to do next without guessing.
+
+**Still open in this item:** `generated/mix.wav` as a render byproduct (§4), and
+a button for the create-project route. The button matters much less now that the
+node makes projects; it is a nicety for someone who wants an empty project
+before they have recorded anything.
 
 ### J. The script without timecodes (≈0.5 d, mostly prose)
 
@@ -244,9 +283,12 @@ the rented hardware. Those three numbers decide the exercise project's length.
 
 ## Recommended order
 
-1. **L** — commit. Hours. Nothing below is safe until it is done.
+1. ~~**L** — commit.~~ **Done 2026-08-29.** Four commits, and the `.bak` files
+   are gone.
 2. **H** — the audio pack comes inside. 0.5 d. Blocks G.
-3. **I** — the narration seam. 0.5 d. Closes the shape.
+3. ~~**I** — the narration seam.~~ **Done 2026-08-29**, and it turned out to be
+   both ends of the same gap: the door in now makes the project as well as
+   filling it.
 4. **J** — the script format. 0.5 d.
 5. **K** — rebuild "89". 1 d, blocked on a recording that does not exist yet.
 6. **G** — machine A. 1 d, not code.

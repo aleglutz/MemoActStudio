@@ -98,7 +98,8 @@ The chain is already built and already numbered:
 | 9 | **Save** | writes the file |
 
 Work top to bottom. Listen after each change — the nodes preview audio, so you
-do not have to render anything to hear what you just did.
+do not have to render anything to hear what you just did. When it sounds right,
+go on to 1.1, which is the node that puts it into a project.
 
 **On speed.** Changing tempo here is fine and it is the only place it is fine.
 Everything after this listens to the *result*: the timings of every subtitle and
@@ -106,28 +107,40 @@ every cut are measured against the recording as it comes out of this graph. If
 you speed the voice up later, all of them are wrong. So: decide the pace here,
 then leave it.
 
-### ⚠ The one manual step in the whole process
+### 1.1 Set Narration — where your project begins
 
-**Save as WAV, not MP3.** Open the Save node and set the format.
+Add **MemoActs — Set Narration** at the end of the chain and wire the last
+audio node into it. You can delete the Save node, or leave it: what reaches the
+project is this one.
 
-Two reasons, and the second one bites silently:
+Type a name into **project**. If nothing under `projects/` has that name yet, it
+is made now — folders, an empty `script.md`, and a `shots.csv` with a header and
+no rows. If it exists, it is used as it stands.
 
-1. Your voice is compressed once, at the very end, when the reel is made. Saving
-   MP3 here compresses it twice for no gain.
-2. The reel looks for a file called `narration.<anything>` and takes the first
-   one alphabetically. **`narration.mp3` beats `narration.wav`.** If you save
-   both, or save MP3 today and WAV tomorrow, the old MP3 keeps winning and
-   nothing tells you.
+Press **Run**.
 
-Then **put the file in your project**: `projects/<your name>/sources/`, named
-`narration.wav`.
+**You should see** a report naming the folder, saying whether it was created,
+and giving the recording's length, channels and sample rate. Then a short list
+of what is still missing — your scenes, your pictures — because at this moment
+the project is empty and this is the only node that knows it.
 
-> This move is the seam that is not finished yet — a node should do it and does
-> not (`docs/PLAN.md`, item I). It is the first thing this crash test is meant
-> to prove is worth building. Note how it felt.
+Three things it is doing quietly, each worth knowing:
 
-**You should now have:** one file, `sources/narration.wav`, and no
-`narration.mp3` anywhere near it.
+- **It writes WAV and only WAV.** The reel looks for `narration.<anything>` and
+  takes the first alphabetically, so a stray `narration.mp3` would beat your
+  `narration.wav` silently and for as long as both existed. Any other
+  `narration.*` is **moved into `archive/`** — moved, never deleted — and named
+  in the report.
+- **It leaves the file alone if you Run again with the same audio.** Alignment
+  is remembered against this file; rewriting identical samples would throw that
+  away and cost you ninety seconds for nothing.
+- **It does not touch your voice.** The rate and channel count you recorded at
+  are the ones written, as 24-bit PCM. Nothing is resampled, nothing is
+  compressed. The one compression in the whole pipeline happens at the very end,
+  when the MP4 is made.
+
+**You should now have:** `projects/<your name>/sources/narration.wav`, and a
+folder tree ready for the rest.
 
 ---
 
@@ -247,13 +260,14 @@ ordinary sound to workflow 2. Nothing downstream can tell it was generated.
 
 ---
 
-## 4 · Rebuilding "89"
+## 4 · "89", from nothing
 
-The specific crash test. `projects/legends_of_surrender` is a finished reel whose
-script has been rewritten underneath it, so it exercises every step above
-against real material rather than a fixture.
+The specific crash test, and it is built from an empty folder on purpose: every
+hole this document has is a hole a student falls into, and reusing a project
+that already works would paper over exactly the steps that have never been
+walked.
 
-**Where it stands on 2026-08-29:**
+**Where the material stands on 2026-08-29:**
 
 - `script.md` was rewritten on the 26th: **20 blocks became 28 scenes**, and the
   opening hook — *"Six-seven is dead" / "Let's talk eight-nine"* — moved from a
@@ -265,20 +279,34 @@ against real material rather than a fixture.
   matches nothing, and four rows match a timecode while landing on a different
   line than the one they were written for.
 
+**The crash test does not reuse `legends_of_surrender`.** The point is to walk
+the pipeline from nothing, which is what a student does and what an existing
+folder full of working media would hide. The new project is **`89-in-comfy`**,
+and it starts empty.
+
 **So the order is:**
 
-1. Record the new read. Workflow 1. Save WAV into `sources/`.
-2. Convert `script.md` to `## S01` headings — while rebuilding, not after.
-3. Run Project and Align, and read the report. This is where the 28 scenes
+1. Record the new read, shape it in workflow 1, and end on **Set Narration**
+   with `89-in-comfy` in the project box. That call makes the folder.
+2. Write `script.md` with `## S01` headings — the 28 scenes, no timecodes.
+3. Put the pictures in `sources/images/`. They can be copied from
+   `legends_of_surrender`: the material is the same film, and this test is about
+   the pipeline, not about finding photographs twice.
+4. Run Project and Align, and read the report. This is where the 28 scenes
    become real.
-4. Rewrite `shots.csv` by scene number. Nineteen of the twenty existing rows
-   still name the right picture; they need the right row.
-5. Scenes 1 and 2 need media: either the existing hook clip cut in two, or the
+5. Fill in `shots.csv` by scene number, in the table widget. The old project's
+   rows are the reference for which picture goes where; they are not importable,
+   because they address rows by timecode and the timecodes are gone.
+6. Scenes 1 and 2 need media: either the existing hook clip cut in two, or the
    newly generated sheet.
-6. Render.
+7. Render.
 
 `assemble_reel` is no longer part of this. The hook is inside the reel now, and
 `out/reel.mp4` is the finished film.
+
+When it works, `legends_of_surrender` can be retired or rebuilt from what this
+one proved. Until then it stays exactly as it is — a finished reel and a
+reference for the edit.
 
 ---
 
@@ -288,7 +316,7 @@ against real material rather than a fixture.
 |---|---|
 | Fewer scenes than you wrote | a heading without its `##` |
 | A scene's words in the previous scene's subtitle | same thing |
-| The old recording's length in the Project report | `narration.mp3` is still there and beating `narration.wav` |
+| The old recording's length in the Project report | an old `narration.*` outside `sources/` — Set Narration reports any it moved aside |
 | Alignment runs every single time | something is rewriting the recording between runs |
 | A caption with a dark bar through it | a wrap — see 2.4 |
 | A picture visibly soft | it is being enlarged past its resolution; the media dropdown said so |
@@ -303,7 +331,7 @@ Fill this in while walking, not afterwards.
 | Step | What happened | What the document should have said |
 |---|---|---|
 | 1 · Voice | | |
-| 1 · saving into the project | | |
+| 1.1 Set Narration | | |
 | 2.1 Project | | |
 | 2.2 Align | | |
 | 2.3 Shot Table | | |

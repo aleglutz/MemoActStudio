@@ -31,7 +31,7 @@ except (ImportError, AttributeError):       # imported without a running server
 from .memoacts_core import effects as fx
 from .memoacts_core import sfx as sfxlib
 from .memoacts_core import shotlist
-from .memoacts_core.pipeline import ProjectError, read_project
+from .memoacts_core.pipeline import ProjectError, create_project, read_project
 from .memoacts_core.project import MEDIA_DIRS
 from .memoacts_core.schedule import (FOCUSABLE, PRESETS as MOTION_PRESETS,
                                      base_window, focus_limits)
@@ -331,12 +331,17 @@ async def save_script(request: web.Request) -> web.Response:
 
 
 @_ROUTES.post("/memoacts/project")
-async def create_project(request: web.Request) -> web.Response:
+async def new_project(request: web.Request) -> web.Response:
     """Make an empty project: four folders and the two files a person fills in.
 
-    Deliberately not a template with placeholder shots. An empty script is
-    honest about what has to happen next; a pretend one gets rendered by
-    accident and teaches nothing.
+    The folders and the two files are `pipeline.create_project`, which the Set
+    Narration node calls as well. This route used to spell them out itself, and
+    a second list of what a project is would have started disagreeing with the
+    first the day either grew a folder.
+
+    Unlike the node, this refuses a name that already exists. A route called
+    "new" that quietly hands back somebody else's project is how a student
+    overwrites a neighbour's work on a shared machine.
     """
     body = await request.json()
     name = (body.get("name") or "").strip()
@@ -345,8 +350,5 @@ async def create_project(request: web.Request) -> web.Response:
     folder = PROJECTS_DIR / name
     if folder.exists():
         raise web.HTTPBadRequest(reason=f"{name} already exists")
-    for d in ("sources", *MEDIA_DIRS, "generated", "out", "archive"):
-        (folder / d).mkdir(parents=True, exist_ok=True)
-    (folder / "script.md").write_text("", encoding="utf-8")
-    shotlist.write_table(folder / "shots.csv", shotlist.ShotTable())
+    create_project(folder)
     return web.json_response({"project": name, "path": str(folder)})
