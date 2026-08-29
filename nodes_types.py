@@ -43,6 +43,24 @@ Shots = io.Custom("MEMOACTS_SHOTS")
 #: writer, which is exactly how the pack drifted from the CLI before.
 Subs = io.Custom("MEMOACTS_SUBS")
 
+#: The sound design. Payload:
+#:   {"project_dir": str, "doc": <shots.json>, "csv": str,
+#:    "cues": [memoacts_core.sfx.Cue], "placed": [memoacts_core.sfx.Placed]}
+#:
+#: Both lists travel because they answer different questions: `cues` is what the
+#: table *says*, in file order, which is what the generator walks; `placed` is
+#: what it *means* against this shot table — when each sound starts, how long it
+#: runs, and whether the recording exists yet — which is what the mixer needs.
+SfxCues = io.Custom("MEMOACTS_SFX")
+
+#: One row of it, on its way through a text-to-audio graph. Payload is `SfxCues`
+#: plus {"cue": Cue, "seed": int, "seconds": float}.
+#:
+#: It exists so the generated audio comes back to the node that knows which row
+#: asked for it. Without it the save step would need its own copy of the index,
+#: and an index that is set in two places is an index that disagrees with itself.
+SfxCue = io.Custom("MEMOACTS_SFX_CUE")
+
 #: A `memoacts_core.effects.EffectStack`. Kept out of the shot table's `doc`
 #: because `doc` stays plain JSON (docs/SHOTS_SCHEMA.md) — effect stacks travel
 #: alongside it, in the payload's `effects` map keyed by shot id.

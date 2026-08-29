@@ -14,12 +14,18 @@ The workflow is five nodes, left to right, and each is one sentence:
 
                         Shot Table ─→ Preview Shot     one shot, seconds
     Effect Preset ─→ Grade ─→ Grain ─→ … ─→ Apply Effects ─┘
+
+                        Shot Table ─→ Sound Design ─→ SFX Bed ─┐
+                        "this scene needs a sound"             ↓
+                                                        Render Reel (sfx)
 """
 from typing_extensions import override
 
 from comfy_api.latest import ComfyExtension, io
 
 from .nodes_align import MemoActsAlign
+from .nodes_audio import (MemoActsSaveSfx, MemoActsSfxBed, MemoActsSfxPrompt,
+                          MemoActsSoundDesign)
 from .nodes_encode import MemoActsPreviewShot, MemoActsRenderReel
 from .nodes_layers import (MemoActsApplyEffects, MemoActsEffectPreset,
                            MemoActsFrameOverlay, MemoActsGrade,
@@ -51,6 +57,10 @@ class MemoActsExtension(ComfyExtension):
             MemoActsPreviewShot,
             MemoActsSetMotion,
             MemoActsSetImage,
+            MemoActsSoundDesign,
+            MemoActsSfxPrompt,
+            MemoActsSaveSfx,
+            MemoActsSfxBed,
             MemoActsEffectPreset,
             MemoActsGrade,
             MemoActsGrain,

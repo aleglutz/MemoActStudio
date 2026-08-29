@@ -36,6 +36,7 @@ from typing import Any
 
 from PIL import Image
 
+from . import sfx as sfxlib
 from . import subs
 from .align import Aligner, Span, StableTsAligner, proportional_spans
 from .effects import EffectStack, PRESETS, preset
@@ -113,6 +114,22 @@ class Composition:
 
 
 @dataclass
+class SoundDesign:
+    """The sound cues, typed and placed against a shot table.
+
+    `is_template` says the project had no `sfx.csv` and this is the starter one
+    — every row a comment. It matters because "nothing is planned yet" and "the
+    plan is empty" want different things said about them.
+    """
+    csv: Path
+    table: sfxlib.CueTable
+    cues: list[sfxlib.Cue]
+    placed: list[sfxlib.Placed]
+    is_template: bool = False
+    warnings: list[str] = field(default_factory=list)
+
+
+@dataclass
 class RenderOptions:
     """Everything `render_reel.py`'s flags decide, with the same defaults."""
     subs: bool = True
@@ -125,6 +142,8 @@ class RenderOptions:
     crf: int = 19
     on_upscale: str = "warn"
     effects: str = "none"                   # fallback for shots setting none
+    sfx: Path | None = None                 # the sound design layer, summed
+                                            # with the narration at the mux
 
 
 @dataclass
@@ -311,6 +330,78 @@ def compose_project(project: Path, read: ProjectRead, alignment: Alignment, *,
     return Composition(doc=doc, report=report, path=path, warnings=warnings)
 
 
+def read_sound_design(project: Path, doc: dict[str, Any], *,
+                      text: str | None = None,
+                      write: bool = False) -> SoundDesign:
+    """The sound design, from a typed-in table or from `sfx.csv`.
+
+    `text` is what somebody has in front of them — the Sound Design node's box —
+    and it wins over the file, which is the same rule the shot table follows.
+    Left as None the file is authoritative; if there is no file either, the
+    starter table stands in, and `write=True` puts it on disk so the next run
+    has something to read.
+
+    Nothing here is slow and nothing here decodes audio: this is the step that
+    has to be able to run on every keystroke.
+    """
+    path = project / "sfx.csv"
+    is_template = False
+    if text is not None and text.strip():
+        table = sfxlib.parse_text(text)
+        # The box wins on every column a person writes, and loses on the two
+        # the generator writes back into the file. Without this the seed of a
+        # take somebody liked survives exactly until the next run.
+        table = sfxlib.carry_generated(table, sfxlib.read_table(path))
+    else:
+        table = sfxlib.read_table(path)
+        if not table.rows:
+            table = sfxlib.template(doc)
+            is_template = True
+    if write:
+        sfxlib.write_table(path, table)
+
+    cues, warnings = sfxlib.cues_from_table(table)
+    placed, more = sfxlib.resolve(project, doc, cues)
+    return SoundDesign(csv=path, table=table, cues=cues, placed=placed,
+                       is_template=is_template, warnings=warnings + more)
+
+
+def build_sfx_bed(project: Path, doc: dict[str, Any], design: SoundDesign, *,
+                  master_db: float = 0.0, duck: bool = True,
+                  out: Path | None = None,
+                  progress: Progress = _noop) -> tuple[Path, list[str]]:
+    """Mix the sound design into one track the length of the reel.
+
+    The narration is opened read-only, to find where the voice is; the only
+    signal written is the sound effects layer (SPEC §5.6). The bed lands in
+    `generated/`, beside `shots.json`, because it is derived from files the
+    project already holds and can be thrown away and remade.
+    """
+    if not design.placed:
+        raise ProjectError("no sound cues to mix — sfx.csv has no live rows")
+    total = float(doc.get("duration_s") or 0.0)
+    if total <= 0:
+        raise ProjectError("the shot table carries no duration_s to mix against")
+
+    narration = None
+    if duck:
+        narration = project / doc.get("narration", "")
+        if not narration.exists():
+            narration = find_narration(project)
+
+    have = sum(1 for p in design.placed if p.path is not None)
+    progress("sfx", 0, 0,
+             f"mixing {have} of {len(design.placed)} sound(s) over "
+             f"{total:.2f}s" + (", ducked under the narration" if narration
+                                else ", no ducking"))
+    bed, notes = sfxlib.render_bed(design.placed, total, narration=narration,
+                                   master_db=master_db)
+    path = sfxlib.write_wav(out or project / "generated" / "sfx_bed.wav", bed)
+    for n in notes:
+        progress("sfx", 0, 0, f"  {n}")
+    return path, notes
+
+
 def _motion_for(index: int, pick: ResolvedShot) -> Motion:
     """The shot's motion: the rotating default, then whatever the table says."""
     mot = default_motion(index)
@@ -408,6 +499,14 @@ def render_project(project: Path, doc: dict[str, Any], *,
             if narration is None:
                 raise ProjectError(f"no narration.* in {project}")
 
+    sfx_bed = None if preview else opts.sfx
+    if sfx_bed is not None:
+        if not sfx_bed.exists():
+            raise ProjectError(f"no sound design at {sfx_bed}; build the bed "
+                               f"before rendering, or clear the option")
+        progress("render", 0, 0, f"sound design: {sfx_bed.name} mixed under "
+                                 f"the narration")
+
     ass = srt = None
     cues: list[subs.Cue] = []
     wrapped: list[str] = []
@@ -452,7 +551,7 @@ def render_project(project: Path, doc: dict[str, Any], *,
     with _warnings.catch_warnings(record=True) as caught:
         _warnings.simplefilter("always")
         render_reel(shots, out_path, fps, narration=narration, ass=ass,
-                    crf=opts.crf, out_w=out_w, out_h=out_h,
+                    sfx=sfx_bed, crf=opts.crf, out_w=out_w, out_h=out_h,
                     on_upscale=opts.on_upscale, on_frame=on_frame)
     warnings += [str(w.message) for w in caught]
 

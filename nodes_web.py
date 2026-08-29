@@ -29,6 +29,7 @@ except (ImportError, AttributeError):       # imported without a running server
     _ROUTES = web.RouteTableDef()
 
 from .memoacts_core import effects as fx
+from .memoacts_core import sfx as sfxlib
 from .memoacts_core import shotlist
 from .memoacts_core.pipeline import ProjectError, read_project
 from .memoacts_core.project import MEDIA_DIRS
@@ -280,6 +281,34 @@ async def thumb(request: web.Request) -> web.Response:
     image.save(buf, format="JPEG", quality=82)
     return web.Response(body=buf.getvalue(), content_type="image/jpeg",
                         headers={"Cache-Control": "no-cache"})
+
+
+@_ROUTES.get("/memoacts/sfx")
+async def sound_design(request: web.Request) -> web.Response:
+    """`sfx.csv` as text, for the box on the Sound Design node.
+
+    A project with no sound design yet gets the starter table rather than an
+    empty string — one commented row per shot, carrying what the shot says, so
+    the first thing a person sees is the format and their own script rather
+    than a blank field. `rows` tells the caller which of the two it received;
+    the two read identically and mean very different things.
+    """
+    folder = _project(request)
+    path = folder / "sfx.csv"
+    table = sfxlib.read_table(path)
+    rows = len(table.rows)
+    if not rows:
+        try:
+            read = read_project(folder)
+        except ProjectError as exc:
+            return web.json_response({"error": str(exc)}, status=400)
+        # The template needs shot ids and their text, which is what the script
+        # already carries — no alignment, so this stays instant.
+        table = sfxlib.template({"shots": [
+            {"id": i, "text": s.text}
+            for i, s in enumerate(read.script_shots, 1)]})
+    return web.json_response({"cues": sfxlib.to_text(table), "rows": rows,
+                              "path": str(path)})
 
 
 @_ROUTES.get("/memoacts/script")

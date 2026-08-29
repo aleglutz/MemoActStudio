@@ -19,6 +19,7 @@ from comfy_api.latest import io, ui
 
 from .memoacts_core.effects import COST, PRESETS
 from .memoacts_core.pipeline import RenderOptions, render_project
+from .nodes_audio import audio_to_numpy
 from .nodes_types import Effects, Shots, Subs
 
 #: How often a frame is pushed to the node's preview. Every frame would be a
@@ -97,6 +98,14 @@ class MemoActsRenderReel(io.ComfyNode):
                 Shots.Input("shots"),
                 Subs.Input("subtitles", optional=True),
                 Effects.Input("effects", optional=True),
+                io.Audio.Input(
+                    "sfx", optional=True,
+                    tooltip="The sound design layer, summed with the narration "
+                            "at the mux. Usually SFX Bed; any AUDIO works, so a "
+                            "track from a CC0 library loaded with Load Audio "
+                            "goes straight in. The narration itself is never "
+                            "touched.",
+                ),
                 io.String.Input("filename_prefix", default="memoacts/reel"),
                 io.Combo.Input(
                     "effect_preset", options=["none"] + sorted(set(PRESETS) - {"none"}),
@@ -124,9 +133,10 @@ class MemoActsRenderReel(io.ComfyNode):
 
     @classmethod
     def execute(cls, shots, filename_prefix, effect_preset, crf, on_upscale,
-                subtitles=None, effects=None):
+                subtitles=None, effects=None, sfx=None):
         out_path, subfolder = _output_path(filename_prefix)
         opts = _options(subtitles, effect_preset, crf, on_upscale)
+        opts.sfx = _sfx_file(Path(shots["project_dir"]), sfx)
         res = render_project(Path(shots["project_dir"]), shots["doc"],
                              out=out_path, opts=opts,
                              stacks=_stacks(shots, effects),
@@ -214,6 +224,21 @@ def _options(subtitles, effect_preset: str, crf: int,
             if field in subtitles:
                 setattr(opts, field, subtitles[field])
     return opts
+
+
+def _sfx_file(project: Path, audio) -> Path | None:
+    """The sound design as a file, because ffmpeg reads files and not tensors.
+
+    Written into `generated/`, which is the folder that exists to be deletable:
+    this is a re-derivable copy of whatever was wired in, kept only long enough
+    for the mux and left behind on purpose, so a mix that sounds wrong can be
+    listened to on its own afterwards.
+    """
+    if audio is None:
+        return None
+    from .memoacts_core.sfx import write_wav
+    return write_wav(project / "generated" / "sfx_render.wav",
+                     audio_to_numpy(audio))
 
 
 def _stacks(shots, effects):

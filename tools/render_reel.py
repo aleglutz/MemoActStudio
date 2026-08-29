@@ -31,6 +31,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from memoacts_core.effects import PRESETS  # noqa: E402
 from memoacts_core.pipeline import (ProjectError, RenderOptions,  # noqa: E402
+                                    build_sfx_bed, read_sound_design,
                                     render_project)
 
 
@@ -74,6 +75,16 @@ def main() -> int:
     ap.add_argument("--effects", default="none", choices=sorted(PRESETS),
                     help="effect preset for every shot that names none of its "
                          "own in shots.csv (SPEC §5.4)")
+    ap.add_argument("--sfx", action="store_true",
+                    help="build the sound design bed from <project>/sfx.csv "
+                         "and mix it under the narration (SPEC §5.6). The "
+                         "recording itself is never re-timed or re-levelled")
+    ap.add_argument("--sfx-gain", type=float, default=0.0,
+                    help="the whole sound layer up or down, in dB, after the "
+                         "per-row gains (default: 0)")
+    ap.add_argument("--no-duck", action="store_true",
+                    help="do not step the sounds back under the voice — how "
+                         "you hear the gains in sfx.csv on their own")
     ap.add_argument("--shot", type=int, action="append", default=None,
                     help="render only this shot, by number; repeatable. A "
                          "preview: no narration and no captions, because both "
@@ -87,11 +98,24 @@ def main() -> int:
         return 1
     doc = json.loads(shots_path.read_text(encoding="utf-8"))
 
+    bed = None
+    if args.sfx:
+        try:
+            design = read_sound_design(proj, doc)
+            bed, _ = build_sfx_bed(proj, doc, design,
+                                   master_db=args.sfx_gain,
+                                   duck=not args.no_duck, progress=printer)
+        except ProjectError as exc:
+            print(exc)
+            return 1
+        for w in design.warnings:
+            print(f"[MemoActs] {w}")
+
     opts = RenderOptions(subs=not args.no_subs, sub_size=args.sub_size,
                          segment=not args.no_segment, plate=args.plate,
                          labels=not args.no_labels, label_hold=args.label_hold,
                          crf=args.crf, on_upscale=args.on_upscale,
-                         effects=args.effects)
+                         effects=args.effects, sfx=bed)
     try:
         res = render_project(proj, doc, out=args.out, opts=opts,
                              shot_ids=args.shot, progress=printer)

@@ -1,0 +1,1463 @@
+{
+  "revision": 0,
+  "last_node_id": 32,
+  "last_link_id": 26,
+  "nodes": [
+    {
+      "id": 1,
+      "type": "MemoActsProject",
+      "pos": [
+        40,
+        40
+      ],
+      "size": [
+        300,
+        90
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "project",
+          "name": "project",
+          "type": "COMBO",
+          "link": null,
+          "widget": {
+            "name": "project"
+          }
+        },
+        {
+          "localized_name": "project_dir",
+          "name": "project_dir",
+          "type": "STRING",
+          "link": null,
+          "shape": 7,
+          "widget": {
+            "name": "project_dir"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "PROJECT",
+          "name": "PROJECT",
+          "type": "MEMOACTS_PROJECT",
+          "links": [
+            1
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "MemoActsProject"
+      },
+      "widgets_values": [
+        "demo_en",
+        ""
+      ],
+      "title": "1 · Project — this is my material"
+    },
+    {
+      "id": 2,
+      "type": "MemoActsAlign",
+      "pos": [
+        40,
+        190
+      ],
+      "size": [
+        300,
+        130
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "project",
+          "name": "project",
+          "type": "MEMOACTS_PROJECT",
+          "link": 1
+        },
+        {
+          "localized_name": "lang",
+          "name": "lang",
+          "type": "COMBO",
+          "link": null,
+          "widget": {
+            "name": "lang"
+          }
+        },
+        {
+          "localized_name": "model",
+          "name": "model",
+          "type": "COMBO",
+          "link": null,
+          "widget": {
+            "name": "model"
+          }
+        },
+        {
+          "localized_name": "skip_alignment",
+          "name": "skip_alignment",
+          "type": "BOOLEAN",
+          "link": null,
+          "widget": {
+            "name": "skip_alignment"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "ALIGNMENT",
+          "name": "ALIGNMENT",
+          "type": "MEMOACTS_ALIGNMENT",
+          "links": [
+            2
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "MemoActsAlign"
+      },
+      "widgets_values": [
+        "en",
+        "small",
+        false
+      ],
+      "title": "2 · Align — my words become timings"
+    },
+    {
+      "id": 3,
+      "type": "MemoActsShotTable",
+      "pos": [
+        40,
+        400
+      ],
+      "size": [
+        300,
+        460
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "alignment",
+          "name": "alignment",
+          "type": "MEMOACTS_ALIGNMENT",
+          "link": 2
+        },
+        {
+          "localized_name": "fps",
+          "name": "fps",
+          "type": "INT",
+          "link": null,
+          "widget": {
+            "name": "fps"
+          }
+        },
+        {
+          "localized_name": "shot_lead_ms",
+          "name": "shot_lead_ms",
+          "type": "INT",
+          "link": null,
+          "widget": {
+            "name": "shot_lead_ms"
+          }
+        },
+        {
+          "localized_name": "save",
+          "name": "save",
+          "type": "BOOLEAN",
+          "link": null,
+          "widget": {
+            "name": "save"
+          }
+        },
+        {
+          "localized_name": "max_chunk",
+          "name": "max_chunk",
+          "type": "INT",
+          "link": null,
+          "shape": 7,
+          "widget": {
+            "name": "max_chunk"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "SHOTS",
+          "name": "SHOTS",
+          "type": "MEMOACTS_SHOTS",
+          "links": [
+            3,
+            23,
+            24
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "MemoActsShotTable"
+      },
+      "widgets_values": [
+        30,
+        100,
+        true,
+        30
+      ],
+      "title": "3 · Shot Table — I decide what is seen"
+    },
+    {
+      "id": 10,
+      "type": "MemoActsSoundDesign",
+      "pos": [
+        420,
+        40
+      ],
+      "size": [
+        520,
+        420
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "shots",
+          "name": "shots",
+          "type": "MEMOACTS_SHOTS",
+          "link": 3
+        },
+        {
+          "localized_name": "cues",
+          "name": "cues",
+          "type": "STRING",
+          "link": null,
+          "widget": {
+            "name": "cues"
+          }
+        },
+        {
+          "localized_name": "save_to_csv",
+          "name": "save_to_csv",
+          "type": "BOOLEAN",
+          "link": null,
+          "widget": {
+            "name": "save_to_csv"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "SFX",
+          "name": "SFX",
+          "type": "MEMOACTS_SFX",
+          "links": [
+            4,
+            22
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "MemoActsSoundDesign"
+      },
+      "widgets_values": [
+        "shot,at,dur,gain,fade,duck,loop,file,seed,prompt,notes\n1,0,3,-16,0.1 0.8,8,,,,the pages of a large old book turning slowly one after another,\n2,-0.2,1.6,-9,0.01 0.9,10,,,,a heavy wooden door slams shut in a stone hallway,\n3,0,2.5,-13,0.05 0.5,9,,,,unhurried footsteps on a parquet floor in an empty museum hall,\n4,0,1.2,-11,0.01 0.4,10,,,,a mechanical camera shutter clicks and the film advances,\n,0:00,,-30,3 3,5,yes,,,quiet room tone of a large empty hall,ambience under the whole reel\n",
+        true
+      ],
+      "title": "4 · Sound Design — this scene needs a sound"
+    },
+    {
+      "id": 11,
+      "type": "MemoActsSfxPrompt",
+      "pos": [
+        420,
+        500
+      ],
+      "size": [
+        520,
+        380
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "design",
+          "name": "design",
+          "type": "MEMOACTS_SFX",
+          "link": 4
+        },
+        {
+          "localized_name": "index",
+          "name": "index",
+          "type": "INT",
+          "link": null,
+          "widget": {
+            "name": "index"
+          }
+        },
+        {
+          "localized_name": "seed",
+          "name": "seed",
+          "type": "INT",
+          "link": null,
+          "widget": {
+            "name": "seed"
+          }
+        },
+        {
+          "localized_name": "style",
+          "name": "style",
+          "type": "STRING",
+          "link": null,
+          "widget": {
+            "name": "style"
+          }
+        },
+        {
+          "localized_name": "negative",
+          "name": "negative",
+          "type": "STRING",
+          "link": null,
+          "widget": {
+            "name": "negative"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "positive",
+          "name": "positive",
+          "type": "STRING",
+          "links": [
+            5
+          ]
+        },
+        {
+          "localized_name": "negative",
+          "name": "negative",
+          "type": "STRING",
+          "links": [
+            6
+          ]
+        },
+        {
+          "localized_name": "seconds",
+          "name": "seconds",
+          "type": "FLOAT",
+          "links": [
+            7,
+            8
+          ]
+        },
+        {
+          "localized_name": "seed",
+          "name": "seed",
+          "type": "INT",
+          "links": [
+            9
+          ]
+        },
+        {
+          "localized_name": "CUE",
+          "name": "CUE",
+          "type": "MEMOACTS_SFX_CUE",
+          "links": [
+            10
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "MemoActsSfxPrompt"
+      },
+      "widgets_values": [
+        1,
+        "increment",
+        0,
+        "randomize",
+        "single sound effect, field recording, close mono source, dry, clean, no music, no speech",
+        "music, melody, singing, speech, voice, narration, hiss, hum, distortion, low quality, heavy reverb"
+      ],
+      "title": "5 · SFX Prompt — one row, handed to the model"
+    },
+    {
+      "id": 20,
+      "type": "CheckpointLoaderSimple",
+      "pos": [
+        1020,
+        40
+      ],
+      "size": [
+        360,
+        100
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "ckpt_name",
+          "name": "ckpt_name",
+          "type": "COMBO",
+          "link": null,
+          "widget": {
+            "name": "ckpt_name"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "MODEL",
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": [
+            15
+          ]
+        },
+        {
+          "localized_name": "CLIP",
+          "name": "CLIP",
+          "type": "CLIP",
+          "links": null
+        },
+        {
+          "localized_name": "VAE",
+          "name": "VAE",
+          "type": "VAE",
+          "links": [
+            20
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "CheckpointLoaderSimple"
+      },
+      "widgets_values": [
+        "stable-audio-open-1.0.safetensors"
+      ],
+      "title": "The audio model"
+    },
+    {
+      "id": 21,
+      "type": "CLIPLoader",
+      "pos": [
+        1020,
+        190
+      ],
+      "size": [
+        360,
+        110
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "clip_name",
+          "name": "clip_name",
+          "type": "COMBO",
+          "link": null,
+          "widget": {
+            "name": "clip_name"
+          }
+        },
+        {
+          "localized_name": "type",
+          "name": "type",
+          "type": "COMBO",
+          "link": null,
+          "widget": {
+            "name": "type"
+          }
+        },
+        {
+          "localized_name": "device",
+          "name": "device",
+          "type": "COMBO",
+          "link": null,
+          "shape": 7,
+          "widget": {
+            "name": "device"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "CLIP",
+          "name": "CLIP",
+          "type": "CLIP",
+          "links": [
+            11,
+            12
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "CLIPLoader"
+      },
+      "widgets_values": [
+        "t5_base.safetensors",
+        "stable_audio",
+        "default"
+      ],
+      "title": "Its text encoder"
+    },
+    {
+      "id": 22,
+      "type": "CLIPTextEncode",
+      "pos": [
+        1020,
+        330
+      ],
+      "size": [
+        360,
+        120
+      ],
+      "flags": {},
+      "order": 7,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "text",
+          "name": "text",
+          "type": "STRING",
+          "link": 5,
+          "widget": {
+            "name": "text"
+          }
+        },
+        {
+          "localized_name": "clip",
+          "name": "clip",
+          "type": "CLIP",
+          "link": 11
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "CONDITIONING",
+          "name": "CONDITIONING",
+          "type": "CONDITIONING",
+          "links": [
+            13
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "CLIPTextEncode"
+      },
+      "widgets_values": [
+        ""
+      ],
+      "title": "What the sound is"
+    },
+    {
+      "id": 23,
+      "type": "CLIPTextEncode",
+      "pos": [
+        1020,
+        490
+      ],
+      "size": [
+        360,
+        120
+      ],
+      "flags": {},
+      "order": 8,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "text",
+          "name": "text",
+          "type": "STRING",
+          "link": 6,
+          "widget": {
+            "name": "text"
+          }
+        },
+        {
+          "localized_name": "clip",
+          "name": "clip",
+          "type": "CLIP",
+          "link": 12
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "CONDITIONING",
+          "name": "CONDITIONING",
+          "type": "CONDITIONING",
+          "links": [
+            14
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "CLIPTextEncode"
+      },
+      "widgets_values": [
+        ""
+      ],
+      "title": "What it must not be"
+    },
+    {
+      "id": 24,
+      "type": "ConditioningStableAudio",
+      "pos": [
+        1020,
+        650
+      ],
+      "size": [
+        360,
+        110
+      ],
+      "flags": {},
+      "order": 9,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "positive",
+          "name": "positive",
+          "type": "CONDITIONING",
+          "link": 13
+        },
+        {
+          "localized_name": "negative",
+          "name": "negative",
+          "type": "CONDITIONING",
+          "link": 14
+        },
+        {
+          "localized_name": "seconds_start",
+          "name": "seconds_start",
+          "type": "FLOAT",
+          "link": null,
+          "widget": {
+            "name": "seconds_start"
+          }
+        },
+        {
+          "localized_name": "seconds_total",
+          "name": "seconds_total",
+          "type": "FLOAT",
+          "link": 7,
+          "widget": {
+            "name": "seconds_total"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "positive",
+          "name": "positive",
+          "type": "CONDITIONING",
+          "links": [
+            16
+          ]
+        },
+        {
+          "localized_name": "negative",
+          "name": "negative",
+          "type": "CONDITIONING",
+          "links": [
+            17
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ConditioningStableAudio"
+      },
+      "widgets_values": [
+        0.0,
+        3.0
+      ],
+      "title": "How long the model thinks it is"
+    },
+    {
+      "id": 25,
+      "type": "EmptyLatentAudio",
+      "pos": [
+        1020,
+        790
+      ],
+      "size": [
+        360,
+        90
+      ],
+      "flags": {},
+      "order": 10,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "seconds",
+          "name": "seconds",
+          "type": "FLOAT",
+          "link": 8,
+          "widget": {
+            "name": "seconds"
+          }
+        },
+        {
+          "localized_name": "batch_size",
+          "name": "batch_size",
+          "type": "INT",
+          "link": null,
+          "widget": {
+            "name": "batch_size"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "LATENT",
+          "name": "LATENT",
+          "type": "LATENT",
+          "links": [
+            18
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "EmptyLatentAudio"
+      },
+      "widgets_values": [
+        3.0,
+        1
+      ],
+      "title": "The silence it fills"
+    },
+    {
+      "id": 26,
+      "type": "KSampler",
+      "pos": [
+        1440,
+        40
+      ],
+      "size": [
+        320,
+        270
+      ],
+      "flags": {},
+      "order": 11,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "model",
+          "name": "model",
+          "type": "MODEL",
+          "link": 15
+        },
+        {
+          "localized_name": "seed",
+          "name": "seed",
+          "type": "INT",
+          "link": 9,
+          "widget": {
+            "name": "seed"
+          }
+        },
+        {
+          "localized_name": "steps",
+          "name": "steps",
+          "type": "INT",
+          "link": null,
+          "widget": {
+            "name": "steps"
+          }
+        },
+        {
+          "localized_name": "cfg",
+          "name": "cfg",
+          "type": "FLOAT",
+          "link": null,
+          "widget": {
+            "name": "cfg"
+          }
+        },
+        {
+          "localized_name": "sampler_name",
+          "name": "sampler_name",
+          "type": "COMBO",
+          "link": null,
+          "widget": {
+            "name": "sampler_name"
+          }
+        },
+        {
+          "localized_name": "scheduler",
+          "name": "scheduler",
+          "type": "COMBO",
+          "link": null,
+          "widget": {
+            "name": "scheduler"
+          }
+        },
+        {
+          "localized_name": "positive",
+          "name": "positive",
+          "type": "CONDITIONING",
+          "link": 16
+        },
+        {
+          "localized_name": "negative",
+          "name": "negative",
+          "type": "CONDITIONING",
+          "link": 17
+        },
+        {
+          "localized_name": "latent_image",
+          "name": "latent_image",
+          "type": "LATENT",
+          "link": 18
+        },
+        {
+          "localized_name": "denoise",
+          "name": "denoise",
+          "type": "FLOAT",
+          "link": null,
+          "widget": {
+            "name": "denoise"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "LATENT",
+          "name": "LATENT",
+          "type": "LATENT",
+          "links": [
+            19
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "KSampler"
+      },
+      "widgets_values": [
+        0,
+        "fixed",
+        50,
+        5.0,
+        "dpmpp_3m_sde_gpu",
+        "exponential",
+        1.0
+      ],
+      "title": "Generate"
+    },
+    {
+      "id": 27,
+      "type": "VAEDecodeAudio",
+      "pos": [
+        1440,
+        340
+      ],
+      "size": [
+        320,
+        60
+      ],
+      "flags": {},
+      "order": 12,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "samples",
+          "name": "samples",
+          "type": "LATENT",
+          "link": 19
+        },
+        {
+          "localized_name": "vae",
+          "name": "vae",
+          "type": "VAE",
+          "link": 20
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "AUDIO",
+          "name": "AUDIO",
+          "type": "AUDIO",
+          "links": [
+            21
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "VAEDecodeAudio"
+      },
+      "widgets_values": [],
+      "title": "Listen to it"
+    },
+    {
+      "id": 28,
+      "type": "MemoActsSaveSfx",
+      "pos": [
+        1440,
+        440
+      ],
+      "size": [
+        480,
+        220
+      ],
+      "flags": {},
+      "order": 13,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "audio",
+          "name": "audio",
+          "type": "AUDIO",
+          "link": 21
+        },
+        {
+          "localized_name": "cue",
+          "name": "cue",
+          "type": "MEMOACTS_SFX_CUE",
+          "link": 10
+        },
+        {
+          "localized_name": "peak_dbfs",
+          "name": "peak_dbfs",
+          "type": "FLOAT",
+          "link": null,
+          "widget": {
+            "name": "peak_dbfs"
+          }
+        },
+        {
+          "localized_name": "head_db_below_peak",
+          "name": "head_db_below_peak",
+          "type": "FLOAT",
+          "link": null,
+          "widget": {
+            "name": "head_db_below_peak"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "audio",
+          "name": "audio",
+          "type": "AUDIO",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "MemoActsSaveSfx"
+      },
+      "widgets_values": [
+        -1.0,
+        20.0
+      ],
+      "title": "6 · Save SFX — into the project, under the name the row asked for"
+    },
+    {
+      "id": 30,
+      "type": "MemoActsSfxBed",
+      "pos": [
+        2000,
+        440
+      ],
+      "size": [
+        460,
+        200
+      ],
+      "flags": {},
+      "order": 14,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "design",
+          "name": "design",
+          "type": "MEMOACTS_SFX",
+          "link": 22
+        },
+        {
+          "localized_name": "master_gain_db",
+          "name": "master_gain_db",
+          "type": "FLOAT",
+          "link": null,
+          "widget": {
+            "name": "master_gain_db"
+          }
+        },
+        {
+          "localized_name": "duck_under_voice",
+          "name": "duck_under_voice",
+          "type": "BOOLEAN",
+          "link": null,
+          "widget": {
+            "name": "duck_under_voice"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "sfx_bed",
+          "name": "sfx_bed",
+          "type": "AUDIO",
+          "links": [
+            26
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "MemoActsSfxBed"
+      },
+      "widgets_values": [
+        0.0,
+        true
+      ],
+      "title": "7 · SFX Bed — every sound, placed and mixed under the voice"
+    },
+    {
+      "id": 31,
+      "type": "MemoActsSubtitles",
+      "pos": [
+        2000,
+        40
+      ],
+      "size": [
+        340,
+        200
+      ],
+      "flags": {},
+      "order": 15,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "shots",
+          "name": "shots",
+          "type": "MEMOACTS_SHOTS",
+          "link": 23
+        },
+        {
+          "localized_name": "size",
+          "name": "size",
+          "type": "INT",
+          "link": null,
+          "widget": {
+            "name": "size"
+          }
+        },
+        {
+          "localized_name": "plate_opacity",
+          "name": "plate_opacity",
+          "type": "FLOAT",
+          "link": null,
+          "widget": {
+            "name": "plate_opacity"
+          }
+        },
+        {
+          "localized_name": "segment",
+          "name": "segment",
+          "type": "BOOLEAN",
+          "link": null,
+          "widget": {
+            "name": "segment"
+          }
+        },
+        {
+          "localized_name": "min_duration",
+          "name": "min_duration",
+          "type": "FLOAT",
+          "link": null,
+          "widget": {
+            "name": "min_duration"
+          }
+        },
+        {
+          "localized_name": "label_hold",
+          "name": "label_hold",
+          "type": "FLOAT",
+          "link": null,
+          "widget": {
+            "name": "label_hold"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "SUBS",
+          "name": "SUBS",
+          "type": "MEMOACTS_SUBS",
+          "links": [
+            25
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "MemoActsSubtitles"
+      },
+      "widgets_values": [
+        56,
+        0.68,
+        true,
+        1.0,
+        3.0
+      ],
+      "title": "8 · Subtitles — the words become captions"
+    },
+    {
+      "id": 32,
+      "type": "MemoActsRenderReel",
+      "pos": [
+        2000,
+        700
+      ],
+      "size": [
+        410,
+        220
+      ],
+      "flags": {},
+      "order": 16,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "shots",
+          "name": "shots",
+          "type": "MEMOACTS_SHOTS",
+          "link": 24
+        },
+        {
+          "localized_name": "filename_prefix",
+          "name": "filename_prefix",
+          "type": "STRING",
+          "link": null,
+          "widget": {
+            "name": "filename_prefix"
+          }
+        },
+        {
+          "localized_name": "effect_preset",
+          "name": "effect_preset",
+          "type": "COMBO",
+          "link": null,
+          "widget": {
+            "name": "effect_preset"
+          }
+        },
+        {
+          "localized_name": "crf",
+          "name": "crf",
+          "type": "INT",
+          "link": null,
+          "widget": {
+            "name": "crf"
+          }
+        },
+        {
+          "localized_name": "on_upscale",
+          "name": "on_upscale",
+          "type": "COMBO",
+          "link": null,
+          "widget": {
+            "name": "on_upscale"
+          }
+        },
+        {
+          "localized_name": "subtitles",
+          "name": "subtitles",
+          "type": "MEMOACTS_SUBS",
+          "link": 25,
+          "shape": 7
+        },
+        {
+          "localized_name": "effects",
+          "name": "effects",
+          "type": "MEMOACTS_EFFECTS",
+          "link": null,
+          "shape": 7
+        },
+        {
+          "localized_name": "sfx",
+          "name": "sfx",
+          "type": "AUDIO",
+          "link": 26,
+          "shape": 7
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "Node name for S&R": "MemoActsRenderReel"
+      },
+      "widgets_values": [
+        "memoacts/reel",
+        "none",
+        19,
+        "warn"
+      ],
+      "title": "9 · Render Reel — the reel is made, and now it is heard"
+    }
+  ],
+  "links": [
+    [
+      1,
+      1,
+      0,
+      2,
+      0,
+      "MEMOACTS_PROJECT"
+    ],
+    [
+      2,
+      2,
+      0,
+      3,
+      0,
+      "MEMOACTS_ALIGNMENT"
+    ],
+    [
+      3,
+      3,
+      0,
+      10,
+      0,
+      "MEMOACTS_SHOTS"
+    ],
+    [
+      4,
+      10,
+      0,
+      11,
+      0,
+      "MEMOACTS_SFX"
+    ],
+    [
+      5,
+      11,
+      0,
+      22,
+      0,
+      "STRING"
+    ],
+    [
+      6,
+      11,
+      1,
+      23,
+      0,
+      "STRING"
+    ],
+    [
+      7,
+      11,
+      2,
+      24,
+      3,
+      "FLOAT"
+    ],
+    [
+      8,
+      11,
+      2,
+      25,
+      0,
+      "FLOAT"
+    ],
+    [
+      9,
+      11,
+      3,
+      26,
+      1,
+      "INT"
+    ],
+    [
+      10,
+      11,
+      4,
+      28,
+      1,
+      "MEMOACTS_SFX_CUE"
+    ],
+    [
+      11,
+      21,
+      0,
+      22,
+      1,
+      "CLIP"
+    ],
+    [
+      12,
+      21,
+      0,
+      23,
+      1,
+      "CLIP"
+    ],
+    [
+      13,
+      22,
+      0,
+      24,
+      0,
+      "CONDITIONING"
+    ],
+    [
+      14,
+      23,
+      0,
+      24,
+      1,
+      "CONDITIONING"
+    ],
+    [
+      15,
+      20,
+      0,
+      26,
+      0,
+      "MODEL"
+    ],
+    [
+      16,
+      24,
+      0,
+      26,
+      6,
+      "CONDITIONING"
+    ],
+    [
+      17,
+      24,
+      1,
+      26,
+      7,
+      "CONDITIONING"
+    ],
+    [
+      18,
+      25,
+      0,
+      26,
+      8,
+      "LATENT"
+    ],
+    [
+      19,
+      26,
+      0,
+      27,
+      0,
+      "LATENT"
+    ],
+    [
+      20,
+      20,
+      2,
+      27,
+      1,
+      "VAE"
+    ],
+    [
+      21,
+      27,
+      0,
+      28,
+      0,
+      "AUDIO"
+    ],
+    [
+      22,
+      10,
+      0,
+      30,
+      0,
+      "MEMOACTS_SFX"
+    ],
+    [
+      23,
+      3,
+      0,
+      31,
+      0,
+      "MEMOACTS_SHOTS"
+    ],
+    [
+      24,
+      3,
+      0,
+      32,
+      0,
+      "MEMOACTS_SHOTS"
+    ],
+    [
+      25,
+      31,
+      0,
+      32,
+      5,
+      "MEMOACTS_SUBS"
+    ],
+    [
+      26,
+      30,
+      0,
+      32,
+      7,
+      "AUDIO"
+    ]
+  ],
+  "groups": [
+    {
+      "id": 1,
+      "title": "The reel, as it already was",
+      "bounding": [
+        30,
+        -34,
+        320,
+        904
+      ],
+      "color": "#3f789e",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 2,
+      "title": "Sound design — the table, and one row at a time",
+      "bounding": [
+        410,
+        -34,
+        540,
+        924
+      ],
+      "color": "#88A",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 3,
+      "title": "Any text-to-audio graph. Swap it and nothing else moves",
+      "bounding": [
+        1010,
+        -34,
+        920,
+        924
+      ],
+      "color": "#8A8",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 4,
+      "title": "Mixed, and muxed under an untouched voice",
+      "bounding": [
+        1990,
+        -34,
+        480,
+        964
+      ],
+      "color": "#A88",
+      "font_size": 24,
+      "flags": {}
+    }
+  ],
+  "config": {},
+  "extra": {},
+  "version": 0.4
+}

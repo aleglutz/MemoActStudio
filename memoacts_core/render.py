@@ -213,7 +213,7 @@ def _escape_filter_path(path: Path) -> str:
 def encode(frames: Iterable[Image.Image], out_path: Path, fps: int, *,
            narration: Path | None = None, ass: Path | None = None,
            fontsdir: Path | None = None, tune: str | None = None,
-           max_mbps: float | None = 12.0,
+           max_mbps: float | None = 12.0, sfx: Path | None = None,
            crf: int = 19, out_w: int = OUT_W, out_h: int = OUT_H) -> Path:
     """Stream frames into one ffmpeg process and write a finished MP4.
 
@@ -225,15 +225,28 @@ def encode(frames: Iterable[Image.Image], out_path: Path, fps: int, *,
     needs, never time-stretched (SPEC §5.6). `-shortest` is deliberately absent
     — narration is typically a few ms shorter than the frame-quantised video
     and it would drop the final frame.
+
+    `sfx` is the sound design layer (`memoacts_core.sfx`), summed with the
+    narration here rather than mixed into it upstream. That is the whole reason
+    it is a second input: the voice reaches this process as recorded, and the
+    single AAC encode the mux already performed is still the only one. `amix`
+    runs with `normalize=0` — its default divides every input by the number of
+    inputs, which would quietly drop the narration 6 dB the moment a sound
+    design existed.
     """
     if out_w % 2 or out_h % 2:
         raise ValueError(f"H.264 needs even dimensions, got {out_w}x{out_h}")
+    if sfx is not None and narration is None:
+        raise ValueError("a sound design without narration to mix it under; "
+                         "render the reel with its recording or without sfx")
 
     cmd = [ffmpeg_exe(), "-y",
            "-f", "rawvideo", "-pix_fmt", "rgb24",
            "-s", f"{out_w}x{out_h}", "-r", str(fps), "-i", "-"]
     if narration is not None:
         cmd += ["-i", str(narration)]
+    if sfx is not None:
+        cmd += ["-i", str(sfx)]
     if ass is not None:
         # Point libass at the font shipped with the project rather than a
         # system install, so a fresh machine renders identical captions with no
@@ -265,7 +278,15 @@ def encode(frames: Iterable[Image.Image], out_path: Path, fps: int, *,
         # preset silently produces a file no platform will accept.
         kbit = int(max_mbps * 1000)
         cmd += ["-maxrate", f"{kbit}k", "-bufsize", f"{kbit * 2}k"]
-    if narration is not None:
+    if narration is not None and sfx is not None:
+        # duration=first keeps the output as long as the narration, so a sound
+        # whose tail runs past the last word cannot lengthen the file and pull
+        # the video out of sync with it.
+        cmd += ["-filter_complex",
+                "[1:a][2:a]amix=inputs=2:duration=first:dropout_transition=0"
+                ":normalize=0[aout]",
+                "-map", "0:v", "-map", "[aout]", "-c:a", "aac", "-b:a", "192k"]
+    elif narration is not None:
         cmd += ["-map", "0:v", "-map", "1:a", "-c:a", "aac", "-b:a", "192k"]
     cmd += ["-movflags", "+faststart", str(out_path)]
 
@@ -311,6 +332,7 @@ def encode(frames: Iterable[Image.Image], out_path: Path, fps: int, *,
 def render_reel(shots: Iterable[ShotRender], out_path: Path, fps: int, *,
                 narration: Path | None = None, ass: Path | None = None,
                 fontsdir: Path | None = None, max_mbps: float | None = 12.0,
+                sfx: Path | None = None,
                 crf: int = 19, out_w: int = OUT_W, out_h: int = OUT_H,
                 on_upscale: str = "warn",
                 on_frame: Callable[[int, int, Image.Image], None] | None = None
@@ -335,7 +357,7 @@ def render_reel(shots: Iterable[ShotRender], out_path: Path, fps: int, *,
         frames = _counted(frames, sum(len(s.schedule.ws) for s in shots), on_frame)
     return encode(frames, out_path,
                   fps, narration=narration, ass=ass, fontsdir=fontsdir,
-                  tune=tune, max_mbps=max_mbps, crf=crf,
+                  tune=tune, max_mbps=max_mbps, sfx=sfx, crf=crf,
                   out_w=out_w, out_h=out_h)
 
 

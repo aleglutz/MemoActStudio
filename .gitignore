@@ -71,3 +71,13 @@ archive/script-framework.pdf
 # Module 03 screening page: the HTML is versioned, the re-encoded video is not.
 # `projects/module03/screening/REBUILD.md` regenerates media/ from out/.
 projects/module03/screening/media/
+
+# Hand-made backups. They pile up while a file is being worked on — nine of
+# them for one node module on 2026-08-28 — and none of them is history anybody
+# reads: git is. Left on disk, kept out of the repository and out of `git
+# status`, and safe to delete whenever the working copy is committed.
+*.bak
+*.bak[0-9]
+*.bak-*
+*.pregraft
+*.realpencil

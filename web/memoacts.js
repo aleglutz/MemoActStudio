@@ -97,7 +97,7 @@ const CSS = `
 `;
 
 /** Walk back along the wires until something knows which project this is. */
-function findProject(node) {
+export function findProject(node) {
   const seen = new Set();
   const walk = (n, depth) => {
     if (!n || depth > 8 || seen.has(n.id)) return null;

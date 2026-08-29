@@ -68,9 +68,9 @@ reverses SPEC §0's "`nodes_layers.py` is the designated first cut" the same way
 | `HARDENING.md` | Deferred portability items (much reduced — students are on Cloud, not local) |
 | `README.md` | The public front door: what this is, install, the five nodes. Written for a stranger arriving from GitHub |
 | `HANDOFF.md` | Where the last session stopped and what the next one does first. Rewritten, not appended to; superseded versions go to `archive/handoffs/` |
-| `docs/` | Working documents: `PLAN.md` (current task list), `WORKSHOP_HANDOUT.md` (what a September student is given), `CLI.md` (the author's terminal path, cold start to rendered reel), `P1_GRAPH.md` + `PARTICIPANT_GRAPH_RECIPE.md` (August intensive), `WORKSHOP_MACHINE_SETUP.md` (September), `SHOTS_SCHEMA.md`, `THREEBAND_TOOL.md`, `UPSCALE.md`, `EDITING.md`, `INTERFACE_BRIEF.md` (the brief for the student-facing interface — paste it to open that session) |
-| `example_workflows/` | `reel_stills.json` — the five-node graph a student opens. Load it in ComfyUI rather than reading it |
-| `web/` + `nodes_web.py` | The shot-table widget and the `/memoacts/` routes behind it |
+| `docs/` | Working documents: `PLAN.md` (current task list), `WORKSHOP_HANDOUT.md` (what a September student is given), `CLI.md` (the author's terminal path, cold start to rendered reel), `P1_GRAPH.md` + `PARTICIPANT_GRAPH_RECIPE.md` (August intensive), `WORKSHOP_MACHINE_SETUP.md` (September), `SHOTS_SCHEMA.md`, `THREEBAND_TOOL.md`, `UPSCALE.md`, `EDITING.md`, `INTERFACE_BRIEF.md` (the brief for the student-facing interface — paste it to open that session), `SOUND_DESIGN.md` (the SFX stage: `sfx.csv`, the four nodes, and why the narration is never touched) |
+| `example_workflows/` | `reel_stills.json` — the five-node graph a student opens; `sound_design.json` — the same graph with the SFX stage on the end. Load them in ComfyUI rather than reading them |
+| `web/` + `nodes_web.py` | The shot-table widget, the Sound Design buttons, and the `/memoacts/` routes behind them |
 | `archive/` | Superseded documents, kept for their reasoning. Not authoritative, not maintained — see `archive/README.md` |
 | `projects/legends_of_surrender/` | **The live project** — English reel "Signed After Midnight" for Museum Berlin-Karlshorst. Media is unversioned; `REBUILD.md` regenerates it |
 | `projects/demo_en/` | Working fixture (4 shots, 13.8 s) — pipeline mechanics only. Its stills are unversioned but are on disk, in `sources/images/` |
@@ -78,18 +78,21 @@ reverses SPEC §0's "`nodes_layers.py` is the designated first cut" the same way
 
 ## Project layout
 
-Every project is four folders and three files, and the boundary is drawn by
+Every project is four folders and four files, and the boundary is drawn by
 *what the edit can point at*, not by who made the file:
 
 ```
 projects/<name>/
   script.md     the text — ground truth
-  shots.csv     the edit decision
+  shots.csv     the edit decision: what is seen
+  sfx.csv       the sound design: what is heard under the voice
   REBUILD.md    how every generated file is remade
-  sources/      everything shots.csv may name: SOURCES.md, narration.wav,
-                images/ videos/ composites/ maps/ — a plate the tool drew and
-                a scan a person found are the same kind of thing to a shot
-  generated/    the compiler's own output, shots.json + report.txt. Deletable
+  sources/      everything shots.csv and sfx.csv may name: SOURCES.md,
+                narration.wav, images/ videos/ composites/ maps/ sfx/ — a plate
+                the tool drew and a scan a person found are the same kind of
+                thing to a shot, and so are a generated slam and a recorded one
+  generated/    the compiler's own output, shots.json + report.txt +
+                sfx_bed.wav. Deletable
   out/          the finished reel
   archive/      superseded, kept for its reasoning. Nothing is deleted from it
 ```
