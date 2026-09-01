@@ -41,9 +41,10 @@ from . import subs
 from .align import Aligner, Span, StableTsAligner, proportional_spans
 from .effects import EffectStack, PRESETS, preset
 from .normalize import normalize_block
-from .project import (MEDIA_DIRS, ScriptShot, apply_shot_lead, find_narration,
-                      list_images, parse_script_shots, resolve_media,
-                      resolve_shot_images, write_outputs)
+from .project import (MEDIA_DIRS, ScriptShot, apply_shot_lead,
+                      escaped_headings, find_narration, list_images,
+                      parse_script_shots, resolve_media, resolve_shot_images,
+                      write_outputs)
 from .render import ShotRender, render_reel
 from .schedule import FOCUSABLE, Motion, compute, default_motion, frames_for
 from .shotlist import ResolvedShot, apply_shot_list, read_shot_list
@@ -310,6 +311,19 @@ def read_project(project: Path) -> ProjectRead:
         raise ProjectError(f"{project / MEDIA_DIRS[0]} is empty")
 
     media, warnings = resolve_shot_images(script_shots, images)
+
+    # Said first, and said in full, because it is the one defect in a script
+    # that makes every number downstream wrong while looking like nothing.
+    escaped = escaped_headings(project / "script.md")
+    if escaped:
+        warnings.insert(0, (
+            f"script.md has {escaped} scene heading(s) written as '\\## S01' "
+            f"rather than '## S01'. A backslash there means 'not a heading', so "
+            f"none of them is one: the file is being read as "
+            f"{len(script_shots)} blank-line blocks instead of {escaped} scenes, "
+            f"and the heading lines themselves will be spoken and subtitled. "
+            f"Some editors add that backslash when text is pasted — delete it "
+            f"and run this again"))
 
     # shots.csv wins over the script's own [[refs]] and over cycling: it is the
     # edit decision, made after both.

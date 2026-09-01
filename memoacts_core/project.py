@@ -16,6 +16,17 @@ from .schedule import Motion, ShotSchedule
 #: A heading that names a shot: "### S14", "## S 3", "# s07".
 _SHOT_HEADING_RE = re.compile(r"^#{1,6}\s*S\s*(\d+)\b", re.IGNORECASE)
 
+#: A shot heading an editor has escaped out of existence: `\## S01`.
+#:
+#: Markdown says a backslash before a `#` means "a literal hash, not a heading",
+#: so the parser is *right* to obey it — and the result is catastrophic and
+#: silent. No headings are found, the file falls back to the plain layout, every
+#: blank-line block becomes a shot, and the heading lines themselves are aligned
+#: and burnt into subtitles as `\## S01`. Seen 2026-09-01: a 34-scene script
+#: pasted through an editor arrived with all 35 hashes escaped and parsed as 69
+#: shots. Nothing about the file looks wrong until you count.
+_ESCAPED_HEADING_RE = re.compile(r"^\\#{1,6}\s*S\s*\d+\b", re.IGNORECASE | re.M)
+
 #: An asset reference inside the storyboard: "[[Reims-Signing.jpg]]".
 _ASSET_REF_RE = re.compile(r"\[\[([^\]]+)\]\]")
 
@@ -145,6 +156,19 @@ def parse_script_shots(path: Path) -> list[ScriptShot]:
                 shots.append(shot)
 
     return shots
+
+
+def escaped_headings(path: Path) -> int:
+    """How many shot headings this script has escaped out of existence.
+
+    Non-zero means the file was meant to be a storyboard and is not being read
+    as one — see `_ESCAPED_HEADING_RE`. Cheap enough to run on every read: it is
+    one pass over a few kilobytes of text.
+    """
+    try:
+        return len(_ESCAPED_HEADING_RE.findall(path.read_text(encoding="utf-8")))
+    except OSError:
+        return 0
 
 
 def parse_script(path: Path) -> list[str]:
