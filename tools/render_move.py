@@ -69,6 +69,34 @@ OUT_W, OUT_H = 1080, 1920
 BED = (28, 32, 44)
 
 
+def parse_at(spec: str) -> tuple[float, float, float, float, int | None]:
+    """`t:fx,fy,s[,page]` -> a key that says *what to look at*.
+
+    `--key` places the sheet: `cx,cy` is where the page's own centre sits on the
+    frame. That is the right model for the renderer and the wrong one for a
+    person, who knows where the thing is on the page and wants it in the middle
+    of the shot. Naming a corner then means inverting the placement by hand,
+    which is arithmetic nobody should do twice:
+
+        cx = 0.5 - (fx - 0.5) * s * page_width / 1080
+
+    So `--at 0.0:0.891,0.045,0.75` reads "three quarters scale, the pencilled 67
+    in the centre of the frame". The two spellings mix freely in one path; this
+    one is converted once the page it refers to has been measured, which is why
+    it survives as far as `main` untouched.
+    """
+    t, fx, fy, s, page = parse_key(spec)
+    return t, fx, fy, s, page
+
+
+def look_at(fx: float, fy: float, s: float, size: tuple[int, int]
+            ) -> tuple[float, float]:
+    """Where to put the page's centre so that `(fx, fy)` lands on the frame's."""
+    w, h = size
+    return (0.5 - (fx - 0.5) * s * w / OUT_W,
+            0.5 - (fy - 0.5) * s * h / OUT_H)
+
+
 def parse_key(spec: str) -> tuple[float, float, float, float, int | None]:
     """`t:cx,cy,s[,page]` -> (t, cx, cy, s, page or None)."""
     try:
@@ -257,6 +285,11 @@ def main() -> int:
                     help="page, repeated; a key's fourth field selects one "
                          "(1-based) and switches to it at that instant")
     ap.add_argument("--name", required=True)
+    ap.add_argument("--at", action="append", default=[],
+                    metavar="T:FX,FY,S[,PAGE]",
+                    help="a key that names what to look at: FX,FY is a point "
+                         "on the page, put in the centre of the frame at scale "
+                         "S. Mixes with --key, which places the page instead")
     ap.add_argument("--key", action="append", default=[],
                     help="t:cx,cy,s[,page]; at least two, ordered by t")
     ap.add_argument("--turn", action="append", default=[],
@@ -290,16 +323,20 @@ def main() -> int:
 
     if not args.image:
         print("need at least one --image"); return 1
-    keys = sorted((parse_key(k) for k in args.key), key=lambda k: k[0])
+    # A sixth field rides along saying which spelling a key came from, so the
+    # `--at` ones can be inverted after the page they name has been measured.
+    keys = sorted([parse_key(k) + (False,) for k in args.key]
+                  + [parse_at(k) + (True,) for k in args.at],
+                  key=lambda k: k[0])
     if len(keys) < 2:
         print("need at least two keys"); return 1
     if keys[0][4] is None:
-        keys[0] = keys[0][:4] + (1,)
+        keys[0] = keys[0][:4] + (1,) + keys[0][5:]
     # Carry the page forward, so only the keys that change it name one.
     filled, page = [], keys[0][4]
     for k in keys:
         page = k[4] or page
-        filled.append(k[:4] + (page,))
+        filled.append(k[:4] + (page,) + k[5:])
     keys = filled
 
     turns = sorted((parse_turn(t) for t in args.turn), key=lambda t: t[0])
@@ -314,12 +351,25 @@ def main() -> int:
         for t0, t1, to in turns:
             if k[0] >= t1:
                 page = to
-        filled2.append(k[:4] + (page,))
+        filled2.append(k[:4] + (page,) + k[5:])
     keys = filled2
 
     pages = [load_source(resolve(args.project, name)) for name in args.image]
     for name, im in zip(args.image, pages):
         print(f"  page {name} {im.size[0]}x{im.size[1]}")
+    # Now the pages have been measured, so "look at this point" becomes "put
+    # the page here". Reported, because a key written one way and used the
+    # other is exactly the sort of thing worth being able to read back.
+    converted = []
+    for t, x, y, s, page, is_at in keys:
+        if is_at:
+            cx, cy = look_at(x, y, s, pages[page - 1].size)
+            print(f"  at t={t:.3f} ({x:.3f},{y:.3f}) of page {page} "
+                  f"-> key {cx:.4f},{cy:.4f},{s:g}")
+            x, y = cx, cy
+        converted.append((t, x, y, s, page))
+    keys = converted
+
     bed = parse_bed(args.bed)
     ease = ease_cosine if args.ease == "cosine" else (lambda t: t)
 
