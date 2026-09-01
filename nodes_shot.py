@@ -155,7 +155,12 @@ class MemoActsSetMotion(io.ComfyNode):
                 # about, which changing the direction of travel does not revise.
                 # Overwriting the dict wholesale would silently discard it.
                 s["motion"] = {"preset": preset, "rate": rate, "anchor": anchor,
-                               "focus": s.get("motion", {}).get("focus")}
+                               "focus": s.get("motion", {}).get("focus"),
+                               # Same reason as the focus: a path says what the
+                               # shot is about, and a change of direction does
+                               # not revise that. Overwriting the dict wholesale
+                               # would silently discard both.
+                               "path": s.get("motion", {}).get("path")}
         return io.NodeOutput(out)
 
 

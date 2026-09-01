@@ -460,7 +460,8 @@ def write_outputs(out_dir: Path, *, lang: str, fps: int, narration: str,
             # Motion accepts either.
             "motion": {"preset": mot.preset, "rate": mot.rate,
                        "anchor": mot.anchor,
-                       "focus": list(mot.focus) if mot.focus else None},
+                       "focus": list(mot.focus) if mot.focus else None,
+                       "path": [list(k) for k in mot.path] if mot.path else None},
             "clamped": sched.clamped, "max_zoom": round(sched.max_zoom, 2),
             # Burnt into the corner, so it is screen text and gets the same
             # treatment as the caption: written verbatim, never normalised.

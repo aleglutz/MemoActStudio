@@ -9,4 +9,4 @@ P2 role: the library behind the comfyui-memoacts node pack.
 #: 1.5 adds per-shot `effects`, the name of a preset from `effects.PRESETS`.
 #: Additive the same way: `null` on every shot a 1.4 file carries, which is
 #: what a shot with no look of its own means.
-SCHEMA_VERSION = "1.5"
+SCHEMA_VERSION = "1.6"

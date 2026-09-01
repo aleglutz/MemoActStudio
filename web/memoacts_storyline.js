@@ -109,6 +109,17 @@ const CSS = `
 .ma-note { font-size:10px; opacity:.7; margin-top:4px; }
 .ma-note.warn { color:#ffcc80; opacity:1; }
 .ma-note.bad { color:#ff8a80; opacity:1; }
+.ma-stops { margin-top:6px; display:flex; flex-direction:column; gap:2px; }
+.ma-stop { display:flex; align-items:center; gap:5px; font-size:10px;
+  padding:2px 4px; border-radius:3px; border:1px solid transparent;
+  cursor:pointer; }
+.ma-stop:hover { background:rgba(255,255,255,.05); }
+.ma-stop.sel { border-color:#8ab4f8; background:rgba(138,180,248,.12); }
+.ma-stop.bad { color:#ffcc80; }
+.ma-stop .n { opacity:.6; min-width:12px; }
+.ma-stop input { width:58px; font:inherit; font-size:10px; padding:1px 3px;
+  border-radius:3px; border:1px solid var(--border-color,#555);
+  background:var(--comfy-input-bg,#333); color:inherit; }
 .ma-bounds { display:flex; flex-wrap:wrap; gap:8px; margin-top:6px;
   padding-top:5px; border-top:1px dashed var(--border-color,#444); }
 .ma-link { border:none; background:none; color:#8ab4f8; cursor:pointer;
@@ -143,12 +154,23 @@ class StorylinePanel {
     this.host = null;
     this.overlay = null;
 
+    this.stopIndex = 0;
     this.picker = new FocusPicker({
       onCommit: (fit) => {
         const shot = this.selected();
         if (!shot) return;
-        this.model.setCell(shot, "focus",
-          `${fit.cx.toFixed(3)} ${fit.cy.toFixed(3)} ${fit.w.toFixed(3)}`);
+        // A rectangle means the selected stop when the scene has a move, and
+        // the focus when it does not. One gesture, and what it edits is
+        // whatever is on screen under it.
+        const stops = this.model.pathOf(shot);
+        if (stops.length) {
+          const i = Math.min(this.stopIndex, stops.length - 1);
+          stops[i] = { ...stops[i], cx: fit.cx, cy: fit.cy, w: fit.w };
+          this.setPath(shot, stops);
+        } else {
+          this.model.setCell(shot, "focus",
+            `${fit.cx.toFixed(3)} ${fit.cy.toFixed(3)} ${fit.w.toFixed(3)}`);
+        }
         this.drawScenes();
         this.drawDetail();
       },
@@ -359,7 +381,12 @@ class StorylinePanel {
         className: "ma-scene"
           + (shot.id === this.selectedId ? " sel" : "")
           + (this.model.dirty.has(shot.id) ? " edited" : ""),
-        onclick: () => { this.selectedId = shot.id; this.drawScenes(); this.drawDetail(); },
+        onclick: () => {
+          this.selectedId = shot.id;
+          this.stopIndex = 0;
+          this.drawScenes();
+          this.drawDetail();
+        },
       }, [
         el("div", { className: "ma-scene-head" }, head),
         el("div", { className: "ma-scene-body" }, [
@@ -376,8 +403,15 @@ class StorylinePanel {
     const shot = this.selected();
     if (!shot) { this.detail.replaceChildren(); return; }
     const media = this.model.mediaFor(shot);
-    const focus = this.model.focusOf(shot);
-    this.picker.show(this.model.thumbURL(this.model.shownName(shot)), media, focus);
+    const stops = this.model.pathOf(shot);
+    // The rectangle on screen is the selected stop when there is a move, so
+    // dragging always edits the thing being looked at.
+    const shown = stops.length
+      ? (() => { const k = stops[Math.min(this.stopIndex, stops.length - 1)];
+                 return [k.cx, k.cy, k.w]; })()
+      : this.model.focusOf(shot);
+    const focus = shown;
+    this.picker.show(this.model.thumbURL(this.model.shownName(shot)), media, shown);
 
     const rows = [];
     for (const f of FIELDS) {
@@ -459,6 +493,7 @@ class StorylinePanel {
     this.detail.replaceChildren(
       el("div", { className: "ma-note", textContent: shot.text || "(silent)" }),
       this.picker.root,
+      this.stops(shot),
       this.boundaries(shot),
       el("div", { className: "ma-fields" }, rows),
       ...notes);
@@ -466,6 +501,118 @@ class StorylinePanel {
     // image's box, and a detached image has none. Redrawing a scene whose
     // thumbnail is already cached fires no `load` event to do it later.
     this.picker.draw();
+  }
+
+  /**
+   * The stops of a move, when a scene wants more than one.
+   *
+   * A focus is one destination, which is one gesture. A path is several, which
+   * is a shot that *reads* something. The rectangle on the picture is the
+   * scale, where it sits is the stop, and the times between stops are the
+   * speed — two stops sharing a time hold still between them.
+   *
+   * The renderer crops inside the picture and cannot leave it, so a stop too
+   * near an edge is approached rather than centred. That is said here, per
+   * stop, because it is the one way a path quietly does something other than
+   * what it says. A corner genuinely in the middle of the frame needs a surface
+   * behind the paper, which is a composite.
+   */
+  stops(shot) {
+    const media = this.model.mediaFor(shot);
+    const list = this.model.pathOf(shot);
+    const box = el("div", { className: "ma-stops" });
+
+    if (!list.length) {
+      box.append(el("button", {
+        className: "ma-link",
+        textContent: media ? "make a move with stops" : "",
+        onclick: () => {
+          const f = this.model.focusOf(shot);
+          const w = f ? f[2] : Math.min(0.5, media.focus_max_w);
+          const start = f ? [f[0], f[1]] : [0.5, 0.35];
+          this.setPath(shot, [
+            { t: 0, cx: start[0], cy: start[1], w },
+            { t: 1, cx: 0.5, cy: 0.65, w },
+          ]);
+          this.stopIndex = 0;
+          this.drawDetail();
+        },
+      }));
+      return box;
+    }
+
+    box.append(el("div", { className: "ma-note",
+      textContent: "click a stop, then drag on the picture to place it" }));
+    list.forEach((k, i) => {
+      const unreachable = media && this.unreachable(media, k);
+      const time = el("input", {
+        type: "number", step: "0.01", min: "0", max: "1", value: String(k.t),
+        onchange: () => {
+          const next = this.model.pathOf(shot);
+          next[i].t = Math.min(Math.max(Number(time.value) || 0, 0), 1);
+          this.setPath(shot, next);
+          this.drawDetail();
+        },
+      });
+      box.append(el("div", {
+        className: "ma-stop" + (i === this.stopIndex ? " sel" : "")
+          + (unreachable ? " bad" : ""),
+        onclick: (e) => {
+          if (e.target.tagName === "INPUT" || e.target.tagName === "BUTTON") return;
+          this.stopIndex = i;
+          this.drawDetail();
+        },
+      }, [
+        el("span", { className: "n", textContent: `${i + 1}` }),
+        time,
+        el("span", { className: "grow",
+          textContent: `${k.cx.toFixed(3)}, ${k.cy.toFixed(3)} · ${k.w.toFixed(3)} wide`
+            + (unreachable ? " — too near the edge" : "") }),
+        el("button", {
+          className: "ma-link", textContent: "+",
+          title: "another stop just after this one, in the same place — a hold",
+          onclick: () => {
+            const next = this.model.pathOf(shot);
+            next.splice(i + 1, 0, { ...k, t: Math.min(1, k.t + 0.1) });
+            this.setPath(shot, next);
+            this.stopIndex = i + 1;
+            this.drawDetail();
+          },
+        }),
+        el("button", {
+          className: "ma-link", textContent: "×",
+          onclick: () => {
+            const next = this.model.pathOf(shot);
+            next.splice(i, 1);
+            // Below two stops it is not a path any more; the cell empties and
+            // the scene goes back to its preset rather than to a broken value.
+            this.setPath(shot, next.length >= 2 ? next : []);
+            this.stopIndex = 0;
+            this.drawDetail();
+          },
+        }),
+      ]));
+    });
+    box.append(el("button", {
+      className: "ma-link", textContent: "clear the move",
+      onclick: () => { this.setPath(shot, []); this.drawDetail(); },
+    }));
+    return box;
+  }
+
+  /** Whether a crop this wide can actually centre on this point. */
+  unreachable(media, k) {
+    const w = Math.min(Math.max(k.w, media.focus_min_w), media.focus_max_w);
+    const halfX = w / 2;
+    const halfY = (w * media.width * 16 / 9) / 2 / media.height;
+    return k.cx < halfX - 1e-6 || k.cx > 1 - halfX + 1e-6
+        || k.cy < halfY - 1e-6 || k.cy > 1 - halfY + 1e-6;
+  }
+
+  setPath(shot, stops) {
+    this.model.setCell(shot, "path",
+      stops.length >= 2 ? this.model.writePath(stops) : "");
+    this.drawScenes();
   }
 
   /**

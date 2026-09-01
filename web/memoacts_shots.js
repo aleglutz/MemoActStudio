@@ -197,6 +197,36 @@ export class ShotsModel {
     return nums.some(Number.isNaN) ? null : nums;
   }
 
+  /** The stops of a path, as `[{t, cx, cy, w}]`. Same grammar as `parse_path`. */
+  pathOf(shot) {
+    const cell = (shot.row.path || "").trim();
+    if (!cell) return [];
+    const out = [];
+    let w = null;
+    for (const token of cell.split(/\s+/)) {
+      const [head, rest] = [token.slice(0, token.indexOf(":")),
+                            token.slice(token.indexOf(":") + 1)];
+      if (!rest) return [];
+      const parts = rest.split(",").map(Number);
+      if (parts.length === 3) w = parts[2];
+      if (w === null || parts.some(Number.isNaN)) return [];
+      out.push({ t: Number(head), cx: parts[0], cy: parts[1], w });
+    }
+    return out.some((k) => Number.isNaN(k.t)) ? [] : out;
+  }
+
+  /** Back into the cell, dropping a width that repeats the one before it. */
+  writePath(stops) {
+    let last = null;
+    return stops.map(({ t, cx, cy, w }) => {
+      const head = `${Number(t.toFixed(4))}:${cx.toFixed(3)},${cy.toFixed(3)}`;
+      const cell = (last === null || Math.abs(w - last) > 1e-9)
+        ? `${head},${w.toFixed(3)}` : head;
+      last = w;
+      return cell;
+    }).join(" ");
+  }
+
   optionsFor(kind) {
     if (!this.data) return null;
     if (kind === "motion") {

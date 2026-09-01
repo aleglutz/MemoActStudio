@@ -32,6 +32,22 @@ class Motion:
     #: `rate` is unused when a focus is set. Pans ignore it (see `compute`).
     focus: tuple[float, float, float] | None = None
 
+    #: Several stops on one picture, as `(t, cx, cy, w)` with `t` a fraction of
+    #: the shot. A path wins over `preset`, `rate` and `focus` outright.
+    #:
+    #: A focus is one destination, which is one gesture; a path is a sequence of
+    #: them, which is a shot that *reads* something — the title of a sheet, then
+    #: the number pencilled in its corner, then the two numbers the film is
+    #: about. That could only be done by rendering a clip outside the pipeline
+    #: and assigning it as media, which cost a second encode and had to be
+    #: re-rendered by hand every time the scene changed length.
+    #:
+    #: Two keys with the same `t` are a hold: the window is still between them.
+    #: A key inherits `w` from the one before it when it does not say, so a move
+    #: at one scale — a sheet travelling under a fixed camera — is the short
+    #: thing to write and a zoom between stops is available when wanted.
+    path: list[tuple[float, float, float, float]] | None = None
+
 
 @dataclass
 class ShotSchedule:
@@ -46,6 +62,12 @@ class ShotSchedule:
     #: what every other preset does and what the renderer assumed outright
     #: before this existed. Width is always the full output width.
     dst_hs: list[int] = field(default_factory=list)
+
+    #: Stops on a `Motion.path` the window could not reach, as
+    #: `(stop, asked_cx, asked_cy, got_cx, got_cy)`. See `keyed`: a crop cannot
+    #: leave its source, so a point near an edge is approached, not centred.
+    unreachable: list[tuple[int, float, float, float, float]] = field(
+        default_factory=list)
 
     def csv(self) -> dict[str, str]:
         j = lambda v: ",".join(map(str, v))
@@ -128,6 +150,78 @@ def focus_limits(src_w: int, src_h: int, out_w: int = 1080,
     return min(float(out_w), w0) / src_w, w0 / src_w
 
 
+def keyed(src_w: int, src_h: int, n_frames: int,
+          path: list[tuple[float, float, float, float]],
+          out_w: int = 1080, aspect: float = ASPECT) -> ShotSchedule:
+    """Per-frame windows along a path of stops — `Motion.path`.
+
+    Deliberately built out of `focus_window` rather than beside it. Every stop
+    on a path is a focus, so the two ceilings apply to each of them and to every
+    frame between: a path can no more enlarge a source than a single focus can.
+    Writing the geometry twice is how the guard would come to mean two different
+    things.
+
+    Easing is per segment, so each leg starts and ends still. A path of two
+    keys is therefore the same shot a `focus` already gave, which is the
+    property that makes this a generalisation rather than a second mechanism.
+
+    **A stop too near an edge cannot be reached, and that is the boundary of
+    what this can do.** The window is a crop *inside* the source, so it slides
+    to stay there rather than showing what is not image: asking for a point 4.5 %
+    down a page centres on 22.7 % instead, because half the window is 1280 px
+    and the page has 773 px above the point. `unreachable` names those stops, so
+    the difference between what was asked and what will happen is said out loud
+    rather than discovered in the render. A corner genuinely in the middle of
+    the frame needs a surface behind the paper, which is `tools/render_move.py`
+    and a composite.
+    """
+    sched = ShotSchedule()
+    w0, _ = base_window(src_w, src_h, aspect)
+    sched.max_zoom = w0 / out_w
+    keys = sorted(path, key=lambda k: k[0])
+    if not keys:
+        keys = [(0.0, 0.5, 0.5, w0 / src_w)]
+    if len(keys) == 1:
+        keys = [keys[0], (1.0,) + tuple(keys[0][1:])]
+
+    for n, (_, cx, cy, wf) in enumerate(keys, 1):
+        w, h, cxp, cyp, _ = focus_window(
+            src_w, src_h, (cx, cy, wf), w0, out_w, aspect)
+        got_x = min(max(cxp - w / 2, 0), src_w - w) + w / 2
+        got_y = min(max(cyp - h / 2, 0), src_h - h) + h / 2
+        if abs(got_x - cxp) > 1 or abs(got_y - cyp) > 1:
+            sched.unreachable.append(
+                (n, cx, cy, got_x / src_w, got_y / src_h))
+
+    for i in range(n_frames):
+        t = i / max(n_frames - 1, 1)
+        # The segment this frame is in. A hold is two keys sharing a `t`; the
+        # zero-length span between them is skipped rather than divided by.
+        j = 0
+        while j < len(keys) - 2 and t >= keys[j + 1][0]:
+            j += 1
+        t0, cx0, cy0, w_0 = keys[j]
+        t1, cx1, cy1, w_1 = keys[j + 1]
+        span = t1 - t0
+        u = _ease(0.0 if span <= 0 else min(max((t - t0) / span, 0.0), 1.0))
+        cx = cx0 + (cx1 - cx0) * u
+        cy = cy0 + (cy1 - cy0) * u
+        wf = w_0 + (w_1 - w_0) * u
+
+        w, h, cxp, cyp, clamped = focus_window(
+            src_w, src_h, (cx, cy, wf), w0, out_w, aspect)
+        sched.clamped = sched.clamped or clamped
+        w_i = int(round(w / 2)) * 2
+        h_i = int(round(h / 2)) * 2
+        x_i = int(round(min(max(cxp - w / 2, 0), src_w - w_i)))
+        y_i = int(round(min(max(cyp - h / 2, 0), src_h - h_i)))
+        sched.ws.append(w_i)
+        sched.hs.append(h_i)
+        sched.xs.append(x_i)
+        sched.ys.append(y_i)
+    return sched
+
+
 def compute(src_w: int, src_h: int, n_frames: int, motion: Motion,
             out_w: int = 1080, aspect: float = ASPECT) -> ShotSchedule:
     """Per-frame crop rects. Resolution guard (SPEC §5.2): the crop window may
@@ -140,6 +234,9 @@ def compute(src_w: int, src_h: int, n_frames: int, motion: Motion,
     w0, h0 = base_window(src_w, src_h, aspect)
     sched = ShotSchedule()
     sched.max_zoom = w0 / out_w
+
+    if motion.path:
+        return keyed(src_w, src_h, n_frames, motion.path, out_w, aspect)
 
     rate = max(0.0, motion.rate)
     preset = motion.preset if motion.preset in PRESETS else "static"

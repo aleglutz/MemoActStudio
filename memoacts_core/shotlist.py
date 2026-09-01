@@ -10,7 +10,7 @@ Format — a header row, then one row per shot you want to say something about.
 Every column except `shot` is optional, blank cells mean "leave the default",
 and a row starting with `#` is a comment:
 
-    shot,media,in,motion,rate,anchor,speed,focus,label,credit,effects,notes
+    shot,media,in,motion,rate,anchor,speed,focus,path,label,credit,effects,notes
     1,Berlin.jpg,,zoom_in,0.05,,,,Berlin,archive_soft,opening
     0:21,MBK_KAPFILM_FINAL.mp4,2:14,static,,,0.4,,,,Tempelhof arrival in slow motion
     0:41,Reims-Signing.jpg,,zoom_in,,,,0.44 0.62 0.30,,,push in to the signature
@@ -34,6 +34,18 @@ and 62 % down, ending on the middle 30 % of the width". Separate with spaces,
 commas or slashes. `zoom_in` arrives there, `zoom_out` leaves from there,
 `static` holds it; the pans ignore it. It replaces `rate` rather than joining it
 — see `schedule.Motion.focus` for why a rate cannot reach a detail.
+
+`path` is several stops instead of one: `t:cx,cy[,w]` separated by spaces, where
+`t` is a fraction of the shot. It is what a `focus` cannot say — a shot that
+*reads* something, the title of a sheet and then the number in its corner. The
+width carries forward from the stop before it, so a move at one scale is short
+to write; two stops sharing a `t` hold still between them. A path replaces the
+preset, the rate and the focus outright.
+
+The window is a crop **inside** the picture and cannot leave it, so a stop too
+near an edge is approached rather than centred, and the shot report says which
+and where it landed. A corner genuinely in the middle of the frame needs a
+surface behind the paper: that is `tools/render_move.py`, and a composite.
 
 `shot` addresses the shot either by **number** (1-based, as in the shot report)
 or by the **cue timecode** written in the script. Cues are the safer handle:
@@ -85,6 +97,62 @@ def parse_focus(value: str) -> tuple[float, float, float] | str | None:
     return cx, cy, w
 
 
+def parse_path(value: str) -> list[tuple[float, float, float, float]] | str | None:
+    """`t:cx,cy[,w]` stops, whitespace-separated. A string back is the complaint.
+
+    Written the way the focus column is written, with a time in front:
+
+        0:0.281,0.137,0.35  0.14:0.281,0.137  0.44:0.891,0.045
+
+    `w` carries forward from the stop before it, because a move at one scale —
+    a sheet travelling under a fixed camera — is the ordinary case and should
+    not have to repeat itself. Two stops sharing a `t` are a hold.
+    """
+    value = (value or "").strip()
+    if not value:
+        return None
+    out: list[tuple[float, float, float, float]] = []
+    w = None
+    for token in value.split():
+        head, _, rest = token.partition(":")
+        if not rest:
+            return f"{token!r} has no time in front of it — write t:cx,cy[,w]"
+        parts = rest.split(",")
+        if len(parts) not in (2, 3):
+            return f"{token!r}: expected t:cx,cy or t:cx,cy,w"
+        try:
+            t = float(head)
+            cx, cy = float(parts[0]), float(parts[1])
+            if len(parts) == 3:
+                w = float(parts[2])
+        except ValueError:
+            return f"{token!r} is not numbers"
+        if w is None:
+            return f"{token!r}: the first stop has to say its width"
+        if not 0.0 <= t <= 1.0:
+            return f"{token!r}: t is a fraction of the shot, got {t}"
+        if not 0.0 < w <= 1.0:
+            return f"{token!r}: w is a fraction of the source width, got {w}"
+        out.append((t, cx, cy, w))
+    if len(out) < 2:
+        return "a path needs at least two stops; one stop is a focus"
+    return out
+
+
+def write_path(path: list[tuple[float, float, float, float]] | None) -> str:
+    """A path back into its cell, dropping a width that repeats the last one."""
+    if not path:
+        return ""
+    out, last = [], None
+    for t, cx, cy, w in path:
+        cell = f"{t:g}:{cx:.3f},{cy:.3f}"
+        if last is None or abs(w - last) > 1e-9:
+            cell += f",{w:.3f}"
+        last = w
+        out.append(cell)
+    return " ".join(out)
+
+
 def parse_timecode(value: str) -> float | None:
     """"2:14" -> 134.0, "1:02:33" -> 3753.0, "7.5" -> 7.5. Blank -> None."""
     value = (value or "").strip()
@@ -113,6 +181,7 @@ class ShotEdit:
     anchor: str = ""
     speed: float | None = None         # footage playback rate; 1.0 = as shot
     focus: str = ""                    # raw; parsed in apply_shot_list so a bad
+    path: str = ""                     # raw too, and for the same reason
     label: str = ""                    # value can warn with its row's key
     credit: str = ""                   # source line, held for the whole shot
     effects: str = ""
@@ -133,6 +202,7 @@ class ResolvedShot:
     anchor: str = ""
     speed: float | None = None
     focus: tuple[float, float, float] | None = None
+    path: list[tuple[float, float, float, float]] | None = None
     label: str = ""
     credit: str = ""
     effects: str = ""
@@ -145,7 +215,7 @@ class ResolvedShot:
 #: The columns `write_template` emits, and the order a file gets when the
 #: editor writes one from nothing. A file already on disk keeps its own header.
 COLUMNS = ("shot", "media", "in", "motion", "rate", "anchor", "speed",
-           "focus", "label", "credit", "effects", "notes")
+           "focus", "path", "label", "credit", "effects", "notes")
 
 
 @dataclass
@@ -319,6 +389,7 @@ def edits_from_table(table: ShotTable) -> list[ShotEdit]:
             motion=row.get("motion", ""),
             anchor=row.get("anchor", ""),
             focus=row.get("focus", ""),
+            path=row.get("path", ""),
             label=row.get("label", ""),
             credit=row.get("credit", ""),
             effects=row.get("effects", ""),
@@ -432,6 +503,16 @@ def apply_shot_list(shots: list[ScriptShot], edits: list[ShotEdit],
                             f"{focus}; ignored")
         elif focus is not None:
             target.focus = focus
+
+        path = parse_path(edit.path)
+        if isinstance(path, str):
+            warnings.append(f"shots.csv: shot {edit.key} path: {path}; ignored")
+        elif path is not None:
+            target.path = path
+            if focus is not None and not isinstance(focus, str):
+                warnings.append(
+                    f"shots.csv: shot {edit.key} has both a focus and a path; "
+                    f"the path wins, and the focus is its first stop")
 
         target.motion = edit.motion or target.motion
         target.rate = edit.rate if edit.rate is not None else target.rate

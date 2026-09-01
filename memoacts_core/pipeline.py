@@ -639,7 +639,20 @@ def compose_project(project: Path, read: ProjectRead, alignment: Alignment, *,
                     f"{mot.preset!r}, which traverses rather than arrives; "
                     f"focus ignored. Use one of {', '.join(FOCUSABLE)}.")
         motions.append(mot)
-        schedules.append(compute(src_w, src_h, nf, mot))
+        sched = compute(src_w, src_h, nf, mot)
+        # A stop a crop cannot reach is the one way a path quietly does
+        # something other than what it says. Named here, per stop, with the
+        # number it will actually land on, because "it looks slightly wrong" is
+        # not something anybody can act on three scenes later.
+        for stop, ax, ay, gx, gy in sched.unreachable:
+            warnings.append(
+                f"shot {i + 1} path stop {stop} asks for "
+                f"({ax:.3f}, {ay:.3f}), which is too near the edge of the "
+                f"picture for a window this wide; it lands on "
+                f"({gx:.3f}, {gy:.3f}). Widen the stop, move it inward, or "
+                f"build the move as a composite, which can show the surface "
+                f"behind the paper")
+        schedules.append(sched)
 
     # `write_outputs` is the only thing that knows the schema, so the table is
     # always built through it — even when the caller does not want it on disk,
@@ -746,6 +759,12 @@ def build_sfx_bed(project: Path, doc: dict[str, Any], design: SoundDesign, *,
 def _motion_for(index: int, pick: ResolvedShot) -> Motion:
     """The shot's motion: the rotating default, then whatever the table says."""
     mot = default_motion(index)
+    if pick.path:
+        # A path says everything a preset would have decided — where the window
+        # starts, where it goes and how wide it is at each stop — so nothing
+        # else on the row can still be true at the same time.
+        return Motion(preset="static", rate=mot.rate, anchor=mot.anchor,
+                      path=pick.path)
     if pick.motion:
         return Motion(preset=pick.motion,
                       rate=pick.rate if pick.rate is not None else mot.rate,

@@ -1,4 +1,4 @@
-# shots.json + crop CSV — prepared-inputs contract, schema 1.4
+# shots.json + crop CSV — prepared-inputs contract, schema 1.6
 
 **Frozen 2026-07-24.** This is the interface handed to participants (SPEC §4).
 Additive changes bump the minor version; anything that breaks an existing
@@ -18,6 +18,19 @@ Additive: an empty string is the absence of one, which is how a 1.2 file reads.
 
 **1.4 (2026-08-11)** adds `media_in` and `speed` for video fragments. Additive:
 both are `null` for a still, which is every shot in a 1.3 file.
+
+**1.6 (2026-09-01)** adds `motion.path`: several stops on one picture, as
+`[t, cx, cy, w]` with `t` a fraction of the shot. It is the generalisation of
+`motion.focus` — a focus is one destination, a path is a sequence of them — and
+it exists because a shot that *reads* a document could previously only be made
+by rendering a clip outside the pipeline and assigning it as media, at the cost
+of a second encode and a frame count that had to be kept in step by hand.
+
+`null` where there is none, which every reader before 1.6 already tolerates
+because `Motion(**shot["motion"])` fills it from the field's own default. A path
+present overrides `preset`, `rate` and `focus`. The window is still a crop
+inside the source, so a stop nearer an edge than half the window is approached
+rather than reached, and the report says so per stop.
 
 **1.5 (2026-08-21)** adds `effects`, the shot's own look by preset name. It is
 the `effects` column of `shots.csv`, which until now was parsed and then thrown
