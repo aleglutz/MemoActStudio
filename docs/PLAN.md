@@ -271,6 +271,53 @@ museum wall.
 5. `assemble_reel.py` leaves the path. The hook is inside the reel now, and
    `out/reel.mp4` is the finished film.
 
+### M. The storyline panel — **BUILT 2026-09-01**
+
+The editor was a `<table>` inside the Shot Table node, and 34 scenes against 20
+pictures broke it two ways. It had **no time in it** — `/memoacts/shots` calls
+`read_project`, which never touches the aligner, so every row was the same
+height whether the scene ran 1.4 s or 8 s and the rhythm of the film was
+invisible. And pictures were chosen from a **dropdown of filenames**, with one
+thumbnail on screen for drawing the focus rectangle on: assigning 34 scenes
+meant already knowing what each filename looked like.
+
+`web/memoacts_storyline.js` is a sidebar tab. Scenes stack in spoken order with
+a duration bar each; the pictures are a shelf above them; **click a scene, then
+click a picture.** Expand puts the same panel full screen for laying a whole
+reel out at once. Two marks fell out of the rebuild almost free and close two
+more holes: **auto**, for a scene whose picture nobody chose — the cycled
+default is how a scene reaches the render unlooked-at — and **same as
+previous**, for the cut that does not cut.
+
+The bars come from `generated/shots.json`, which already held `t_start`,
+`t_end` and `n_frames`: one file read, no aligner. **The guard on it is the
+load-bearing part.** A `shots.json` from a different script would draw
+confident, wrong bars, and both live projects were in exactly that state — so
+the timing is attached only when the file has the same number of scenes *and*
+the same words in each. Otherwise the panel says why there are none.
+
+What was underneath the table — `load` / `persist`, the focus picker, the option
+lists — moved unchanged into `web/memoacts_shots.js`. `web/memoacts.js` is gone,
+the node has no widget, and it keeps the job it actually does: compiling the
+table and printing the report.
+
+**Not in scope, decided with it:** media below the scene. A change inside a
+scene is a composite, as `S12_ru_page_move.mp4` already is, not a third level in
+`shots.json`.
+
+### N. The escaped-heading guard — **BUILT 2026-09-01, found by the crash test**
+
+`89-in-comfy`'s `script.md` arrived with every `## S01` written `\## S01` — an
+editor escaping the hashes on paste. Markdown says a backslash there means "a
+literal hash, not a heading", so the parser was right to obey, and the result is
+silent and total: no headings, the plain layout, 34 scenes read as **69 blocks**,
+and the heading lines themselves aligned and burnt into subtitles. Nothing about
+the file looks wrong until you count.
+
+`project.escaped_headings()` counts them and `read_project` puts it first among
+the warnings, in words that say what to do. This is the crash test working as
+intended: the hole was found by walking the path, not by reasoning about it.
+
 ### G. Machine A, and the numbers (≈1 d + owner time) — carried unchanged
 
 Verbatim from the last plan, still true, still next among the non-code work:
@@ -289,18 +336,12 @@ the rented hardware. Those three numbers decide the exercise project's length.
 3. ~~**I** — the narration seam.~~ **Done 2026-08-29**, and it turned out to be
    both ends of the same gap: the door in now makes the project as well as
    filling it.
-4. **J** — the script format. 0.5 d.
+4. **J** — the script format. 0.5 d. **N is done**, which is the half of it
+   that had teeth.
 5. **K** — rebuild "89". 1 d, blocked on a recording that does not exist yet.
 6. **G** — machine A. 1 d, not code.
 
 ## What this plan does not touch
-
-**Per-scene work** — deciding what a single scene looks like, on the example of
-the opening hook over the newly generated sheet. That is the next conversation,
-and it is deliberately left undecided here: the real question is whether
-workflow 3's output reaches one scene as media, as an effect stack, or as a
-composite, and it should be answered against a real scene rather than in the
-abstract.
 
 The August intensive (`docs/P1_GRAPH.md`, `projects/module03/`,
 `tools/run_p1_local.py`) is untouched by every item above, as before.

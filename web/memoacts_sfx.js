@@ -15,7 +15,7 @@
  * the server, in `memoacts_core.sfx`, where the CLI can reach them too.
  */
 import { app } from "../../scripts/app.js";
-import { findProject } from "./memoacts.js";
+import { findProject } from "./memoacts_shots.js";
 
 const CSS = `
 .memoacts-sfx-bar { display:flex; gap:6px; align-items:center;

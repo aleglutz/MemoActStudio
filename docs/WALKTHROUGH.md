@@ -38,6 +38,12 @@ One long day here opened a fork that still runs across Europe.
 - **The `##` is not decoration.** A bare line `s01` is not a heading. The tool
   will not see a new scene, will glue the text onto the scene before it, and the
   words will end up spoken by nobody and burnt into somebody else's subtitle.
+- **And watch for `\## S01`.** Some editors add a backslash before a `#` when
+  text is pasted into them. In markdown that means "a literal hash, not a
+  heading", so the tool obeys it and none of your scenes exist: a 34-scene
+  script arrives as 69 blocks and the heading lines get spoken. It has happened
+  once already. The Project node now says so in plain words — but the fix is
+  yours, and it is to delete the backslashes.
 - **A heading with nothing under it is legal** — `## S03` above. That is a
   silent scene: it holds screen time and the alignment fills it from the pause.
 - **Numbers and dates are written as you say them.** They are never transcribed,
@@ -176,31 +182,61 @@ subtitles come out as you wrote them, dates and names included.
 again only if you change the script or the recording, so everything below is
 free.
 
-### 2.3 Shot Table — "I decide what is seen"
+### 2.3 Storyline — "I decide what is seen"
 
-The node draws a table: one row per scene.
+This one is not on the canvas. Open the **Storyline** tab in ComfyUI's left
+sidebar (the pictures icon) and choose your project at the top — it opens on
+whatever the graph is about.
 
-| Column | Decides |
+The panel is your scenes, stacked in the order they are spoken, and a shelf of
+your pictures above them.
+
+**To give a scene its picture: click the scene, then click the picture.** That
+is the whole gesture. It writes the `media` column of `shots.csv`, the same file
+you could edit in a spreadsheet, and neither loses the other's work.
+
+What each scene shows you:
+
+- **A bar for how long it lasts**, next to the seconds. Full width is the
+  longest scene in the reel. This is the rhythm of the film — three short bars
+  in a row will flash by, one long bar is a picture that has to hold. The bars
+  appear once Shot Table has run; before that the panel says so.
+- **auto** — nobody chose this picture. It is the cycled default, and it is how
+  a scene reaches the render never having been looked at.
+- **same as previous** — two scenes in a row on one picture. It renders as a cut
+  that does not cut.
+- **missing** — the file named in the row is not in `sources/`.
+
+Selecting a scene fills the panel below it: the picture large, with the **focus
+rectangle** — drag on it to say what the shot is about, click to move the window
+without resizing it — and the rest of the decisions.
+
+| | Decides |
 |---|---|
-| **media** | which picture this scene appears over |
 | **motion** | how it moves: `zoom_in`, `zoom_out`, `pan_lr`, `pan_rl`, `static`, … |
 | **rate** | how fast, as a fraction of the frame. 0.04–0.08 reads as a slow drift |
-| **focus** | what the move heads towards — drag a rectangle on the thumbnail |
-| **label** | a tag in the corner: a place or a person |
+| **corner tag** | a place or a person, in the corner |
 | **credit** | where the picture came from |
-| **effects** | a look, with what it costs |
+| **look** | an effect preset, with what it costs in render time |
+| **in-point / speed** | footage only |
 | **notes** | yours |
 
-Two things worth knowing while you are in here:
+Two more things worth knowing:
 
-- **The media dropdown tells you how far each picture can be pushed** before it
-  is being enlarged past its own resolution. That number is a choice you make
-  now, not a warning you get after a render.
-- **You are editing a file.** The table is `shots.csv` in your project. You can
-  edit it here or in any spreadsheet, and neither loses the other's work.
+- **Hover a picture on the shelf** and it tells you its size and how far it can
+  be pushed before it is being enlarged past its own resolution. An orange
+  caption means it is already too small for the frame. That is a choice you make
+  now rather than a warning you get after a render.
+- **Expand** puts the same panel full screen, which is the way to lay out a
+  whole reel's pictures at once. Escape closes it. Nothing is lost either way,
+  saved or not.
 
-Press **Run**. **You should see** the shot report: every scene, when it starts
-and ends, how confident the alignment was, and which picture it will use.
+Press **Save** in the panel, then **Run** on the Shot Table node — the panel
+writes the decisions, the node compiles them.
+
+**You should see** the node's report: every scene, when it starts and ends, how
+confident the alignment was, and which picture it will use. Run it once and the
+duration bars appear in the panel.
 
 ### 2.4 Subtitles — "the words become captions"
 
@@ -315,6 +351,7 @@ reference for the edit.
 | What you see | What it usually is |
 |---|---|
 | Fewer scenes than you wrote | a heading without its `##` |
+| About twice as many scenes as you wrote | every heading escaped as `\## S01` |
 | A scene's words in the previous scene's subtitle | same thing |
 | The old recording's length in the Project report | an old `narration.*` outside `sources/` — Set Narration reports any it moved aside |
 | Alignment runs every single time | something is rewriting the recording between runs |
@@ -334,7 +371,7 @@ Fill this in while walking, not afterwards.
 | 1.1 Set Narration | | |
 | 2.1 Project | | |
 | 2.2 Align | | |
-| 2.3 Shot Table | | |
+| 2.3 Storyline panel | | |
 | 2.4 Subtitles | | |
 | 2.5 Preview Shot | | |
 | 2.6 Render | | |

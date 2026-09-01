@@ -16,6 +16,7 @@ Routes are registered on ComfyUI's own aiohttp app, so they live at
 """
 from __future__ import annotations
 
+import json
 from io import BytesIO
 from pathlib import Path
 
@@ -84,6 +85,43 @@ def _cells(raw: dict[str, str]) -> dict[str, str]:
     return {c: lower.get(c, "") for c in EDIT_COLUMNS}
 
 
+def _timings(folder: Path, texts: list[str]) -> tuple[list[dict] | None, str, float]:
+    """Per-shot timings from the last compile, or a reason there are none.
+
+    `generated/shots.json` already holds `t_start`, `t_end`, `n_frames` and
+    `confidence` for every shot, written by the Shot Table node's last run. The
+    storyline draws its bars from that: no aligner, no model, one file read.
+
+    **The guard is the point of this function.** A `shots.json` left over from a
+    different script would draw confident, wrong bars — `legends_of_surrender`
+    has exactly that today, 20 shots against a 28-scene script, and
+    `89-in-comfy` went 20 → 34 in one edit. So the file is used only when it
+    describes *this* script: same number of shots, and the same words in each.
+    Anything else is "no timing yet", which is honest and costs a Run to fix.
+    """
+    path = folder / "generated" / "shots.json"
+    if not path.is_file():
+        return None, "no timing yet — run Shot Table once to see it", 0.0
+    try:
+        doc = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError) as exc:
+        return None, f"{path.name} could not be read: {exc}", 0.0
+
+    shots = doc.get("shots") or []
+    if len(shots) != len(texts):
+        return None, (f"the timing on disk is for {len(shots)} scenes and the "
+                      f"script now has {len(texts)} — run Shot Table again"), 0.0
+    if any((s.get("text") or "") != t for s, t in zip(shots, texts)):
+        return None, ("the script has changed since the timing was computed — "
+                      "run Shot Table again"), 0.0
+
+    out = [{"t_start": s.get("t_start"), "t_end": s.get("t_end"),
+            "n_frames": s.get("n_frames"),
+            "confidence": s.get("confidence"),
+            "estimated": bool(s.get("estimated"))} for s in shots]
+    return out, "", float(doc.get("duration_s") or 0.0)
+
+
 def _index_of(edit: shotlist.ShotEdit, cues: list[float | None]) -> int | None:
     """Which shot a row addresses — by number, or by the cue it was written for."""
     if edit.index is not None:
@@ -127,6 +165,9 @@ async def shots(request: web.Request) -> web.Response:
         if i is not None:
             rows[i] = _cells(raw)
 
+    timings, timing_note, duration_s = _timings(
+        folder, [s.text for s in read.script_shots])
+
     out = []
     for i, (shot, media) in enumerate(zip(read.script_shots, read.media)):
         out.append({
@@ -138,9 +179,15 @@ async def shots(request: web.Request) -> web.Response:
             "resolved_dir": media.parent.name,
             "exists": media.exists(),
             "row": rows[i] or {c: "" for c in EDIT_COLUMNS},
+            # None until a compile has run against this script. The storyline
+            # draws bars from it and says why when it is missing, rather than
+            # drawing nothing and leaving the reason to be guessed.
+            "timing": timings[i] if timings else None,
         })
     return web.json_response({
         "project": folder.name,
+        "timing_note": timing_note,
+        "duration_s": duration_s,
         "columns": EDIT_COLUMNS,
         "motions": list(MOTION_PRESETS),
         "focusable": list(FOCUSABLE),

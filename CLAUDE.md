@@ -27,8 +27,11 @@ reference implementation of every step — they stay, they keep working, and the
 interface may call the same `memoacts_core` functions. But nothing a student
 sees, types or is examined on is a terminal command. The brief for what replaces
 it is `docs/INTERFACE_BRIEF.md`, and the plan that answers it is `docs/PLAN.md`
-(2026-08-21): the graph is the spine — five nodes, one screen — and `shots.csv`
-is edited in a table widget inside the middle one. Two scope decisions taken
+(2026-08-21): the graph is the spine — five nodes, one screen. `shots.csv` was
+edited in a table widget inside the middle node until **2026-09-01**, when 34
+scenes against 20 pictures broke it and the edit moved to the **Storyline
+panel** in the sidebar: scenes with duration bars, a shelf of pictures, click a
+scene then click a picture. Two scope decisions taken
 with it: students arrive with **their own script, recording and images**, and
 **per-shot focus and per-shot effects are in the September scope**, which
 reverses SPEC §0's "`nodes_layers.py` is the designated first cut" the same way
@@ -70,10 +73,11 @@ reverses SPEC §0's "`nodes_layers.py` is the designated first cut" the same way
 | `HANDOFF.md` | Where the last session stopped and what the next one does first. Rewritten, not appended to; superseded versions go to `archive/handoffs/` |
 | `docs/` | Working documents: `PLAN.md` (current task list), `WALKTHROUGH.md` (the long form of all three workflows, written to be walked), `WORKSHOP_HANDOUT.md` (what a September student is given), `CLI.md` (the author's terminal path, cold start to rendered reel), `P1_GRAPH.md` + `PARTICIPANT_GRAPH_RECIPE.md` (August intensive), `WORKSHOP_MACHINE_SETUP.md` (September provisioning — it absorbed `HARDENING.md`), `SHOTS_SCHEMA.md`, `SOUND_DESIGN.md` (the SFX stage: `sfx.csv`, the four nodes, and why the narration is never touched), `THREEBAND_TOOL.md`, `UPSCALE.md`, `EDITING.md`, `INTERFACE_BRIEF.md` (the brief for the student-facing interface — paste it to open that session) |
 | `example_workflows/` | `reel_stills.json` — the five-node graph a student opens; `sound_design.json` — the same graph with the SFX stage on the end; `hook_page.json` — the typed sheet. Load them in ComfyUI rather than reading them |
-| `web/` + `nodes_web.py` | The shot-table widget, the Sound Design buttons, and the `/memoacts/` routes behind them |
+| `web/` + `nodes_web.py` | The **Storyline panel** — a sidebar tab where each scene gets its picture — the Sound Design buttons, and the `/memoacts/` routes behind them |
 | `archive/` | Superseded documents, kept for their reasoning. Not authoritative, not maintained — see `archive/README.md` |
 | `projects/legends_of_surrender/` | **The live project** — English reel "Signed After Midnight" for Museum Berlin-Karlshorst. Media is unversioned; `REBUILD.md` regenerates it |
 | `projects/demo_en/` | Working fixture (4 shots, 13.8 s) — pipeline mechanics only. Its stills are unversioned but are on disk, in `sources/images/` |
+| `projects/89-in-comfy/` | **The crash test** — "89" rebuilt from an empty folder through the three workflows, to find what `docs/WALKTHROUGH.md` gets wrong. 34 scenes, its own narration. Not a fixture: when it works, it is the reel |
 | `projects/workshop_starter/` | The first project of the September workshop — short, and about itself. Media is a facilitator task, `REBUILD.md` says exactly which four files |
 
 ## Project layout

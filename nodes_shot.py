@@ -5,12 +5,16 @@ downstream reads, and prints the shot report so the decisions can be checked
 before anything is rendered: confidence per shot, drift against the cue written
 in the script, and the resolution guard's verdict on the image chosen for it.
 
-The decisions themselves live in `shots.csv` — twenty rows of media, motion,
-focus, labels and credits — because that is a table and a table is the right
-instrument for it. This node re-reads that file every run, so an edit made in
-any editor is picked up without re-aligning. The table editor arrives as a
-widget on this node; until then the file is the interface, and both write the
-same thing.
+The decisions themselves live in `shots.csv`, and this node re-reads that file
+every run, so an edit made anywhere is picked up without re-aligning.
+
+**Where they are made is the Storyline panel**, in ComfyUI's sidebar, not here.
+The editor used to be a table inside this node and stopped carrying its job at
+34 scenes: a table has no time in it, so the rhythm of the reel was invisible,
+and pictures were picked from a dropdown of filenames rather than by looking at
+them. `web/memoacts_storyline.js` is the answer to both. This node keeps the
+work it actually does — compiling the table, writing `shots.json`, and printing
+the report by which the decisions are checked before anything is rendered.
 
 Defaults must produce a decent reel with zero per-shot input, so the creator
 edits **by exception**. `MemoActsSetMotion` and `MemoActsSetImage` are that
@@ -40,7 +44,9 @@ class MemoActsShotTable(io.ComfyNode):
                 "Combines the timings with the edit decisions in shots.csv — "
                 "which image, which move, what it is about, what it is called — "
                 "and emits the shot table. Cheap: it re-reads the folder every "
-                "run, so an edit costs nothing and never re-runs alignment."
+                "run, so an edit costs nothing and never re-runs alignment. "
+                "Make the decisions in the Storyline panel, in the sidebar; run "
+                "this to compile them and read the report."
             ),
             is_output_node=True,
             inputs=[
