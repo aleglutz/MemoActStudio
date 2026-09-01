@@ -117,7 +117,7 @@ const CSS = `
 .ma-stop.sel { border-color:#8ab4f8; background:rgba(138,180,248,.12); }
 .ma-stop.bad { color:#ffcc80; }
 .ma-stop .n { opacity:.6; min-width:12px; }
-.ma-stop input { width:58px; font:inherit; font-size:10px; padding:1px 3px;
+.ma-stop input { width:52px; font:inherit; font-size:10px; padding:1px 3px;
   border-radius:3px; border:1px solid var(--border-color,#555);
   background:var(--comfy-input-bg,#333); color:inherit; }
 .ma-bounds { display:flex; flex-wrap:wrap; gap:8px; margin-top:6px;
@@ -411,7 +411,10 @@ class StorylinePanel {
                  return [k.cx, k.cy, k.w]; })()
       : this.model.focusOf(shot);
     const focus = shown;
-    this.picker.show(this.model.thumbURL(this.model.shownName(shot)), media, shown);
+    // 1024 rather than the shelf's 480: on a 4096-wide page the tightest legal
+    // window is 92 px at 480, and a 92-pixel rectangle cannot be aimed.
+    this.picker.show(
+      this.model.thumbURL(this.model.shownName(shot), 1024), media, shown);
 
     const rows = [];
     for (const f of FIELDS) {
@@ -456,10 +459,18 @@ class StorylinePanel {
           : "no focus to choose — this source fills the frame and no more";
       }
       if (focus) {
-        notes.push(el("button", {
-          className: "ma-link", textContent: "clear focus",
-          onclick: () => { this.model.setCell(shot, "focus", ""); this.drawDetail(); },
-        }));
+        notes.push(el("div", { className: "ma-stops" }, [
+          el("div", { className: "ma-stop sel" }, [
+            el("span", { className: "n", textContent: "focus" }),
+            ...this.numbers(shot, { cx: focus[0], cy: focus[1], w: focus[2] },
+                            null, media),
+            el("span", { className: "grow" }),
+            el("button", {
+              className: "ma-link", textContent: "×",
+              onclick: () => { this.model.setCell(shot, "focus", ""); this.drawDetail(); },
+            }),
+          ]),
+        ]));
       }
     }
     if (shot.row.media) {
@@ -565,9 +576,9 @@ class StorylinePanel {
       }, [
         el("span", { className: "n", textContent: `${i + 1}` }),
         time,
+        ...this.numbers(shot, k, i, media),
         el("span", { className: "grow",
-          textContent: `${k.cx.toFixed(3)}, ${k.cy.toFixed(3)} · ${k.w.toFixed(3)} wide`
-            + (unreachable ? " — too near the edge" : "") }),
+          textContent: unreachable ? "too near the edge" : "" }),
         el("button", {
           className: "ma-link", textContent: "+",
           title: "another stop just after this one, in the same place — a hold",
@@ -598,6 +609,48 @@ class StorylinePanel {
       onclick: () => { this.setPath(shot, []); this.drawDetail(); },
     }));
     return box;
+  }
+
+  /**
+   * The three numbers of a stop, typed rather than drawn.
+   *
+   * A rectangle is the fast way to place a window and a hopeless way to set it
+   * to 0.264 exactly. `w` is where this matters: it is the one number with a
+   * hard floor — the resolution guard refuses anything narrower than the output
+   * frame — and a drag that keeps hitting that floor looks like the panel
+   * ignoring you. Typed, the floor is a number you can see yourself reach.
+   *
+   * `i` is the stop's index, or null for a plain focus.
+   */
+  numbers(shot, k, i, media) {
+    const lo = media ? media.focus_min_w : 0.05;
+    const hi = media ? media.focus_max_w : 1;
+    const field = (key, value, min, max, step, title) => el("input", {
+      type: "number", value: String(Number(value.toFixed(3))),
+      min: String(min), max: String(max), step: String(step), title,
+      onchange: (e) => {
+        const v = Math.min(Math.max(Number(e.target.value) || 0, min), max);
+        const next = { ...k, [key]: v };
+        if (i === null) {
+          this.model.setCell(shot, "focus",
+            `${next.cx.toFixed(3)} ${next.cy.toFixed(3)} ${next.w.toFixed(3)}`);
+        } else {
+          const stops = this.model.pathOf(shot);
+          stops[i] = { ...stops[i], ...next };
+          this.setPath(shot, stops);
+        }
+        this.drawScenes();
+        this.drawDetail();
+      },
+    });
+    return [
+      field("cx", k.cx, 0, 1, 0.005, "across the picture"),
+      field("cy", k.cy, 0, 1, 0.005, "down the picture"),
+      field("w", k.w, lo, hi, 0.005,
+            `how much of the width is in frame — ${lo.toFixed(3)} is as tight `
+            + `as this picture goes without being enlarged, ${hi.toFixed(3)} is `
+            + `the whole 9:16 window`),
+    ];
   }
 
   /** Whether a crop this wide can actually centre on this point. */

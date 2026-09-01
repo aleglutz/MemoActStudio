@@ -325,9 +325,20 @@ def _still_size(path: Path) -> tuple[int, int]:
 
 @_ROUTES.get("/memoacts/thumb")
 async def thumb(request: web.Request) -> web.Response:
-    """One media file as a small JPEG. A video gives up its first frame."""
+    """One media file as a small JPEG. A video gives up its first frame.
+
+    `px` asks for a bigger one. The shelf wants twenty small pictures at once
+    and the picker wants one it can place a rectangle on precisely: a page 4096
+    px wide shown at 480 puts its tightest legal window at 92 px on screen, and
+    a 92-pixel rectangle is not something anybody can aim. Same route, same
+    file, different question.
+    """
     folder = _project(request)
     name = request.query.get("file", "")
+    try:
+        px = min(max(int(request.query.get("px") or THUMB_PX), 128), 1600)
+    except ValueError:
+        px = THUMB_PX
     found = next((folder / d / name for d in MEDIA_DIRS
                   if (folder / d / name).is_file()), None)
     if found is None:
@@ -340,7 +351,7 @@ async def thumb(request: web.Request) -> web.Response:
     else:
         from .memoacts_core.render import load_source
         image = load_source(found)
-    image.thumbnail((THUMB_PX, THUMB_PX), Image.Resampling.LANCZOS)
+    image.thumbnail((px, px), Image.Resampling.LANCZOS)
     buf = BytesIO()
     image.save(buf, format="JPEG", quality=82)
     return web.Response(body=buf.getvalue(), content_type="image/jpeg",

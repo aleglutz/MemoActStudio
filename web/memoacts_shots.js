@@ -182,10 +182,10 @@ export class ShotsModel {
   /** What this shot shows, whether it was chosen or cycled to. */
   shownName(shot) { return shot.row.media || shot.resolved || ""; }
 
-  thumbURL(name) {
+  thumbURL(name, px) {
     return name
       ? `/memoacts/thumb?project=${encodeURIComponent(this.project)}`
-        + `&file=${encodeURIComponent(name)}`
+        + `&file=${encodeURIComponent(name)}` + (px ? `&px=${px}` : "")
       : "";
   }
 
