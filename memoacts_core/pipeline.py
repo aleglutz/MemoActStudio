@@ -47,7 +47,8 @@ from .project import (MEDIA_DIRS, ScriptShot, apply_shot_lead,
                       write_outputs)
 from .render import ShotRender, render_reel
 from .schedule import FOCUSABLE, Motion, compute, default_motion, frames_for
-from .shotlist import ResolvedShot, apply_shot_list, read_shot_list
+from .shotlist import (ResolvedShot, apply_shot_list, edits_from_table,
+                       mislabelled_comments, read_table)
 from .video import is_video, probe
 
 #: `progress(stage, done, total, message, preview)`.
@@ -326,10 +327,24 @@ def read_project(project: Path) -> ProjectRead:
             f"and run this again"))
 
     # shots.csv wins over the script's own [[refs]] and over cycling: it is the
-    # edit decision, made after both.
-    picks, edit_warnings = apply_shot_list(script_shots, read_shot_list(
-        project / "shots.csv"), project)
+    # edit decision, made after both. The table is read once here rather than
+    # inside `read_shot_list`, because the rows it *drops* are worth a word too.
+    table = read_table(project / "shots.csv")
+    picks, edit_warnings = apply_shot_list(
+        script_shots, edits_from_table(table), project)
     warnings = list(warnings) + edit_warnings
+    # One line, not one per row: a file written this way is written this way
+    # throughout, and thirty-four copies of the same sentence is not a louder
+    # warning, it is a wall nobody reads to the end of.
+    commented = mislabelled_comments(table)
+    if commented:
+        first = commented[0]
+        warnings.append(
+            f"shots.csv: {len(commented)} row(s) are commented out and being "
+            f"ignored — their shot column starts with '#', which this format "
+            f"reads as a comment. Everything decided on them is lost. Write "
+            f"{first!r} as {first.lstrip('#').strip()!r}, and the same for the "
+            f"rest")
     for i, p in enumerate(picks):
         if p.media is not None:
             media[i] = p.media

@@ -217,7 +217,10 @@ async def save_shots(request: web.Request) -> web.Response:
     body = await request.json()
     incoming = {int(s["id"]): s.get("row", {}) for s in body.get("shots", [])}
 
-    read = read_project(folder)
+    try:
+        read = read_project(folder)
+    except ProjectError as exc:
+        return web.json_response({"error": str(exc)}, status=400)
     cues = [s.cue for s in read.script_shots]
     path = folder / "shots.csv"
     table = shotlist.read_table(path)
@@ -255,7 +258,14 @@ async def save_shots(request: web.Request) -> web.Response:
         written.append(row)
 
     table.rows = kept + written
-    shotlist.write_table(path, table)
+    try:
+        shotlist.write_table(path, table)
+    except shotlist.TableLocked as exc:
+        # A 400 with a sentence, not aiohttp's plain-text 500. The panel calls
+        # `.json()` on the answer, and a 500 page is not JSON — which is how a
+        # spreadsheet holding the file arrived in the browser as
+        # "JSON.parse: unexpected non-whitespace character after JSON data".
+        return web.json_response({"error": str(exc)}, status=400)
     return web.json_response({"saved": len(written), "path": str(path)})
 
 

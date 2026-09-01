@@ -92,9 +92,30 @@ export class ShotsModel {
 
   say(text, bad = false) { this.onStatus(text, bad); }
 
+  /**
+   * A response as JSON, or as the reason it was not.
+   *
+   * `res.json()` on aiohttp's plain-text 500 page throws a parser error, and
+   * what reached the person was "JSON.parse: unexpected non-whitespace
+   * character after JSON data" — a sentence about a parser, describing a
+   * spreadsheet holding shots.csv open. The server says it properly now; this
+   * is the other half, so that whatever else ever goes wrong up there arrives
+   * as words rather than as a stack trace.
+   */
+  static async body(res) {
+    const text = await res.text();
+    try {
+      return JSON.parse(text);
+    } catch {
+      const line = text.trim().split("\n")[0].slice(0, 200);
+      throw new Error(`the server answered ${res.status} ${res.statusText}`
+        + (line ? ` — ${line}` : ""));
+    }
+  }
+
   async projects() {
     const res = await fetch("/memoacts/projects");
-    return (await res.json()).projects ?? [];
+    return (await ShotsModel.body(res)).projects ?? [];
   }
 
   async load(project) {
@@ -104,7 +125,7 @@ export class ShotsModel {
     try {
       const res = await fetch(
         `/memoacts/shots?project=${encodeURIComponent(this.project)}`);
-      const body = await res.json();
+      const body = await ShotsModel.body(res);
       if (!res.ok || body.error) throw new Error(body.error || res.statusText);
       this.data = body;
       this.dirty.clear();
@@ -131,8 +152,8 @@ export class ShotsModel {
           }),
         },
       );
-      const body = await res.json();
-      if (!res.ok) throw new Error(body.error || res.statusText);
+      const body = await ShotsModel.body(res);
+      if (!res.ok || body.error) throw new Error(body.error || res.statusText);
       // Re-read rather than trust the local copy: the file decides what a row
       // says now, and a shot whose decisions were all cleared has lost its row.
       await this.load();

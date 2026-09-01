@@ -200,15 +200,105 @@ def write_table(path: Path, table: ShotTable) -> Path:
     path.parent.mkdir(parents=True, exist_ok=True)
     fieldnames = table.fieldnames or list(COLUMNS)
     tmp = path.with_suffix(path.suffix + ".tmp")
-    with tmp.open("w", newline="", encoding="utf-8") as fh:
-        w = csv.DictWriter(fh, fieldnames=fieldnames, extrasaction="ignore")
-        w.writeheader()
-        for row in table.rows:
-            w.writerow({k: row.get(k, "") for k in fieldnames})
-    # Replace rather than truncate-and-write: a crash mid-write would otherwise
-    # leave the author's edit decisions half gone, and they are not regenerable.
-    tmp.replace(path)
+    try:
+        with tmp.open("w", newline="", encoding="utf-8") as fh:
+            w = csv.DictWriter(fh, fieldnames=fieldnames, extrasaction="ignore")
+            w.writeheader()
+            for row in table.rows:
+                w.writerow({k: row.get(k, "") for k in fieldnames})
+        # Replace rather than truncate-and-write: a crash mid-write would
+        # otherwise leave the author's edit decisions half gone, and they are
+        # not regenerable.
+        tmp.replace(path)
+    except OSError as exc:
+        # The `.tmp` must not survive a failure. One was left behind on
+        # 2026-09-01 and sat in the project looking like a half-saved edit.
+        tmp.unlink(missing_ok=True)
+        raise TableLocked(_why_locked(path, exc)) from exc
     return path
+
+
+class TableLocked(OSError):
+    """`shots.csv` could not be replaced — said in words a person can act on."""
+
+
+def _why_locked(path: Path, exc: OSError) -> str:
+    """Turn a Windows error number into the sentence that names the cure.
+
+    Worth the twenty lines: the raw failure is `[WinError 5] Access is denied`
+    on a file the process can demonstrably open for writing, which reads as a
+    bug in the tool rather than as a spreadsheet holding the file. It is the
+    spreadsheet. LibreOffice leaves its own evidence next to the file, so when
+    that is there, say so exactly.
+    """
+    lock = path.with_name(f".~lock.{path.name}#")
+    if lock.exists():
+        return (f"{path.name} is open in LibreOffice — its lock file "
+                f"{lock.name} is sitting next to it. Close the file there and "
+                f"save again; nothing has been lost.")
+    if getattr(exc, "winerror", None) in (5, 32):
+        return (f"{path.name} is open in another program, which is holding it "
+                f"against being replaced — a spreadsheet, usually. Close it "
+                f"there and save again; nothing has been lost.")
+    return f"{path.name} could not be written: {exc}"
+
+
+#: A row addressing a scene by the label the script gives it: `S01`, `s 7`.
+_LABEL_KEY_RE = re.compile(r"^S\s*(\d+)$", re.IGNORECASE)
+
+
+def parse_shot_key(key: str) -> tuple[int | None, float | None]:
+    """Which shot a row addresses: `(index, cue)`, at most one of them set.
+
+    Three spellings, because three are in use and all three are reasonable:
+
+    * `12` — the shot number, which is what the editor writes.
+    * `0:42` — the cue the script wrote for the block, which survives a scene
+      being inserted above it where a number does not.
+    * `S12` — the label the script gives the scene and the panel shows. Added
+      2026-09-01: a person filling the file in by hand copies what they see, and
+      what they see is `S12`. Before this it typed to neither an index nor a
+      cue, and the row silently addressed nothing.
+    """
+    key = key.strip()
+    if not key:
+        return None, None
+    if ":" in key:
+        return None, parse_timecode(key)
+    try:
+        return int(key), None
+    except ValueError:
+        pass
+    m = _LABEL_KEY_RE.match(key)
+    if m:
+        return int(m.group(1)), None
+    return None, parse_timecode(key)
+
+
+def mislabelled_comments(table: ShotTable) -> list[str]:
+    """Rows commented out by a `#` that look like they were meant to address a shot.
+
+    `## S01` in the shot column is what a person writes when they copy the
+    script's own heading into the spreadsheet — and the file's format says a row
+    starting with `#` is a comment, so the whole row is dropped without a word.
+    Seen on 2026-09-01: thirty-four rows of a real project, every one of them
+    ignored, the panel showing no media for any scene and nobody able to see
+    why. The format still wins; it just stops being silent.
+    """
+    out = []
+    for raw in table.rows:
+        key = row_key(raw)
+        if not key.startswith("#"):
+            continue
+        bare = key.lstrip("#").strip()
+        index, cue = parse_shot_key(bare)
+        if index is None and cue is None:
+            continue
+        decided = any((v or "").strip() for k, v in raw.items()
+                      if (k or "").strip().lower() not in ("shot", ""))
+        if decided:
+            out.append(key)
+    return out
 
 
 def edits_from_table(table: ShotTable) -> list[ShotEdit]:
@@ -234,13 +324,7 @@ def edits_from_table(table: ShotTable) -> list[ShotEdit]:
             effects=row.get("effects", ""),
             notes=row.get("notes", ""),
         )
-        if ":" in key:
-            edit.cue = parse_timecode(key)
-        else:
-            try:
-                edit.index = int(key)
-            except ValueError:
-                edit.cue = parse_timecode(key)
+        edit.index, edit.cue = parse_shot_key(key)
         try:
             edit.rate = float(row["rate"]) if row.get("rate") else None
         except ValueError:
