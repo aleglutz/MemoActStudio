@@ -203,13 +203,31 @@ What each scene shows you:
   appear once Shot Table has run; before that the panel says so.
 - **auto** — nobody chose this picture. It is the cycled default, and it is how
   a scene reaches the render never having been looked at.
-- **same as previous** — two scenes in a row on one picture. It renders as a cut
-  that does not cut.
+- **same as previous** — two scenes in a row on one picture. The renderer gives
+  every scene its own move, and the default preset changes with the scene
+  number, so the picture does not merely restart: it changes direction. Either
+  give one of them a different picture, or **merge them** — see below.
 - **missing** — the file named in the row is not in `sources/`.
 
 Selecting a scene fills the panel below it: the picture large, with the **focus
 rectangle** — drag on it to say what the shot is about, click to move the window
 without resizing it — and the rest of the decisions.
+
+**Where a scene begins and ends** is under the picture, and it is the one
+control here that changes your script rather than your edit:
+
+- **merge into S…** joins this scene to the one before it. Use it when the two
+  are one picture and one move — "hold, then push in" is one scene, not two.
+  The merged scene keeps the first row's picture and takes anything the first
+  left blank from the second, so a focus set on the second half survives.
+- **split before "…"** cuts a scene at a sentence. Both halves start on the same
+  picture, which is how you *make* a hold-then-push-in: split, then set a focus
+  on the second half.
+
+Both rewrite `script.md` and renumber `shots.csv` with it, so your pictures stay
+on the scenes you put them on. Both mean **Align runs again** — your words have
+not changed, but which shot they belong to has. Save your edits first; the panel
+will refuse if you have not.
 
 | | Decides |
 |---|---|

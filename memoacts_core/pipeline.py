@@ -290,6 +290,189 @@ def set_narration(project: Path, data, sample_rate: int, *,
         warnings=warnings)
 
 
+@dataclass
+class SceneEdit:
+    """What moving a scene boundary did, in the terms the panel reports."""
+    scenes: int                             # how many there are now
+    moved_rows: int                         # rows in shots.csv that followed
+    note: str = ""
+    warnings: list[str] = field(default_factory=list)
+
+
+def _renumber_rows(project: Path, remap: dict[int, int | None],
+                   merge_into: dict[int, int] | None = None) -> tuple[int, list[str]]:
+    """Carry `shots.csv` across a change in what the scenes are.
+
+    This is the half of a merge that is easy to forget and expensive to skip.
+    A scene boundary moving shifts every scene after it, and a row addressing
+    scene 20 by number now names a different line than the one it was written
+    for — the exact failure that made `legends_of_surrender`'s table point at
+    the wrong pictures when its script was rewritten underneath it, silently,
+    for a week.
+
+    `remap` is old 1-based index -> new index, or None for a scene that has
+    stopped existing. `merge_into` says which surviving row absorbs a
+    disappearing one, cell by cell: the survivor wins, and the absorbed row
+    fills only what the survivor left blank. That is what makes "hold this
+    picture, then push in" survive being made into one scene — the first row
+    has the picture, the second has the focus, and the merged scene wants both.
+    """
+    from .shotlist import parse_shot_key, read_table, row_key, write_table
+
+    path = project / "shots.csv"
+    table = read_table(path)
+    if not table.rows:
+        return 0, []
+
+    shot_col = next((n for n in table.fieldnames
+                     if (n or "").strip().lower() == "shot"), "shot")
+    by_index: dict[int, dict[str, str]] = {}
+    warnings: list[str] = []
+    keep: list[dict[str, str]] = []
+    for raw in table.rows:
+        key = row_key(raw)
+        if not key or key.startswith("#"):
+            keep.append(raw)
+            continue
+        index, cue = parse_shot_key(key)
+        if index is None:
+            keep.append(raw)
+            if cue is not None:
+                warnings.append(
+                    f"shots.csv: the row {key!r} is addressed by its cue, which "
+                    f"a scene boundary cannot renumber — check it by hand")
+            continue
+        by_index[index] = raw
+
+    for old, raw in sorted(by_index.items()):
+        if remap.get(old) is None:
+            continue                        # absorbed below, or gone
+        raw[shot_col] = _spell_key(row_key(raw), remap[old])
+
+    for gone, survivor in (merge_into or {}).items():
+        loser, winner = by_index.get(gone), by_index.get(survivor)
+        if loser is None:
+            continue
+        if winner is None:                  # nothing to merge into: promote it
+            loser[shot_col] = _spell_key(row_key(loser), remap.get(survivor) or survivor)
+            by_index[survivor] = loser
+            continue
+        for k, v in loser.items():
+            if (k or "").strip().lower() == "shot":
+                continue
+            if not (winner.get(k) or "").strip() and (v or "").strip():
+                winner[k] = v
+
+    moved = [raw for old, raw in sorted(by_index.items())
+             if remap.get(old) is not None]
+    table.rows = keep + moved
+    write_table(path, table)
+    return len(moved), warnings
+
+
+def _spell_key(old: str, index: int) -> str:
+    """The new number, written the way the row already wrote the old one."""
+    old = old.strip()
+    if old[:1].upper() == "S":
+        return f"S{index:02d}"
+    return str(index)
+
+
+def merge_scene(project: Path, index: int) -> SceneEdit:
+    """Fold scene `index` into the one before it. 1-based.
+
+    A scene is a unit of what is seen, so two lines held on one picture with one
+    continuous move are one scene — not two that happen to agree. Doing it here,
+    in the script, is what makes that true for the renderer as well: two shots
+    on one image get two separate motion schedules and `default_motion` cycles
+    the preset by shot number, so they do not merely restart, they travel in
+    different directions.
+
+    Alignment is keyed on `script.md`'s mtime and will run again. That is
+    correct and it is the price: the words did not change, but which words
+    belong to which shot did.
+    """
+    from .project import read_script_file
+
+    sf = read_script_file(project / "script.md")
+    if not 2 <= index <= len(sf.scenes):
+        raise ProjectError(
+            f"scene {index} cannot be merged into the one before it; this "
+            f"script has scenes 1..{len(sf.scenes)} and the first has no "
+            f"predecessor")
+    sf.scenes[index - 2] = sf.scenes[index - 2] + sf.scenes[index - 1]
+    del sf.scenes[index - 1]
+    (project / "script.md").write_text(sf.render(), encoding="utf-8")
+
+    remap = {i: (i if i < index else None if i == index else i - 1)
+             for i in range(1, len(sf.scenes) + 2)}
+    moved, warns = _renumber_rows(project, remap, merge_into={index: index - 1})
+    return SceneEdit(
+        scenes=len(sf.scenes), moved_rows=moved,
+        note=f"scenes {index - 1} and {index} are now scene {index - 1}; "
+             f"{len(sf.scenes)} scenes. Run Align again — the words are the "
+             f"same but which shot they belong to is not",
+        warnings=warns)
+
+
+def split_scene(project: Path, index: int, at_sentence: int) -> SceneEdit:
+    """Cut scene `index` in two before sentence `at_sentence` (1-based).
+
+    The new scene inherits the same row, and therefore the same picture — which
+    is the point. Splitting is how "hold, then push in" gets made: one picture,
+    two scenes, a focus on the second.
+    """
+    from .project import read_script_file, sentences_of
+
+    sf = read_script_file(project / "script.md")
+    if not 1 <= index <= len(sf.scenes):
+        raise ProjectError(f"no scene {index}; this script has "
+                           f"1..{len(sf.scenes)}")
+    parts = sentences_of(sf.scenes[index - 1])
+    if not 1 <= at_sentence < len(parts):
+        raise ProjectError(
+            f"scene {index} has {len(parts)} sentence(s), so there is no "
+            f"boundary {at_sentence} to cut at. A scene of one sentence cannot "
+            f"be split without rewriting it")
+    sf.scenes[index - 1] = [" ".join(parts[:at_sentence])]
+    sf.scenes.insert(index, [" ".join(parts[at_sentence:])])
+    (project / "script.md").write_text(sf.render(), encoding="utf-8")
+
+    remap = {i: (i if i <= index else i + 1) for i in range(1, len(sf.scenes))}
+    moved, warns = _renumber_rows(project, remap)
+    # The new scene starts out as a copy of the one it came from, so the picture
+    # carries over and only the framing has to be decided.
+    _copy_row(project, index, index + 1)
+    return SceneEdit(
+        scenes=len(sf.scenes), moved_rows=moved,
+        note=f"scene {index} is now {index} and {index + 1}, both on the same "
+             f"picture; {len(sf.scenes)} scenes. Run Align again",
+        warnings=warns)
+
+
+def _copy_row(project: Path, src: int, dst: int) -> None:
+    """Give a newly split scene the row its parent had."""
+    from .shotlist import parse_shot_key, read_table, row_key, write_table
+
+    path = project / "shots.csv"
+    table = read_table(path)
+    shot_col = next((n for n in table.fieldnames
+                     if (n or "").strip().lower() == "shot"), "shot")
+    for i, raw in enumerate(table.rows):
+        key = row_key(raw)
+        if key.startswith("#"):
+            continue
+        if parse_shot_key(key)[0] == src:
+            clone = dict(raw)
+            clone[shot_col] = _spell_key(key, dst)
+            # Beside its parent, not at the end: nothing reads the file in
+            # order, but a person does, and a row 4 at the bottom of a
+            # thirty-five-row table reads as damage.
+            table.rows.insert(i + 1, clone)
+            write_table(path, table)
+            return
+
+
 def read_project(project: Path) -> ProjectRead:
     """Read the script, the media and the shot list. No model, no ffmpeg.
 

@@ -109,6 +109,8 @@ const CSS = `
 .ma-note { font-size:10px; opacity:.7; margin-top:4px; }
 .ma-note.warn { color:#ffcc80; opacity:1; }
 .ma-note.bad { color:#ff8a80; opacity:1; }
+.ma-bounds { display:flex; flex-wrap:wrap; gap:8px; margin-top:6px;
+  padding-top:5px; border-top:1px dashed var(--border-color,#444); }
 .ma-link { border:none; background:none; color:#8ab4f8; cursor:pointer;
   text-decoration:underline; font:inherit; font-size:10px; padding:0; }
 
@@ -457,12 +459,81 @@ class StorylinePanel {
     this.detail.replaceChildren(
       el("div", { className: "ma-note", textContent: shot.text || "(silent)" }),
       this.picker.root,
+      this.boundaries(shot),
       el("div", { className: "ma-fields" }, rows),
       ...notes);
     // After attaching, not before: the rectangle is positioned from the
     // image's box, and a detached image has none. Redrawing a scene whose
     // thumbnail is already cached fires no `load` event to do it later.
     this.picker.draw();
+  }
+
+  /**
+   * Where this scene begins and ends — the one control here that edits the
+   * script rather than the shot list.
+   *
+   * A scene is a unit of what is said, so two lines held on one picture with
+   * one continuous move are one scene, not two that agree. Merging them in
+   * `script.md` is what makes that true for the renderer too: two shots on one
+   * image get two motion schedules, and the default preset cycles by shot
+   * number, so they do not merely restart — they travel in different
+   * directions.
+   */
+  boundaries(shot) {
+    const bar = el("div", { className: "ma-bounds" });
+    if (shot.id > 1) {
+      bar.append(el("button", {
+        className: "ma-link", textContent: `⇡ merge into S${String(shot.id - 1).padStart(2, "0")}`,
+        title: "One scene, one picture, one move. Alignment runs again.",
+        onclick: () => this.boundary("merge", shot.id, 1,
+          `Merge scene ${shot.id} into ${shot.id - 1}?\n\n`
+          + `They become one scene on one picture. script.md is rewritten and `
+          + `alignment will run again — the words do not change, but which `
+          + `shot they belong to does.`),
+      }));
+    }
+    const parts = shot.sentences || [];
+    for (let i = 1; i < parts.length; i++) {
+      bar.append(el("button", {
+        className: "ma-link", textContent: `✂ split before “${parts[i].slice(0, 24)}…”`,
+        title: "The new scene starts on the same picture; give it its own framing.",
+        onclick: () => this.boundary("split", shot.id, i,
+          `Split scene ${shot.id} before “${parts[i]}”?\n\n`
+          + `Both halves start on the same picture. script.md is rewritten and `
+          + `alignment will run again.`),
+      }));
+    }
+    if (!bar.children.length) {
+      bar.append(el("span", { className: "ma-note",
+        textContent: "one sentence, and the first scene — no boundary to move" }));
+    }
+    return bar;
+  }
+
+  async boundary(action, id, at, question) {
+    if (this.model.dirty.size) {
+      this.model.say("save your edits first — this rewrites shots.csv", true);
+      return;
+    }
+    const ok = await (app.extensionManager?.dialog?.confirm?.({
+      title: "Move a scene boundary", message: question,
+    }) ?? Promise.resolve(window.confirm(question)));
+    if (!ok) return;
+    this.model.say("rewriting the script…");
+    try {
+      const res = await fetch(
+        `/memoacts/scene?project=${encodeURIComponent(this.model.project)}`,
+        { method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action, id, at }) });
+      const body = await ShotsModel.body(res);
+      if (!res.ok || body.error) throw new Error(body.error || res.statusText);
+      this.selectedId = action === "merge" ? id - 1 : id;
+      await this.model.load();
+      for (const w of body.warnings || []) console.warn(`[MemoActs] ${w}`);
+      this.model.say(body.note, false);
+    } catch (err) {
+      this.model.say(String(err.message || err), true);
+    }
   }
 
   sayFocus(fit, live) {

@@ -32,8 +32,10 @@ except (ImportError, AttributeError):       # imported without a running server
 from .memoacts_core import effects as fx
 from .memoacts_core import sfx as sfxlib
 from .memoacts_core import shotlist
-from .memoacts_core.pipeline import ProjectError, create_project, read_project
-from .memoacts_core.project import MEDIA_DIRS
+from .memoacts_core.pipeline import (ProjectError, create_project,
+                                     merge_scene, read_project,
+                                     split_scene)
+from .memoacts_core.project import MEDIA_DIRS, sentences_of
 from .memoacts_core.schedule import (FOCUSABLE, PRESETS as MOTION_PRESETS,
                                      base_window, focus_limits)
 from .memoacts_core.video import is_video, probe
@@ -183,6 +185,11 @@ async def shots(request: web.Request) -> web.Response:
             # draws bars from it and says why when it is missing, rather than
             # drawing nothing and leaving the reason to be guessed.
             "timing": timings[i] if timings else None,
+            # Where this scene could honestly be cut in two. Sent with the
+            # scene rather than fetched per click, and computed by the same
+            # function the split itself uses, so the boundary the panel offers
+            # is the boundary the script gets.
+            "sentences": sentences_of([shot.text]),
         })
     return web.json_response({
         "project": folder.name,
@@ -385,6 +392,39 @@ async def save_script(request: web.Request) -> web.Response:
     path = folder / "script.md"
     path.write_text(body.get("script", ""), encoding="utf-8")
     return web.json_response({"saved": str(path)})
+
+
+@_ROUTES.post("/memoacts/scene")
+async def move_boundary(request: web.Request) -> web.Response:
+    """Merge a scene into the one before it, or cut one in two.
+
+    A scene boundary lives in `script.md`, because a scene is a unit of what is
+    said — so this is the one editing action in the panel that changes the
+    script rather than the shot list. It carries `shots.csv` with it, since
+    every scene after the boundary shifts by one and a row addressing a number
+    would otherwise quietly name a different line.
+
+    Alignment runs again afterwards, and should: the words are unchanged but
+    which of them belong to which shot is not.
+    """
+    folder = _project(request)
+    body = await request.json()
+    action = body.get("action")
+    index = int(body.get("id") or 0)
+    try:
+        if action == "merge":
+            res = merge_scene(folder, index)
+        elif action == "split":
+            res = split_scene(folder, index, int(body.get("at") or 1))
+        else:
+            raise web.HTTPBadRequest(reason=f"unknown action {action!r}")
+        return web.json_response({
+            "scenes": res.scenes, "moved": res.moved_rows,
+            "note": res.note, "warnings": res.warnings})
+    except ProjectError as exc:
+        return web.json_response({"error": str(exc)}, status=400)
+    except shotlist.TableLocked as exc:
+        return web.json_response({"error": str(exc)}, status=400)
 
 
 @_ROUTES.post("/memoacts/project")

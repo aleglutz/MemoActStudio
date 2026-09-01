@@ -158,6 +158,89 @@ def parse_script_shots(path: Path) -> list[ScriptShot]:
     return shots
 
 
+@dataclass
+class ScriptFile:
+    """`script.md` taken apart so a scene boundary can be moved.
+
+    Deliberately not `parse_script_shots`, which throws away everything that is
+    not narration — the storyboard directions, the blank lines, the title. This
+    keeps the file, so that moving one boundary rewrites one boundary and leaves
+    the rest of the document exactly as its author typed it.
+    """
+    preamble: list[str]                             # before the first heading
+    depth: str                                      # "##", as the file writes it
+    pad: int                                        # digits in "S01"
+    scenes: list[list[str]] = field(default_factory=list)   # body lines only
+
+    def render(self) -> str:
+        """The file again, with the headings renumbered from one.
+
+        Renumbering is not cosmetic. `shots.csv` addresses a row by the scene's
+        position, so a heading that keeps an old number after a merge is a label
+        that lies about which scene it names.
+        """
+        out = list(self.preamble)
+        for i, body in enumerate(self.scenes, 1):
+            out.append(f"{self.depth} S{i:0{self.pad}d}")
+            out.append("")
+            out += body
+            out.append("")
+        while out and not out[-1].strip():
+            out.pop()
+        return "\n".join(out) + "\n"
+
+
+def read_script_file(path: Path) -> ScriptFile:
+    """Split a storyboard script into its scenes, keeping everything else."""
+    lines = path.read_text(encoding="utf-8").splitlines()
+    firsts = [ln for ln in lines if _SHOT_HEADING_RE.match(ln)]
+    if not firsts:
+        raise ValueError(
+            f"{path.name} has no '## S01' scene headings, so there are no "
+            f"scene boundaries to move. Add them, or edit the file directly")
+    head = firsts[0]
+    depth = head[:len(head) - len(head.lstrip("#"))]
+    digits = _SHOT_HEADING_RE.match(head).group(1)
+    pad = len(digits) if digits.startswith("0") else 2
+
+    preamble: list[str] = []
+    scenes: list[list[str]] = []
+    for ln in lines:
+        if _SHOT_HEADING_RE.match(ln):
+            scenes.append([])
+            continue
+        (scenes[-1] if scenes else preamble).append(ln)
+    # Trailing blank lines belong to the layout, not to a scene.
+    for body in scenes:
+        while body and not body[-1].strip():
+            body.pop()
+    while preamble and not preamble[-1].strip():
+        preamble.pop()
+    return ScriptFile(preamble=preamble, depth=depth, pad=pad, scenes=scenes)
+
+
+def sentences_of(body: list[str]) -> list[str]:
+    """A scene's narration cut at sentence ends — the offer a split makes.
+
+    Splitting anywhere else is possible and almost never wanted: a scene is a
+    thing that is said, and the places it can honestly be cut in two are where
+    one sentence stops and the next starts.
+    """
+    text = " ".join(ln.strip() for ln in body if ln.strip()
+                    and not ln.strip().startswith((">", "#")))
+    if not text:
+        return []
+    parts, current = [], ""
+    for token in text.split(" "):
+        current = f"{current} {token}".strip()
+        if token.endswith((".", "!", "?", "…")) and len(token) > 1:
+            parts.append(current)
+            current = ""
+    if current:
+        parts.append(current)
+    return parts
+
+
 def escaped_headings(path: Path) -> int:
     """How many shot headings this script has escaped out of existence.
 

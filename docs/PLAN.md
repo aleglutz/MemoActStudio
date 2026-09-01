@@ -301,6 +301,22 @@ lists — moved unchanged into `web/memoacts_shots.js`. `web/memoacts.js` is gon
 the node has no widget, and it keeps the job it actually does: compiling the
 table and printing the report.
 
+**Merging and splitting scenes** were added on 2026-09-01, after the crash test
+produced eight "same as previous" marks in one project — several of them
+deliberate, a picture held across two lines with a focus on the second. The
+renderer cannot do that: it schedules each shot separately and `default_motion`
+cycles the preset by shot number, so two shots on one image change direction
+rather than continue.
+
+The boundary therefore moves in `script.md`, not in `shots.csv`, because a scene
+is a unit of what is said. `merge_scene` and `split_scene` in `pipeline.py`
+rewrite the script **and carry `shots.csv` with it** — that second half is the
+one that would have been forgotten and is the whole reason this is one operation
+rather than two: a boundary moving shifts every scene after it, and a row
+addressing a number would silently name a different line. Merging keeps the
+surviving row and fills its blanks from the absorbed one, so "hold, then push
+in" survives being made into one scene.
+
 **Not in scope, decided with it:** media below the scene. A change inside a
 scene is a composite, as `S12_ru_page_move.mp4` already is, not a third level in
 `shots.json`.
