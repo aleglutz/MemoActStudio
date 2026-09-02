@@ -81,3 +81,12 @@ projects/module03/screening/media/
 *.bak-*
 *.pregraft
 *.realpencil
+
+# Three project folders kept out of this public repository. They are working
+# material, not something to publish: the files stay on disk exactly where they
+# are and the tools still read them, they are simply no longer versioned here.
+# Excluding the directory itself means git never descends into it, so the
+# sources/ and archive/ negations further up cannot pull anything back in.
+projects/89-in-comfy/
+projects/legends_of_surrender/
+projects/module03/
