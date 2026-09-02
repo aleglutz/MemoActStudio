@@ -99,7 +99,15 @@ const CSS = `
 .ma-frame.locked { opacity:.45; }
 .ma-rect { position:absolute; border:1px solid #8ab4f8; background:rgba(138,180,248,.14);
   pointer-events:none; display:none; }
-.ma-rect.bad { border-color:#ff8a80; background:rgba(255,138,128,.14); }
+.ma-rect.bad { border-color:#ffcc80; background:rgba(255,204,128,.12); }
+/* A cross at the centre of the window. The rectangle says how much is in
+   frame; this says what the shot is actually on, which is the thing being
+   aimed at and was previously left to be estimated by eye. */
+.ma-rect::before, .ma-rect::after { content:""; position:absolute;
+  background:#8ab4f8; box-shadow:0 0 0 1px rgba(0,0,0,.55); }
+.ma-rect::before { left:50%; top:50%; width:11px; height:1px; margin:-1px 0 0 -5px; }
+.ma-rect::after { left:50%; top:50%; width:1px; height:11px; margin:-5px 0 0 -1px; }
+.ma-rect.bad::before, .ma-rect.bad::after { background:#ffcc80; }
 .ma-fields { display:grid; grid-template-columns:auto 1fr; gap:3px 6px;
   align-items:center; margin-top:6px; }
 .ma-fields label { font-size:10px; opacity:.7; }
@@ -449,14 +457,14 @@ class StorylinePanel {
     if (media) {
       if (focus) {
         this.sayFocus(fitFocus(media, focus[0], focus[1], focus[2]));
-      } else if (media.focus_max_w > media.focus_min_w + 1e-6) {
-        this.focusLine.textContent =
-          "drag on the picture to say what the shot is about; click to move it";
       } else {
-        this.focusLine.className = "ma-note warn";
+        this.focusLine.className =
+          "ma-note" + (media.max_zoom < 0.995 ? " warn" : "");
         this.focusLine.textContent = media.max_zoom < 0.995
-          ? "no focus to choose — the whole frame is already being enlarged"
-          : "no focus to choose — this source fills the frame and no more";
+          ? `drag on the picture to say what the shot is about — though this `
+            + `source is already stretched ${(1 / media.max_zoom).toFixed(2)}× `
+            + `to fill the frame, so anything tighter costs more of it`
+          : "drag on the picture to say what the shot is about; click to move it";
       }
       if (focus) {
         notes.push(el("div", { className: "ma-stops" }, [
@@ -578,7 +586,8 @@ class StorylinePanel {
         time,
         ...this.numbers(shot, k, i, media),
         el("span", { className: "grow",
-          textContent: unreachable ? "too near the edge" : "" }),
+          textContent: [unreachable ? "too near the edge" : "",
+                        this.enlargement(media, k)].filter(Boolean).join(" · ") }),
         el("button", {
           className: "ma-link", textContent: "+",
           title: "another stop just after this one, in the same place — a hold",
@@ -623,6 +632,8 @@ class StorylinePanel {
    * `i` is the stop's index, or null for a plain focus.
    */
   numbers(shot, k, i, media) {
+    // The floor is advice, not a bound: below it the picture is enlarged, and
+    // the tooltip and the readout say by how much. The ceiling is a real bound.
     const lo = media ? media.focus_min_w : 0.05;
     const hi = media ? media.focus_max_w : 1;
     const field = (key, value, min, max, step, title) => el("input", {
@@ -646,20 +657,29 @@ class StorylinePanel {
     return [
       field("cx", k.cx, 0, 1, 0.005, "across the picture"),
       field("cy", k.cy, 0, 1, 0.005, "down the picture"),
-      field("w", k.w, lo, hi, 0.005,
-            `how much of the width is in frame — ${lo.toFixed(3)} is as tight `
-            + `as this picture goes without being enlarged, ${hi.toFixed(3)} is `
-            + `the whole 9:16 window`),
+      field("w", k.w, 0.002, hi, 0.005,
+            `how much of the width is in frame. Below ${lo.toFixed(3)} the `
+            + `picture is enlarged, which is allowed and reported, never `
+            + `silent. ${hi.toFixed(3)} is the whole 9:16 window and the one `
+            + `real ceiling — past it there is no more picture`),
     ];
   }
 
   /** Whether a crop this wide can actually centre on this point. */
   unreachable(media, k) {
-    const w = Math.min(Math.max(k.w, media.focus_min_w), media.focus_max_w);
+    const w = Math.min(Math.max(k.w, 0.002), media.focus_max_w);
     const halfX = w / 2;
     const halfY = (w * media.width * 16 / 9) / 2 / media.height;
     return k.cx < halfX - 1e-6 || k.cx > 1 - halfX + 1e-6
         || k.cy < halfY - 1e-6 || k.cy > 1 - halfY + 1e-6;
+  }
+
+  /** "1.8x enlargement", or nothing when the picture is big enough. */
+  enlargement(media, k) {
+    if (!media) return "";
+    const wpx = Math.min(Math.max(k.w, 0.002), media.focus_max_w) * media.width;
+    const factor = 1080 / wpx;
+    return factor > 1.0005 ? `${factor.toFixed(2)}× enlargement` : "";
   }
 
   setPath(shot, stops) {
@@ -739,12 +759,11 @@ class StorylinePanel {
   sayFocus(fit, live) {
     const line = this.focusLine;
     if (!line || !fit || fit.w === undefined) return;
-    line.className = "ma-note" + (fit.wide ? " bad" : "");
-    line.textContent = fit.wide
-      ? `focus ${fit.w.toFixed(3)} — as narrow as this source allows; anything `
-        + `tighter is enlargement`
-      : `focus ${fit.w.toFixed(3)} · ${fit.zoom.toFixed(2)}× push-in`
-        + (live ? " — release to keep" : "");
+    line.className = "ma-note" + (fit.wide ? " warn" : "");
+    line.textContent = `${fit.w.toFixed(3)} wide · ${fit.zoom.toFixed(2)}× push-in`
+      + (fit.wide ? ` · ${fit.enlarge.toFixed(2)}× enlargement — the picture is `
+                    + `being stretched` : "")
+      + (live ? " — release to keep" : "");
   }
 }
 

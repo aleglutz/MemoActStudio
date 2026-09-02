@@ -47,6 +47,15 @@ near an edge is approached rather than centred, and the shot report says which
 and where it landed. A corner genuinely in the middle of the frame needs a
 surface behind the paper: that is `tools/render_move.py`, and a composite.
 
+**How tight either may go (changed 2026-09-01).** A window narrower than the
+output frame enlarges the picture, and that is now allowed: the panel prints the
+factor while the rectangle is drawn, the shot report names it, and the render's
+`on_upscale` decides whether it warns, refuses or stays quiet. The project's
+rule is that enlargement is never *silent*, not that it never happens — an
+editor pulling one face out of a large scan was being refused by a limit written
+for a small one. The **upper** bound is different and still holds: past the
+whole 9:16 window there is no more picture, which is arithmetic.
+
 `shot` addresses the shot either by **number** (1-based, as in the shot report)
 or by the **cue timecode** written in the script. Cues are the safer handle:
 inserting a line renumbers every shot after it, but a cue still points at the

@@ -112,18 +112,25 @@ def focus_window(src_w: int, src_h: int, focus: tuple[float, float, float],
                  ) -> tuple[float, float, float, float, bool]:
     """Resolve `(cx, cy, w)` fractions into a pixel window `(w, h, cx, cy)`.
 
-    Returns the window plus whether it had to be widened. Two ceilings apply and
-    both are the resolution guard in different clothes: the window may not be
-    narrower than the output (that would enlarge), and it may not be wider than
-    the base 9:16 window (there is no more image to show). The centre is left
-    alone here — `compute` clamps the rect into the source once it has one.
+    Returns the window plus whether it had to be widened. One ceiling applies:
+    the window may not be wider than the base 9:16 window, because past that
+    there is no more image and a crop cannot show what was never photographed.
+    That is arithmetic, not policy, and lifting it needs a surface behind the
+    picture the way `tools/render_move.py` has one.
+
+    **There is no floor any more (2026-09-01.)** A window narrower than the
+    output used to be widened back, which made the guard a refusal. The rule
+    this project actually keeps is that enlargement is never *silent*
+    (`CLAUDE.md`, `UPSCALE.md`) — and the machinery for saying it out loud
+    already existed at both ends: `render._check_upscale` reports the factor and
+    honours `on_upscale`, and the panel prints it while the rectangle is being
+    drawn. Refusing as well as reporting meant an editor who wanted a face out
+    of a large scan was told no by a rule written for a small one. The centre is
+    left alone here — `compute` clamps the rect into the source once it has one.
     """
     cxf, cyf, wf = focus
     w = min(wf * src_w, w0)
-    clamped = False
-    if w < out_w:
-        w = min(float(out_w), w0)
-        clamped = True
+    clamped = w < wf * src_w - 1e-9
     h = w / aspect
     if h > src_h:                      # taller than the source: fall back to it
         h = float(src_h)
@@ -145,6 +152,11 @@ def focus_limits(src_w: int, src_h: int, out_w: int = 1080,
     is too small to fill the output at all the two collapse to the same number:
     every window is the widest one, and the guard is going to enlarge whatever
     is chosen.
+
+    **The first number is advice, not a limit** — it is where enlargement
+    begins, and `focus_window` stops nothing there. The panel prints the factor
+    beside a rectangle drawn past it. The second number *is* a limit: past it
+    the window leaves the picture.
     """
     w0, _ = base_window(src_w, src_h, aspect)
     return min(float(out_w), w0) / src_w, w0 / src_w

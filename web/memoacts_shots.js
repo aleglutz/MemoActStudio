@@ -256,8 +256,11 @@ export class ShotsModel {
  * the render-time warning arriving while it is still a choice.
  */
 export function fitFocus(media, cx, cy, w) {
-  const wide = w < media.focus_min_w - 1e-6;
-  w = Math.min(Math.max(w, media.focus_min_w), media.focus_max_w);
+  // Only the ceiling clamps, and it is arithmetic rather than policy: past the
+  // base 9:16 window there is no more picture. Going tighter than the output
+  // frame is allowed and reported — `enlarge` is how much the picture will be
+  // stretched, and the rule this project keeps is that it is never silent.
+  w = Math.min(Math.max(w, 0.002), media.focus_max_w);
   let wpx = w * media.width;
   let hpx = wpx * 16 / 9;                         // the frame is 9:16
   if (hpx > media.height) {
@@ -267,10 +270,13 @@ export function fitFocus(media, cx, cy, w) {
   }
   const halfX = wpx / 2 / media.width;
   const halfY = hpx / 2 / media.height;
+  const enlarge = 1080 / wpx;
   return {
     cx: Math.min(Math.max(cx, halfX), 1 - halfX),
     cy: Math.min(Math.max(cy, halfY), 1 - halfY),
-    w, wpx, hpx, wide,
+    w, wpx, hpx,
+    enlarge,                       // >1 means the picture is being stretched
+    wide: enlarge > 1.0005,        // kept as the flag the rectangle colours on
     zoom: (media.max_zoom * 1080) / wpx,
   };
 }
