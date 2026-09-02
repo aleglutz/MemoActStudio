@@ -1,0 +1,800 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<!--
+  Generated reference, not hand-written prose. The parameters, defaults and
+  ranges below were read from a running ComfyUI's /object_info, so they are the
+  node schemas themselves rather than a description of them. Regenerate after
+  changing any node signature; the same page is published as an Artifact at
+  https://claude.ai/code/artifact/e5b9e350-c21e-4bac-aa0d-8da2a0d3968b
+
+  The webfont is loaded from Google Fonts. On a machine with no internet -- the
+  September workshop machines, by design -- it falls back to the system sans and
+  mono stacks declared beside it, and the page still reads.
+-->
+<style>img{max-width:100%}[hidden]{display:none!important}</style>
+<title>MemoActs Node Reference</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<style>
+:root{
+  --ground:#fbfbfc; --surface:#ffffff; --sunk:#f4f5f8;
+  --ink:#15171c; --muted:#5d636f; --faint:#878e9b;
+  --rule:#e0e3ea; --rule-strong:#c8cdd8;
+  --accent:#3b5bdb; --accent-soft:#eaeeff;
+  --socket:#6741d9; --socket-soft:#f1ecff;
+  --warn:#a35309; --warn-soft:#fdf3e6;
+  --ok:#20714a;
+  --shadow:0 1px 2px rgba(21,23,28,.05);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --ground:#0f1216; --surface:#161a20; --sunk:#1b1f27;
+    --ink:#e5e8ef; --muted:#9aa2b1; --faint:#78808f;
+    --rule:#262b34; --rule-strong:#38404c;
+    --accent:#8ab4f8; --accent-soft:#1b2534;
+    --socket:#b197fc; --socket-soft:#231d33;
+    --warn:#e0a45c; --warn-soft:#2b2117;
+    --ok:#5fc38d;
+    --shadow:0 1px 2px rgba(0,0,0,.3);
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#0f1216; --surface:#161a20; --sunk:#1b1f27;
+  --ink:#e5e8ef; --muted:#9aa2b1; --faint:#78808f;
+  --rule:#262b34; --rule-strong:#38404c;
+  --accent:#8ab4f8; --accent-soft:#1b2534;
+  --socket:#b197fc; --socket-soft:#231d33;
+  --warn:#e0a45c; --warn-soft:#2b2117;
+  --ok:#5fc38d;
+  --shadow:0 1px 2px rgba(0,0,0,.3);
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--ground); color:var(--ink);
+  font-family:"IBM Plex Sans",system-ui,-apple-system,Segoe UI,sans-serif;
+  font-size:15px; line-height:1.55;
+  -webkit-font-smoothing:antialiased;
+}
+code,.mono,th,td.n,.chip{font-family:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace}
+
+.wrap{max-width:1180px; margin:0 auto; padding:0 24px 96px}
+header.top{border-bottom:1px solid var(--rule); background:var(--surface)}
+header.top .wrap{padding-top:38px; padding-bottom:30px}
+h1{
+  font-size:31px; line-height:1.15; margin:0 0 8px; font-weight:600;
+  letter-spacing:-.018em; text-wrap:balance;
+}
+.sub{color:var(--muted); max-width:66ch; margin:0 0 22px}
+.facts{display:flex; flex-wrap:wrap; gap:0; border:1px solid var(--rule); border-radius:7px; overflow:hidden}
+.fact{padding:10px 16px; border-right:1px solid var(--rule); flex:1 1 auto; min-width:132px}
+.fact:last-child{border-right:none}
+.fact b{display:block; font-family:"IBM Plex Mono",monospace; font-size:19px; font-weight:600; font-variant-numeric:tabular-nums}
+.fact span{font-size:11px; text-transform:uppercase; letter-spacing:.07em; color:var(--faint)}
+
+.cols{display:grid; grid-template-columns:214px minmax(0,1fr); gap:40px; padding-top:34px}
+@media(max-width:900px){.cols{grid-template-columns:1fr; gap:22px}}
+
+nav.index{position:sticky; top:18px; align-self:start; max-height:calc(100vh - 36px); overflow:auto; font-size:13px}
+@media(max-width:900px){nav.index{position:static; max-height:none}}
+nav.index h4{
+  font-size:10.5px; text-transform:uppercase; letter-spacing:.09em;
+  color:var(--faint); margin:18px 0 7px; font-weight:600;
+}
+nav.index h4:first-child{margin-top:0}
+nav.index a{
+  display:block; padding:2.5px 0; color:var(--muted); text-decoration:none;
+  font-family:"IBM Plex Mono",monospace; font-size:12px;
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+}
+nav.index a:hover,nav.index a:focus-visible{color:var(--accent); text-decoration:underline}
+
+section{margin-bottom:52px; scroll-margin-top:18px}
+h2{
+  font-size:12px; text-transform:uppercase; letter-spacing:.1em; font-weight:600;
+  color:var(--accent); margin:0 0 4px;
+}
+h2+.lede{color:var(--muted); margin:0 0 20px; max-width:72ch; font-size:14px}
+
+.node{
+  background:var(--surface); border:1px solid var(--rule); border-radius:8px;
+  margin-bottom:14px; box-shadow:var(--shadow); scroll-margin-top:18px; overflow:hidden;
+}
+.node > .head{display:flex; flex-wrap:wrap; align-items:baseline; gap:9px; padding:13px 16px 0}
+.node .id{font-family:"IBM Plex Mono",monospace; font-weight:600; font-size:14.5px}
+.node .display{color:var(--muted); font-size:13px}
+.node .cat{
+  margin-left:auto; font-family:"IBM Plex Mono",monospace; font-size:11px;
+  color:var(--faint); white-space:nowrap;
+}
+.node .desc{padding:7px 16px 13px; margin:0; color:var(--muted); font-size:13.5px; max-width:76ch}
+.node .desc strong{color:var(--ink); font-weight:600}
+
+.tablewrap{overflow-x:auto; border-top:1px solid var(--rule)}
+table{border-collapse:collapse; width:100%; font-size:12.5px}
+th{
+  text-align:left; font-weight:600; font-size:10px; text-transform:uppercase;
+  letter-spacing:.07em; color:var(--faint); padding:7px 16px; background:var(--sunk);
+  border-bottom:1px solid var(--rule); white-space:nowrap;
+}
+td{padding:7px 16px; border-bottom:1px solid var(--rule); vertical-align:top}
+tr:last-child td{border-bottom:none}
+td.n{font-weight:500; white-space:nowrap}
+td.t{white-space:nowrap; color:var(--socket); font-family:"IBM Plex Mono",monospace; font-size:11.5px}
+td.d{font-family:"IBM Plex Mono",monospace; font-size:11.5px; color:var(--muted); white-space:nowrap; font-variant-numeric:tabular-nums}
+td.about{color:var(--muted); min-width:250px}
+.opt{color:var(--faint); font-size:10px; text-transform:uppercase; letter-spacing:.06em; margin-left:5px}
+.out{
+  padding:9px 16px; background:var(--sunk); font-size:12px; color:var(--muted);
+  border-top:1px solid var(--rule); font-family:"IBM Plex Mono",monospace;
+}
+.out b{color:var(--ink); font-weight:600}
+
+.chip{
+  display:inline-block; padding:1px 6px; border-radius:4px; font-size:11px;
+  background:var(--socket-soft); color:var(--socket); border:1px solid transparent;
+}
+.chip.plain{background:var(--accent-soft); color:var(--accent)}
+
+.flow{
+  display:flex; flex-wrap:wrap; gap:7px; align-items:center; padding:14px 16px;
+  background:var(--surface); border:1px solid var(--rule); border-radius:8px;
+  font-family:"IBM Plex Mono",monospace; font-size:12.5px; margin-bottom:20px;
+}
+.flow i{color:var(--faint); font-style:normal}
+.flow b{font-weight:600}
+.flow .step{padding:3px 8px; border:1px solid var(--rule-strong); border-radius:5px; background:var(--sunk)}
+
+.note{
+  border-left:3px solid var(--warn); background:var(--warn-soft);
+  padding:11px 15px; border-radius:0 6px 6px 0; font-size:13px; margin:0 0 16px;
+  color:var(--ink);
+}
+.note b{font-weight:600}
+.note code{background:transparent; padding:0}
+
+code{background:var(--sunk); padding:1px 4px; border-radius:3px; font-size:.9em}
+a{color:var(--accent)}
+:focus-visible{outline:2px solid var(--accent); outline-offset:2px; border-radius:3px}
+footer{border-top:1px solid var(--rule); margin-top:10px; padding-top:18px; color:var(--faint); font-size:12px}
+</style>
+
+</head>
+<body>
+<header class="top"><div class="wrap">
+  <h1>MemoActs Node Reference</h1>
+  <p class="sub">Every node in <code>comfyui-memoacts</code>, its parameters and its sockets, read from
+  the running server's <code>/object_info</code> on 2026-09-02. This is the interface surface — what
+  each node accepts, what it returns, and what it writes to disk.</p>
+  <div class="facts">
+    <div class="fact"><b>28</b><span>nodes</span></div>
+    <div class="fact"><b>7</b><span>custom sockets</span></div>
+    <div class="fact"><b>3</b><span>categories</span></div>
+    <div class="fact"><b>13</b><span>shots.csv columns</span></div>
+    <div class="fact"><b>9</b><span>HTTP routes</span></div>
+    <div class="fact"><b>1.6</b><span>shots.json schema</span></div>
+  </div>
+</div></header>
+
+<div class="wrap"><div class="cols">
+<nav class="index">
+  <h4>Reel pipeline</h4>
+  <a href="#MemoActsSetNarration">SetNarration</a>
+  <a href="#MemoActsProject">Project</a>
+  <a href="#MemoActsAlign">Align</a>
+  <a href="#MemoActsShotTable">ShotTable</a>
+  <a href="#MemoActsSubtitles">Subtitles</a>
+  <a href="#MemoActsRenderReel">RenderReel</a>
+  <a href="#MemoActsPreviewShot">PreviewShot</a>
+  <a href="#MemoActsSetMotion">SetMotion</a>
+  <a href="#MemoActsSetImage">SetImage</a>
+  <h4>Sound</h4>
+  <a href="#MemoActsSoundDesign">SoundDesign</a>
+  <a href="#MemoActsSfxPrompt">SfxPrompt</a>
+  <a href="#MemoActsSaveSfx">SaveSfx</a>
+  <a href="#MemoActsSfxBed">SfxBed</a>
+  <h4>Effects</h4>
+  <a href="#MemoActsEffectPreset">EffectPreset</a>
+  <a href="#MemoActsGrade">Grade</a>
+  <a href="#MemoActsGrain">Grain</a>
+  <a href="#MemoActsTexture">Texture</a>
+  <a href="#MemoActsFrameOverlay">FrameOverlay</a>
+  <a href="#MemoActsShake">Shake</a>
+  <a href="#MemoActsSharpen">Sharpen</a>
+  <a href="#MemoActsApplyEffects">ApplyEffects</a>
+  <h4>Page</h4>
+  <a href="#MemoActsPaperMask">PaperMask</a>
+  <a href="#MemoActsPencilCrop">PencilCrop</a>
+  <a href="#MemoActsPencilPrompt">PencilPrompt</a>
+  <a href="#MemoActsPencilLift">PencilLift</a>
+  <a href="#MemoActsPencilGraft">PencilGraft</a>
+  <a href="#MemoActsPageFile">PageFile</a>
+  <a href="#MemoActsTypePage">TypePage</a>
+  <h4>Reference</h4>
+  <a href="#sockets">Socket types</a>
+  <a href="#csv">shots.csv columns</a>
+  <a href="#routes">HTTP routes</a>
+  <a href="#limits">Constraints</a>
+</nav>
+
+<main>
+
+<section id="pipeline">
+  <h2>Execution order</h2>
+  <p class="lede">Five nodes carry a reel from a project folder to an MP4. Sockets are typed, so the
+  order is enforced by the graph rather than by convention. Editing decisions are not made in any of
+  these nodes — they are made in the Storyline sidebar panel, which writes <code>shots.csv</code>.</p>
+  <div class="flow">
+    <span class="step">Set Narration</span><i>→ PROJECT →</i>
+    <span class="step">Project</span><i>→</i>
+    <span class="step">Align</span><i>→ ALIGNMENT →</i>
+    <span class="step">Shot Table</span><i>→ SHOTS →</i>
+    <span class="step">Subtitles</span><i>→ SUBS →</i>
+    <span class="step">Render Reel</span>
+  </div>
+  <p class="lede"><b>Cost profile.</b> Align is the only slow step (~90 s, Whisper). Project, Shot
+  Table and Subtitles are disk reads and complete in under a second. Render Reel is CPU-bound at
+  roughly 61 ms/frame at 1080×1920 — a 142-second reel took 301 s including alignment.</p>
+</section>
+
+<section id="core">
+  <h2>Category <code>memoacts</code> — reel pipeline</h2>
+  <p class="lede">Nine nodes. All but Align and the two override nodes are output nodes: they run on
+  Queue and return a text or video preview rather than only a socket.</p>
+
+  <article class="node" id="MemoActsSetNarration">
+    <div class="head"><span class="id">MemoActsSetNarration</span><span class="display">MemoActs — Set Narration</span><span class="cat">memoacts</span></div>
+    <p class="desc">Writes an <code>AUDIO</code> tensor to <code>&lt;project&gt;/sources/narration.wav</code>
+    as 24-bit PCM, preserving the incoming sample rate and channel count. Creates the project
+    directory tree if the name is new. Moves any other <code>narration.*</code> in <code>sources/</code>
+    to <code>archive/</code>, because <code>find_narration()</code> takes the first match
+    alphabetically and <code>narration.mp3</code> would otherwise shadow the WAV. <strong>Skips the
+    write when the encoded bytes are identical</strong>, so re-queuing does not invalidate the
+    alignment cache. Reports remaining prerequisites: scene count in <code>script.md</code>, image
+    count in <code>sources/images/</code>.</p>
+    <div class="tablewrap"><table>
+      <tr><th>Parameter</th><th>Type</th><th>Default</th><th>Notes</th></tr>
+      <tr><td class="n">audio</td><td class="t">AUDIO</td><td class="d">—</td><td class="about">Output of the voice workflow, or a plain Load Audio.</td></tr>
+      <tr><td class="n">project</td><td class="t">STRING</td><td class="d">""</td><td class="about">Folder name under <code>projects/</code>. Rejects path separators and leading dots.</td></tr>
+      <tr><td class="n">create_if_missing</td><td class="t">BOOLEAN</td><td class="d">true</td><td class="about">False refuses an unknown name instead of creating it.</td></tr>
+    </table></div>
+    <div class="out"><b>→ PROJECT</b> &nbsp;·&nbsp; output node &nbsp;·&nbsp; cache key: written file's mtime + size</div>
+  </article>
+
+  <article class="node" id="MemoActsProject">
+    <div class="head"><span class="id">MemoActsProject</span><span class="display">MemoActs — Project</span><span class="cat">memoacts</span></div>
+    <p class="desc">Reads the project folder and reports it: which recording was found and its
+    duration, image count, scene count, and which media each scene resolved to. Raises on the three
+    conditions that make a project unusable — no recording, no script, no images. Everything else is
+    a warning. Runs no model and touches no GPU.</p>
+    <div class="tablewrap"><table>
+      <tr><th>Parameter</th><th>Type</th><th>Default</th><th>Notes</th></tr>
+      <tr><td class="n">project</td><td class="t">COMBO</td><td class="d">—</td><td class="about">Folder names under <code>projects/</code>, read when node definitions are built. Press <kbd>R</kbd> after creating one.</td></tr>
+      <tr><td class="n">project_dir<span class="opt">optional</span></td><td class="t">STRING</td><td class="d">""</td><td class="about">Explicit path, overriding the picker. Exists for the moment before a refresh.</td></tr>
+    </table></div>
+    <div class="out"><b>→ PROJECT</b> &nbsp;·&nbsp; output node</div>
+  </article>
+
+  <article class="node" id="MemoActsAlign">
+    <div class="head"><span class="id">MemoActsAlign</span><span class="display">MemoActs — Align</span><span class="cat">memoacts</span></div>
+    <p class="desc">Forced alignment of the known script text against the recording, via
+    <code>stable-ts</code>. <strong>Does not transcribe</strong> — it computes when each word of the
+    existing script is spoken, which is why subtitles reproduce the script verbatim. Cached on the
+    mtimes of <code>script.md</code> and the recording, so downstream edits cost nothing. Falls back
+    to proportional spans if the aligner is unavailable, flagging the result as estimated.</p>
+    <div class="tablewrap"><table>
+      <tr><th>Parameter</th><th>Type</th><th>Default</th><th>Notes</th></tr>
+      <tr><td class="n">project</td><td class="t">MEMOACTS_PROJECT</td><td class="d">—</td><td class="about"></td></tr>
+      <tr><td class="n">lang</td><td class="t">COMBO</td><td class="d">"en"</td><td class="about"><code>en</code> only — translation is out of project scope (SPEC v3.1).</td></tr>
+      <tr><td class="n">model</td><td class="t">COMBO</td><td class="d">"small"</td><td class="about"><code>tiny · base · small · medium</code>. Downloaded on first use; <code>medium</code> is 1.42 GB.</td></tr>
+      <tr><td class="n">skip_alignment</td><td class="t">BOOLEAN</td><td class="d">false</td><td class="about">Distributes duration by word count instead. Instant, and wrong by design — for structural testing.</td></tr>
+    </table></div>
+    <div class="out"><b>→ ALIGNMENT</b> &nbsp;·&nbsp; ~90 s &nbsp;·&nbsp; cache key: script + recording mtimes</div>
+  </article>
+
+  <article class="node" id="MemoActsShotTable">
+    <div class="head"><span class="id">MemoActsShotTable</span><span class="display">MemoActs — Shot Table</span><span class="cat">memoacts</span></div>
+    <p class="desc">Combines timings with the decisions in <code>shots.csv</code> and emits the shot
+    table. Writes <code>generated/shots.json</code> (schema 1.6) and <code>generated/report.txt</code>.
+    Re-reads the folder on every run, so an edit never re-triggers alignment. The printed report is
+    the check before rendering: per-scene start/end, alignment confidence, resolution-guard verdict,
+    and every warning raised by the shot list.</p>
+    <div class="tablewrap"><table>
+      <tr><th>Parameter</th><th>Type</th><th>Default</th><th>Range</th><th>Notes</th></tr>
+      <tr><td class="n">alignment</td><td class="t">MEMOACTS_ALIGNMENT</td><td class="d">—</td><td class="d">—</td><td class="about"></td></tr>
+      <tr><td class="n">fps</td><td class="t">INT</td><td class="d">30</td><td class="d">1–120</td><td class="about"></td></tr>
+      <tr><td class="n">shot_lead_ms</td><td class="t">INT</td><td class="d">100</td><td class="d">0–1000</td><td class="about">Cuts lead the sentence onset. Word timings are not moved, so captions stay on the voice.</td></tr>
+      <tr><td class="n">save</td><td class="t">BOOLEAN</td><td class="d">true</td><td class="d">—</td><td class="about">Off keeps the table in the graph only; the render works either way.</td></tr>
+      <tr><td class="n">max_chunk<span class="opt">optional</span></td><td class="t">INT</td><td class="d">30</td><td class="d">1–600</td><td class="about">Frames per crop CSV, for the Comfy Cloud path only. Local rendering never chunks.</td></tr>
+    </table></div>
+    <div class="out"><b>→ SHOTS</b> &nbsp;·&nbsp; output node &nbsp;·&nbsp; cache key: <code>shots.csv</code> + media dir mtimes</div>
+  </article>
+
+  <article class="node" id="MemoActsSubtitles">
+    <div class="head"><span class="id">MemoActsSubtitles</span><span class="display">MemoActs — Subtitles</span><span class="cat">memoacts</span></div>
+    <p class="desc">Caption settings, and a preview of the cues without rendering a frame. Carries
+    style only — the <code>.ass</code> and <code>.srt</code> files are written by the render, so
+    burn-in and sidecar come from one pass and cannot diverge. Reports any cue too wide for one line
+    under a <code>WRAPS</code> heading; a wrapped caption stacks two backing plates.</p>
+    <div class="tablewrap"><table>
+      <tr><th>Parameter</th><th>Type</th><th>Default</th><th>Range</th><th>Notes</th></tr>
+      <tr><td class="n">shots</td><td class="t">MEMOACTS_SHOTS</td><td class="d">—</td><td class="d">—</td><td class="about"></td></tr>
+      <tr><td class="n">size</td><td class="t">INT</td><td class="d">56</td><td class="d">8–200</td><td class="about">Caption point size.</td></tr>
+      <tr><td class="n">plate_opacity</td><td class="t">FLOAT</td><td class="d">0.68</td><td class="d">0–1</td><td class="about">Backing plate behind the text.</td></tr>
+      <tr><td class="n">segment</td><td class="t">BOOLEAN</td><td class="d">true</td><td class="d">—</td><td class="about">Split long sentences at word timings instead of one cue per scene.</td></tr>
+      <tr><td class="n">min_duration</td><td class="t">FLOAT</td><td class="d">1.0</td><td class="d">0–5</td><td class="about">Shortest time a caption stays up, in seconds.</td></tr>
+      <tr><td class="n">label_hold</td><td class="t">FLOAT</td><td class="d">3.0</td><td class="d">0–30</td><td class="about">How long a corner label holds from the scene's start.</td></tr>
+    </table></div>
+    <div class="out"><b>→ SUBS</b> &nbsp;·&nbsp; output node &nbsp;·&nbsp; instant</div>
+  </article>
+
+  <article class="node" id="MemoActsRenderReel">
+    <div class="head"><span class="id">MemoActsRenderReel</span><span class="display">MemoActs — Render Reel</span><span class="cat">memoacts</span></div>
+    <p class="desc">One ffmpeg pass: per-frame crops streamed from PIL, subtitles burnt via libass,
+    narration muxed without re-timing. Memory is constant in reel length — no chunking, no concat.
+    Reports progress per frame with the frame attached, which also provides cancellation. Output is
+    numbered and never overwritten. With <code>sfx</code> connected, the bed is summed with the
+    narration using <code>amix …:normalize=0</code>; the default would drop the voice 6 dB.</p>
+    <div class="tablewrap"><table>
+      <tr><th>Parameter</th><th>Type</th><th>Default</th><th>Range</th><th>Notes</th></tr>
+      <tr><td class="n">shots</td><td class="t">MEMOACTS_SHOTS</td><td class="d">—</td><td class="d">—</td><td class="about"></td></tr>
+      <tr><td class="n">filename_prefix</td><td class="t">STRING</td><td class="d">"memoacts/reel"</td><td class="d">—</td><td class="about">Under ComfyUI's output directory.</td></tr>
+      <tr><td class="n">effect_preset</td><td class="t">COMBO</td><td class="d">"none"</td><td class="d">—</td><td class="about">Fallback for scenes naming none of their own. Measured cost ×: handheld 2.6, archive_soft 2.9, cold_document 3.2, archive_harsh 3.9, newsreel 4.0.</td></tr>
+      <tr><td class="n">crf</td><td class="t">INT</td><td class="d">19</td><td class="d">0–51</td><td class="about">H.264 quality; lower is larger.</td></tr>
+      <tr><td class="n">on_upscale</td><td class="t">COMBO</td><td class="d">"warn"</td><td class="d">—</td><td class="about"><code>warn · error · allow</code>. Enlargement is permitted but never silent.</td></tr>
+      <tr><td class="n">subtitles<span class="opt">optional</span></td><td class="t">MEMOACTS_SUBS</td><td class="d">—</td><td class="d">—</td><td class="about">Unconnected renders without captions.</td></tr>
+      <tr><td class="n">effects<span class="opt">optional</span></td><td class="t">MEMOACTS_EFFECTS</td><td class="d">—</td><td class="d">—</td><td class="about">Applies to every scene that has no stack of its own.</td></tr>
+      <tr><td class="n">sfx<span class="opt">optional</span></td><td class="t">AUDIO</td><td class="d">—</td><td class="d">—</td><td class="about">Sound-design bed, or any AUDIO.</td></tr>
+    </table></div>
+    <div class="out">output node, no socket output &nbsp;·&nbsp; minutes &nbsp;·&nbsp; ~61 ms/frame at 1080×1920</div>
+  </article>
+
+  <article class="node" id="MemoActsPreviewShot">
+    <div class="head"><span class="id">MemoActsPreviewShot</span><span class="display">MemoActs — Preview Shot</span><span class="cat">memoacts</span></div>
+    <p class="desc">Renders one scene at <code>crf 23</code>. No narration and no captions: both are
+    timed from the head of the reel and would be wrong against a fragment. Seconds instead of
+    minutes, which is what makes a framing decision testable.</p>
+    <div class="tablewrap"><table>
+      <tr><th>Parameter</th><th>Type</th><th>Default</th><th>Range</th><th>Notes</th></tr>
+      <tr><td class="n">shots</td><td class="t">MEMOACTS_SHOTS</td><td class="d">—</td><td class="d">—</td><td class="about"></td></tr>
+      <tr><td class="n">shot_id</td><td class="t">INT</td><td class="d">1</td><td class="d">1–999</td><td class="about">1-based, as in the report.</td></tr>
+      <tr><td class="n">effect_preset</td><td class="t">COMBO</td><td class="d">"none"</td><td class="d">—</td><td class="about"></td></tr>
+      <tr><td class="n">on_upscale</td><td class="t">COMBO</td><td class="d">"warn"</td><td class="d">—</td><td class="about"></td></tr>
+      <tr><td class="n">effects<span class="opt">optional</span></td><td class="t">MEMOACTS_EFFECTS</td><td class="d">—</td><td class="d">—</td><td class="about"></td></tr>
+    </table></div>
+    <div class="out">output node, no socket output</div>
+  </article>
+
+  <article class="node" id="MemoActsSetMotion">
+    <div class="head"><span class="id">MemoActsSetMotion</span><span class="display">MemoActs — Set Motion</span><span class="cat">memoacts</span></div>
+    <p class="desc">Overrides motion for one scene or all of them, in the graph rather than in the
+    file. Preserves the scene's <code>focus</code> and <code>path</code> — a change of direction does
+    not revise what the shot is about. The durable place for this decision is the
+    <code>motion</code> column.</p>
+    <div class="tablewrap"><table>
+      <tr><th>Parameter</th><th>Type</th><th>Default</th><th>Range</th><th>Notes</th></tr>
+      <tr><td class="n">shots</td><td class="t">MEMOACTS_SHOTS</td><td class="d">—</td><td class="d">—</td><td class="about"></td></tr>
+      <tr><td class="n">shot_id</td><td class="t">INT</td><td class="d">0</td><td class="d">0–999</td><td class="about">0 applies to every scene.</td></tr>
+      <tr><td class="n">preset</td><td class="t">COMBO</td><td class="d">"zoom_in"</td><td class="d">—</td><td class="about"><code>static · zoom_in · zoom_out · pan_lr · pan_rl · pan_ud · pan_du · square_in · fit</code></td></tr>
+      <tr><td class="n">rate</td><td class="t">FLOAT</td><td class="d">0.06</td><td class="d">0–0.5</td><td class="about">Zoom fraction across the scene. 0.04–0.08 reads as a drift. Unused when a focus is set.</td></tr>
+      <tr><td class="n">anchor</td><td class="t">COMBO</td><td class="d">"center"</td><td class="d">—</td><td class="about"><code>center · top</code></td></tr>
+    </table></div>
+    <div class="out"><b>→ SHOTS</b></div>
+  </article>
+
+  <article class="node" id="MemoActsSetImage">
+    <div class="head"><span class="id">MemoActsSetImage</span><span class="display">MemoActs — Set Shot Image</span><span class="cat">memoacts</span></div>
+    <p class="desc">Overrides the media for one scene by filename, resolved across
+    <code>sources/images · composites · maps · videos</code>.</p>
+    <div class="tablewrap"><table>
+      <tr><th>Parameter</th><th>Type</th><th>Default</th><th>Range</th><th>Notes</th></tr>
+      <tr><td class="n">shots</td><td class="t">MEMOACTS_SHOTS</td><td class="d">—</td><td class="d">—</td><td class="about"></td></tr>
+      <tr><td class="n">shot_id</td><td class="t">INT</td><td class="d">1</td><td class="d">1–999</td><td class="about"></td></tr>
+      <tr><td class="n">media_filename</td><td class="t">STRING</td><td class="d">—</td><td class="d">—</td><td class="about">Bare filename, no path.</td></tr>
+    </table></div>
+    <div class="out"><b>→ SHOTS</b></div>
+  </article>
+</section>
+
+<section id="sound">
+  <h2>Category <code>memoacts</code> — sound design</h2>
+  <p class="lede">Four nodes around a third table, <code>sfx.csv</code>. The generator sits
+  <em>between</em> SFX Prompt and Save SFX rather than inside either, so swapping the audio model
+  changes nothing else in the graph. The narration is read but never written.</p>
+
+  <article class="node" id="MemoActsSoundDesign">
+    <div class="head"><span class="id">MemoActsSoundDesign</span><span class="display">MemoActs — Sound Design</span><span class="cat">memoacts</span></div>
+    <p class="desc">Reads or writes <code>&lt;project&gt;/sfx.csv</code> and resolves each row against
+    the shot table: absolute start time, duration, gain, duck, and whether the recording exists yet.
+    An empty text box means "read the file"; text in it wins and is written back. A project with no
+    <code>sfx.csv</code> gets a starter table, one commented row per scene.</p>
+    <div class="tablewrap"><table>
+      <tr><th>Parameter</th><th>Type</th><th>Default</th><th>Notes</th></tr>
+      <tr><td class="n">shots</td><td class="t">MEMOACTS_SHOTS</td><td class="d">—</td><td class="about"></td></tr>
+      <tr><td class="n">cues</td><td class="t">STRING</td><td class="d">""</td><td class="about">multiline. Columns: <code>shot, at, dur, gain, fade, duck, loop, file, seed, prompt, notes</code>.</td></tr>
+      <tr><td class="n">save_to_csv</td><td class="t">BOOLEAN</td><td class="d">true</td><td class="about">Write the box back to <code>sfx.csv</code>.</td></tr>
+    </table></div>
+    <div class="out"><b>→ SFX</b> &nbsp;·&nbsp; output node &nbsp;·&nbsp; cache key: <code>sfx.csv</code> mtime when the box is empty</div>
+  </article>
+
+  <article class="node" id="MemoActsSfxPrompt">
+    <div class="head"><span class="id">MemoActsSfxPrompt</span><span class="display">MemoActs — SFX Prompt</span><span class="cat">memoacts</span></div>
+    <p class="desc">Hands one row to a text-to-audio graph. Set the batch count to the number of rows
+    and leave <code>index</code> on increment: one queued batch walks the whole table. Duration comes
+    from the row's <code>dur</code>, or the scene's length, clamped to 1–47 s.</p>
+    <div class="tablewrap"><table>
+      <tr><th>Parameter</th><th>Type</th><th>Default</th><th>Range</th><th>Notes</th></tr>
+      <tr><td class="n">design</td><td class="t">MEMOACTS_SFX</td><td class="d">—</td><td class="d">—</td><td class="about"></td></tr>
+      <tr><td class="n">index</td><td class="t">INT</td><td class="d">1</td><td class="d">1–999</td><td class="about">1-based, in file order. <code>control_after_generate</code>.</td></tr>
+      <tr><td class="n">seed</td><td class="t">INT</td><td class="d">0</td><td class="d">0–2⁶⁴</td><td class="about">Recorded into <code>sfx.csv</code> by Save SFX.</td></tr>
+      <tr><td class="n">style</td><td class="t">STRING</td><td class="d">see note</td><td class="d">—</td><td class="about">Appended to every prompt. Default: <code>single sound effect, field recording, close mono source, dry, clean, no music, no speech</code>.</td></tr>
+      <tr><td class="n">negative</td><td class="t">STRING</td><td class="d">see note</td><td class="d">—</td><td class="about">Default includes <code>heavy reverb</code> — a second acoustic under a voice is what makes a mix sound assembled.</td></tr>
+    </table></div>
+    <div class="out"><b>→ positive</b> STRING &nbsp; <b>negative</b> STRING &nbsp; <b>seconds</b> FLOAT &nbsp; <b>seed</b> INT &nbsp; <b>CUE</b> <span class="chip">MEMOACTS_SFX_CUE</span></div>
+  </article>
+
+  <article class="node" id="MemoActsSaveSfx">
+    <div class="head"><span class="id">MemoActsSaveSfx</span><span class="display">MemoActs — Save SFX</span><span class="cat">memoacts</span></div>
+    <p class="desc">Writes the generated take to <code>sources/sfx/</code> under the filename its row
+    asked for, and records that name and the seed back into <code>sfx.csv</code>. Trims leading
+    near-silence measured against the take's own peak — generated audio routinely opens with a second
+    of imagined room, which would land the event after its cue.</p>
+    <div class="tablewrap"><table>
+      <tr><th>Parameter</th><th>Type</th><th>Default</th><th>Range</th><th>Notes</th></tr>
+      <tr><td class="n">audio</td><td class="t">AUDIO</td><td class="d">—</td><td class="d">—</td><td class="about"></td></tr>
+      <tr><td class="n">cue</td><td class="t">MEMOACTS_SFX_CUE</td><td class="d">—</td><td class="d">—</td><td class="about">From SFX Prompt; carries which row asked.</td></tr>
+      <tr><td class="n">peak_dbfs</td><td class="t">FLOAT</td><td class="d">-1.0</td><td class="d">-40–0</td><td class="about">Normalise before saving so the gain column means the same for every sound. 0 saves as generated.</td></tr>
+      <tr><td class="n">head_db_below_peak</td><td class="t">FLOAT</td><td class="d">20.0</td><td class="d">0–90</td><td class="about">Onset threshold below the take's peak. 90 keeps the take whole. 20 ms of pre-roll is kept so the attack survives.</td></tr>
+    </table></div>
+    <div class="out"><b>→ audio</b> AUDIO &nbsp;·&nbsp; output node &nbsp;·&nbsp; writes <code>sources/sfx/*.wav</code> at 44.1 kHz, 24-bit</div>
+  </article>
+
+  <article class="node" id="MemoActsSfxBed">
+    <div class="head"><span class="id">MemoActsSfxBed</span><span class="display">MemoActs — SFX Bed</span><span class="cat">memoacts</span></div>
+    <p class="desc">Mixes every resolved cue into one track the length of the reel — placed, faded and
+    optionally ducked under the narration — and writes <code>generated/sfx_bed.wav</code>. The
+    narration is opened read-only; the only signal written is the effects layer.</p>
+    <div class="tablewrap"><table>
+      <tr><th>Parameter</th><th>Type</th><th>Default</th><th>Range</th><th>Notes</th></tr>
+      <tr><td class="n">design</td><td class="t">MEMOACTS_SFX</td><td class="d">—</td><td class="d">—</td><td class="about"></td></tr>
+      <tr><td class="n">master_gain_db</td><td class="t">FLOAT</td><td class="d">0.0</td><td class="d">-40–12</td><td class="about">The whole layer, after per-row gains.</td></tr>
+      <tr><td class="n">duck_under_voice</td><td class="t">BOOLEAN</td><td class="d">true</td><td class="d">—</td><td class="about">Off makes the table's own gains audible for judging.</td></tr>
+    </table></div>
+    <div class="out"><b>→ sfx_bed</b> AUDIO &nbsp;·&nbsp; output node</div>
+  </article>
+</section>
+
+<section id="effects">
+  <h2>Category <code>memoacts/effects</code></h2>
+  <p class="lede">Eight nodes. Each family node takes an optional <code>EFFECTS</code> and returns a
+  copy with its own family set, so they chain. A later node overrides the same family set earlier,
+  including one set by a preset — that is the intended way to take a preset and adjust one control.
+  Effects are applied per frame after the crop.</p>
+
+  <article class="node" id="MemoActsEffectPreset">
+    <div class="head"><span class="id">MemoActsEffectPreset</span><span class="display">MemoActs — Effect Preset</span><span class="cat">memoacts/effects</span></div>
+    <p class="desc">A named combination of the six families.</p>
+    <div class="tablewrap"><table>
+      <tr><th>Parameter</th><th>Type</th><th>Default</th><th>Notes</th></tr>
+      <tr><td class="n">preset</td><td class="t">COMBO</td><td class="d">"archive_soft"</td><td class="about"><code>none · archive_soft (2.9×) · handheld (2.6×) · cold_document (3.2×) · archive_harsh (3.9×) · newsreel (4.0×)</code> — measured render cost against a clean pass.</td></tr>
+    </table></div>
+    <div class="out"><b>→ EFFECTS</b></div>
+  </article>
+
+  <article class="node" id="MemoActsGrade">
+    <div class="head"><span class="id">MemoActsGrade</span><span class="display">MemoActs — Grade</span><span class="cat">memoacts/effects</span></div>
+    <p class="desc">Colour grade. A <code>.cube</code> LUT, if given, replaces the parametric controls entirely.</p>
+    <div class="tablewrap"><table>
+      <tr><th>Parameter</th><th>Type</th><th>Default</th><th>Range</th><th>Notes</th></tr>
+      <tr><td class="n">exposure</td><td class="t">FLOAT</td><td class="d">0.0</td><td class="d">-4–4</td><td class="about">In stops.</td></tr>
+      <tr><td class="n">contrast</td><td class="t">FLOAT</td><td class="d">0.0</td><td class="d">-1–1</td><td class="about"></td></tr>
+      <tr><td class="n">saturation</td><td class="t">FLOAT</td><td class="d">0.0</td><td class="d">-1–2</td><td class="about">−1 is fully desaturated.</td></tr>
+      <tr><td class="n">temperature</td><td class="t">FLOAT</td><td class="d">0.0</td><td class="d">-1–1</td><td class="about">−1 cool … +1 warm.</td></tr>
+      <tr><td class="n">lift</td><td class="t">FLOAT</td><td class="d">0.0</td><td class="d">0–0.5</td><td class="about">Raises blacks.</td></tr>
+      <tr><td class="n">lut_path</td><td class="t">STRING</td><td class="d">""</td><td class="d">—</td><td class="about">Overrides everything above.</td></tr>
+      <tr><td class="n">effects<span class="opt">optional</span></td><td class="t">MEMOACTS_EFFECTS</td><td class="d">—</td><td class="d">—</td><td class="about">Stack to extend.</td></tr>
+    </table></div>
+    <div class="out"><b>→ EFFECTS</b></div>
+  </article>
+
+  <article class="node" id="MemoActsGrain">
+    <div class="head"><span class="id">MemoActsGrain</span><span class="display">MemoActs — Grain</span><span class="cat">memoacts/effects</span></div>
+    <p class="desc">Film grain. When any scene carries grain the renderer switches x264 to
+    <code>-tune grain</code> and caps the bitrate, so this control has an encode-side cost as well as
+    a per-frame one.</p>
+    <div class="tablewrap"><table>
+      <tr><th>Parameter</th><th>Type</th><th>Default</th><th>Range</th><th>Notes</th></tr>
+      <tr><td class="n">amount</td><td class="t">FLOAT</td><td class="d">0.03</td><td class="d">0–0.3</td><td class="about">Above ~0.06 reads as static rather than grain.</td></tr>
+      <tr><td class="n">size</td><td class="t">FLOAT</td><td class="d">1.8</td><td class="d">1–8</td><td class="about">Grain scale in output pixels.</td></tr>
+      <tr><td class="n">coloured</td><td class="t">BOOLEAN</td><td class="d">false</td><td class="d">—</td><td class="about">Off = luminance grain, roughly half the cost.</td></tr>
+      <tr><td class="n">seed</td><td class="t">INT</td><td class="d">0</td><td class="d">0–2³¹−1</td><td class="about"></td></tr>
+      <tr><td class="n">effects<span class="opt">optional</span></td><td class="t">MEMOACTS_EFFECTS</td><td class="d">—</td><td class="d">—</td><td class="about"></td></tr>
+    </table></div>
+    <div class="out"><b>→ EFFECTS</b></div>
+  </article>
+
+  <article class="node" id="MemoActsTexture">
+    <div class="head"><span class="id">MemoActsTexture</span><span class="display">MemoActs — Texture</span><span class="cat">memoacts/effects</span></div>
+    <p class="desc">Blends a looping overlay. A video path is streamed and looped, never loaded whole.</p>
+    <div class="tablewrap"><table>
+      <tr><th>Parameter</th><th>Type</th><th>Default</th><th>Range</th><th>Notes</th></tr>
+      <tr><td class="n">path</td><td class="t">STRING</td><td class="d">""</td><td class="d">—</td><td class="about">Still or clip.</td></tr>
+      <tr><td class="n">opacity</td><td class="t">FLOAT</td><td class="d">0.25</td><td class="d">0–1</td><td class="about"></td></tr>
+      <tr><td class="n">blend</td><td class="t">COMBO</td><td class="d">"overlay"</td><td class="d">—</td><td class="about"><code>overlay · soft_light · screen · multiply · normal</code></td></tr>
+      <tr><td class="n">speed</td><td class="t">FLOAT</td><td class="d">1.0</td><td class="d">0.05–4</td><td class="about">&lt;1 slows the clip.</td></tr>
+      <tr><td class="n">effects<span class="opt">optional</span></td><td class="t">MEMOACTS_EFFECTS</td><td class="d">—</td><td class="d">—</td><td class="about"></td></tr>
+    </table></div>
+    <div class="out"><b>→ EFFECTS</b></div>
+  </article>
+
+  <article class="node" id="MemoActsFrameOverlay">
+    <div class="head"><span class="id">MemoActsFrameOverlay</span><span class="display">MemoActs — Frame Overlay</span><span class="cat">memoacts/effects</span></div>
+    <p class="desc">Composites an alpha PNG over everything — borders, vignettes, dust plates.</p>
+    <div class="tablewrap"><table>
+      <tr><th>Parameter</th><th>Type</th><th>Default</th><th>Range</th><th>Notes</th></tr>
+      <tr><td class="n">path</td><td class="t">STRING</td><td class="d">""</td><td class="d">—</td><td class="about"></td></tr>
+      <tr><td class="n">opacity</td><td class="t">FLOAT</td><td class="d">1.0</td><td class="d">0–1</td><td class="about"></td></tr>
+      <tr><td class="n">effects<span class="opt">optional</span></td><td class="t">MEMOACTS_EFFECTS</td><td class="d">—</td><td class="d">—</td><td class="about"></td></tr>
+    </table></div>
+    <div class="out"><b>→ EFFECTS</b></div>
+  </article>
+
+  <article class="node" id="MemoActsShake">
+    <div class="head"><span class="id">MemoActsShake</span><span class="display">MemoActs — Shake</span><span class="cat">memoacts/effects</span></div>
+    <p class="desc">Camera shake applied to the crop window inside the source, so it costs nothing and
+    cannot expose an edge.</p>
+    <div class="tablewrap"><table>
+      <tr><th>Parameter</th><th>Type</th><th>Default</th><th>Range</th><th>Notes</th></tr>
+      <tr><td class="n">amplitude_px</td><td class="t">FLOAT</td><td class="d">4.0</td><td class="d">0–60</td><td class="about">Peak offset in <strong>source</strong> pixels — a large source needs a larger value for the same visible movement.</td></tr>
+      <tr><td class="n">frequency</td><td class="t">FLOAT</td><td class="d">6.0</td><td class="d">0.1–30</td><td class="about">Oscillations per second.</td></tr>
+      <tr><td class="n">seed</td><td class="t">INT</td><td class="d">0</td><td class="d">0–2³¹−1</td><td class="about">Shifts phase so two scenes do not shake in step.</td></tr>
+      <tr><td class="n">effects<span class="opt">optional</span></td><td class="t">MEMOACTS_EFFECTS</td><td class="d">—</td><td class="d">—</td><td class="about"></td></tr>
+    </table></div>
+    <div class="out"><b>→ EFFECTS</b></div>
+  </article>
+
+  <article class="node" id="MemoActsSharpen">
+    <div class="head"><span class="id">MemoActsSharpen</span><span class="display">MemoActs — Sharpen</span><span class="cat">memoacts/effects</span></div>
+    <p class="desc">Unsharp mask. Runs last in the pipeline so it does not amplify grain added before it.</p>
+    <div class="tablewrap"><table>
+      <tr><th>Parameter</th><th>Type</th><th>Default</th><th>Range</th><th>Notes</th></tr>
+      <tr><td class="n">amount</td><td class="t">FLOAT</td><td class="d">0.4</td><td class="d">0–2</td><td class="about"></td></tr>
+      <tr><td class="n">radius</td><td class="t">FLOAT</td><td class="d">1.2</td><td class="d">0.1–10</td><td class="about"></td></tr>
+      <tr><td class="n">threshold</td><td class="t">INT</td><td class="d">3</td><td class="d">0–255</td><td class="about"></td></tr>
+      <tr><td class="n">effects<span class="opt">optional</span></td><td class="t">MEMOACTS_EFFECTS</td><td class="d">—</td><td class="d">—</td><td class="about"></td></tr>
+    </table></div>
+    <div class="out"><b>→ EFFECTS</b></div>
+  </article>
+
+  <article class="node" id="MemoActsApplyEffects">
+    <div class="head"><span class="id">MemoActsApplyEffects</span><span class="display">MemoActs — Apply Effects</span><span class="cat">memoacts/effects</span></div>
+    <p class="desc">Attaches a stack to one scene or to all of them. Chain several to give scenes
+    different looks. Does not deep-copy the shot table.</p>
+    <div class="tablewrap"><table>
+      <tr><th>Parameter</th><th>Type</th><th>Default</th><th>Range</th><th>Notes</th></tr>
+      <tr><td class="n">shots</td><td class="t">MEMOACTS_SHOTS</td><td class="d">—</td><td class="d">—</td><td class="about"></td></tr>
+      <tr><td class="n">effects</td><td class="t">MEMOACTS_EFFECTS</td><td class="d">—</td><td class="d">—</td><td class="about"></td></tr>
+      <tr><td class="n">shot_id</td><td class="t">INT</td><td class="d">0</td><td class="d">0–999</td><td class="about">0 for all.</td></tr>
+    </table></div>
+    <div class="out"><b>→ SHOTS</b></div>
+  </article>
+</section>
+
+<section id="page">
+  <h2>Category <code>memoacts/page</code></h2>
+  <p class="lede">Seven nodes producing a typed document plate. The typesetting is deterministic and
+  is not generated: eleven hundred characters of exact text at 7440×10240 is outside what a local
+  model sets without inventing some of it, and the reel needs named anchors at 1:1 scale. The model
+  is used only for the paper surface and the pencil hand.</p>
+
+  <article class="node" id="MemoActsPaperMask">
+    <div class="head"><span class="id">MemoActsPaperMask</span><span class="display">MemoActs — Paper Mask</span><span class="cat">memoacts/page</span></div>
+    <p class="desc">Separates what on a scan is <em>not</em> paper — typed ink, pencil, stamps — into
+    a mask, so an inpainting model can return the sheet without the document on it.</p>
+    <div class="tablewrap"><table>
+      <tr><th>Parameter</th><th>Type</th><th>Default</th><th>Range</th><th>Notes</th></tr>
+      <tr><td class="n">image</td><td class="t">IMAGE</td><td class="d">—</td><td class="d">—</td><td class="about">The scan.</td></tr>
+      <tr><td class="n">ink</td><td class="t">FLOAT</td><td class="d">26</td><td class="d">4–120</td><td class="about">Darkness threshold for typed ink.</td></tr>
+      <tr><td class="n">blue</td><td class="t">FLOAT</td><td class="d">18</td><td class="d">0–80</td><td class="about">Blue-channel bias, for copying pencil.</td></tr>
+      <tr><td class="n">grow</td><td class="t">INT</td><td class="d">3</td><td class="d">0–20</td><td class="about">Dilation in pixels.</td></tr>
+      <tr><td class="n">keep_border</td><td class="t">FLOAT</td><td class="d">0.02</td><td class="d">0–0.2</td><td class="about">Fraction of the edge left untouched.</td></tr>
+      <tr><td class="n">keep_left_from</td><td class="t">FLOAT</td><td class="d">0.03</td><td class="d">0–0.5</td><td class="about">Band preserved on the left — punch holes and tape.</td></tr>
+      <tr><td class="n">keep_left_to</td><td class="t">FLOAT</td><td class="d">0.12</td><td class="d">0–0.5</td><td class="about"></td></tr>
+    </table></div>
+    <div class="out"><b>→ mask_image</b> IMAGE &nbsp; <b>mask</b> MASK &nbsp; <b>report</b> STRING</div>
+  </article>
+
+  <article class="node" id="MemoActsPencilCrop">
+    <div class="head"><span class="id">MemoActsPencilCrop</span><span class="display">MemoActs — Pencil Crop</span><span class="cat">memoacts/page</span></div>
+    <p class="desc">Crops the corner of the typed plate where the pencilled number goes, and the same
+    region of the source act as a reference, so a model conditioned on both produces a mark in the
+    act's own hand rather than a generic one.</p>
+    <div class="tablewrap"><table>
+      <tr><th>Parameter</th><th>Type</th><th>Default</th><th>Range</th><th>Notes</th></tr>
+      <tr><td class="n">plate</td><td class="t">IMAGE</td><td class="d">—</td><td class="d">—</td><td class="about">The typed page.</td></tr>
+      <tr><td class="n">act</td><td class="t">IMAGE</td><td class="d">—</td><td class="d">—</td><td class="about">The scan carrying the real pencil.</td></tr>
+      <tr><td class="n">text</td><td class="t">STRING</td><td class="d">directives</td><td class="d">—</td><td class="about">The page source; the <code>&lt;!-- pencil … --&gt;</code> directive gives the crop its position.</td></tr>
+      <tr><td class="n">size</td><td class="t">INT</td><td class="d">1024</td><td class="d">256–2048</td><td class="about">Crop edge in pixels.</td></tr>
+      <tr><td class="n">ref_x / ref_y</td><td class="t">FLOAT</td><td class="d">0.910 / 0.057</td><td class="d">0–1</td><td class="about">Where on the act the reference mark is.</td></tr>
+      <tr><td class="n">ref_span</td><td class="t">FLOAT</td><td class="d">0.16</td><td class="d">0.02–0.6</td><td class="about">How much around it to take.</td></tr>
+      <tr><td class="n">fit</td><td class="t">COMBO</td><td class="d">"strict"</td><td class="d">—</td><td class="about"><code>strict · scale layout to plate</code></td></tr>
+    </table></div>
+    <div class="out"><b>→ corner</b> IMAGE &nbsp; <b>reference</b> IMAGE &nbsp; <b>report</b> STRING</div>
+  </article>
+
+  <article class="node" id="MemoActsPencilPrompt">
+    <div class="head"><span class="id">MemoActsPencilPrompt</span><span class="display">MemoActs — Pencil Prompt</span><span class="cat">memoacts/page</span></div>
+    <p class="desc">Builds the prompt pair for the pencilled number, with the writing instrument as a
+    named choice rather than free text.</p>
+    <div class="tablewrap"><table>
+      <tr><th>Parameter</th><th>Type</th><th>Default</th><th>Notes</th></tr>
+      <tr><td class="n">number</td><td class="t">STRING</td><td class="d">"67"</td><td class="about"></td></tr>
+      <tr><td class="n">hand</td><td class="t">COMBO</td><td class="d">the act's own — blue copying pencil</td><td class="about">Also: indelible pencil (violet, wet halo) · archivist's graphite · a clerk's dip pen.</td></tr>
+      <tr><td class="n">extra</td><td class="t">STRING</td><td class="d">""</td><td class="about"></td></tr>
+      <tr><td class="n">negative</td><td class="t">STRING</td><td class="d">see note</td><td class="about">Default excludes printed digits, ballpoint, outlines, drop shadow and any redrawn background.</td></tr>
+    </table></div>
+    <div class="out"><b>→ positive</b> STRING &nbsp; <b>negative</b> STRING</div>
+  </article>
+
+  <article class="node" id="MemoActsPencilLift">
+    <div class="head"><span class="id">MemoActsPencilLift</span><span class="display">MemoActs — Pencil Lift</span><span class="cat">memoacts/page</span></div>
+    <p class="desc">Subtracts the before-image from the after-image to recover only the pigment the
+    model added, with its own alpha. This is what keeps the model's paper out of the page.</p>
+    <div class="tablewrap"><table>
+      <tr><th>Parameter</th><th>Type</th><th>Default</th><th>Range</th><th>Notes</th></tr>
+      <tr><td class="n">before</td><td class="t">IMAGE</td><td class="d">—</td><td class="d">—</td><td class="about">The corner as sent.</td></tr>
+      <tr><td class="n">after</td><td class="t">IMAGE</td><td class="d">—</td><td class="d">—</td><td class="about">The corner as returned.</td></tr>
+      <tr><td class="n">floor</td><td class="t">FLOAT</td><td class="d">6</td><td class="d">0–64</td><td class="about">Difference below this is noise.</td></tr>
+      <tr><td class="n">gain</td><td class="t">FLOAT</td><td class="d">90</td><td class="d">8–255</td><td class="about">Alpha slope above the floor.</td></tr>
+    </table></div>
+    <div class="out"><b>→ pigment</b> IMAGE &nbsp; <b>alpha</b> MASK &nbsp; <b>report</b> STRING</div>
+  </article>
+
+  <article class="node" id="MemoActsPencilGraft">
+    <div class="head"><span class="id">MemoActsPencilGraft</span><span class="display">MemoActs — Pencil Graft</span><span class="cat">memoacts/page</span></div>
+    <p class="desc">Re-tones the lifted pigment to the reference's own colour and grain and thins or
+    thickens the stroke, so the mark sits on the typed page as one object rather than as a paste.</p>
+    <div class="tablewrap"><table>
+      <tr><th>Parameter</th><th>Type</th><th>Default</th><th>Range</th><th>Notes</th></tr>
+      <tr><td class="n">mark</td><td class="t">IMAGE</td><td class="d">—</td><td class="d">—</td><td class="about">Lifted pigment.</td></tr>
+      <tr><td class="n">alpha</td><td class="t">MASK</td><td class="d">—</td><td class="d">—</td><td class="about"></td></tr>
+      <tr><td class="n">reference</td><td class="t">IMAGE</td><td class="d">—</td><td class="d">—</td><td class="about">The act's own mark, for colour and grain.</td></tr>
+      <tr><td class="n">stroke</td><td class="t">FLOAT</td><td class="d">-2</td><td class="d">-12–12</td><td class="about">Negative thins.</td></tr>
+      <tr><td class="n">grain</td><td class="t">FLOAT</td><td class="d">1.0</td><td class="d">0–1</td><td class="about">How much of the reference's texture to carry.</td></tr>
+      <tr><td class="n">seed</td><td class="t">INT</td><td class="d">8945</td><td class="d">0–2³¹−1</td><td class="about"></td></tr>
+      <tr><td class="n">tone</td><td class="t">FLOAT</td><td class="d">0.5</td><td class="d">0–1</td><td class="about">Blend toward the reference's hue.</td></tr>
+    </table></div>
+    <div class="out"><b>→ pigment</b> IMAGE &nbsp; <b>alpha</b> MASK &nbsp; <b>report</b> STRING</div>
+  </article>
+
+  <article class="node" id="MemoActsPageFile">
+    <div class="head"><span class="id">MemoActsPageFile</span><span class="display">MemoActs — Page File</span><span class="cat">memoacts/page</span></div>
+    <p class="desc">Reads the page's markdown source and, optionally, rewrites its layout directives
+    from the plate actually loaded — so the geometry cannot go stale against whichever scan is in the
+    graph.</p>
+    <div class="tablewrap"><table>
+      <tr><th>Parameter</th><th>Type</th><th>Default</th><th>Range</th><th>Notes</th></tr>
+      <tr><td class="n">path</td><td class="t">STRING</td><td class="d">…/hook_page_2.md</td><td class="d">—</td><td class="about">Repository-relative.</td></tr>
+      <tr><td class="n">plate<span class="opt">optional</span></td><td class="t">IMAGE</td><td class="d">—</td><td class="d">—</td><td class="about">Sets <code>&lt;!-- page W×H --&gt;</code> from the real plate.</td></tr>
+      <tr><td class="n">text<span class="opt">optional</span></td><td class="t">STRING</td><td class="d">""</td><td class="d">—</td><td class="about">Overrides the file.</td></tr>
+      <tr><td class="n">save<span class="opt">optional</span></td><td class="t">BOOLEAN</td><td class="d">false</td><td class="d">—</td><td class="about">Write the directives back.</td></tr>
+      <tr><td class="n">type_width<span class="opt">optional</span></td><td class="t">FLOAT</td><td class="d">0.0095</td><td class="d">0.001–0.08</td><td class="about">Character advance as a fraction of page width.</td></tr>
+      <tr><td class="n">line_pitch<span class="opt">optional</span></td><td class="t">FLOAT</td><td class="d">2.4</td><td class="d">1–5</td><td class="about">Line spacing in character widths.</td></tr>
+      <tr><td class="n">pencil_height<span class="opt">optional</span></td><td class="t">FLOAT</td><td class="d">0.038</td><td class="d">0–0.3</td><td class="about">0 removes the pencil directive.</td></tr>
+      <tr><td class="n">pencil<span class="opt">optional</span></td><td class="t">STRING</td><td class="d">"67"</td><td class="d">—</td><td class="about"></td></tr>
+      <tr><td class="n">top<span class="opt">optional</span></td><td class="t">FLOAT</td><td class="d">0.2</td><td class="d">0–0.6</td><td class="about">First baseline, as a fraction of page height.</td></tr>
+    </table></div>
+    <div class="out"><b>→ text</b> STRING</div>
+  </article>
+
+  <article class="node" id="MemoActsTypePage">
+    <div class="head"><span class="id">MemoActsTypePage</span><span class="display">MemoActs — Type Page</span><span class="cat">memoacts/page</span></div>
+    <p class="desc">Sets the page: verbatim text at the size and pitch the directives give, with
+    per-character position and ink jitter from <code>seed</code>. No markdown is parsed — at this
+    magnification the syntax is part of what the shot shows. <code>anchors</code> reports back where
+    named strings landed, in page fractions, which is how a camera move gets its targets.</p>
+    <div class="tablewrap"><table>
+      <tr><th>Parameter</th><th>Type</th><th>Default</th><th>Range</th><th>Notes</th></tr>
+      <tr><td class="n">text</td><td class="t">STRING</td><td class="d">directives + body</td><td class="d">—</td><td class="about">Directives: <code>page W×H</code>, <code>type A/B</code>, <code>margin X,Y</code>, <code>pencil N at x,y size S</code>, <code>center</code>.</td></tr>
+      <tr><td class="n">font</td><td class="t">COMBO</td><td class="d">"SpecialElite-Regular.ttf"</td><td class="d">—</td><td class="about">Also <code>erika-ormig.regular.ttf</code> (the Seidel &amp; Naumann typewriter, CC BY-ND) and <code>ShareTechMono-Regular.ttf</code>.</td></tr>
+      <tr><td class="n">seed</td><td class="t">INT</td><td class="d">8945</td><td class="d">0–2³¹−1</td><td class="about">Per-character jitter.</td></tr>
+      <tr><td class="n">anchors</td><td class="t">STRING</td><td class="d">""</td><td class="d">—</td><td class="about">Strings to locate, one per line.</td></tr>
+    </table></div>
+    <div class="out"><b>→ page</b> IMAGE &nbsp; <b>report</b> STRING</div>
+  </article>
+</section>
+
+<section id="sockets">
+  <h2>Custom socket types</h2>
+  <p class="lede">Defined once in <code>nodes_types.py</code>. Only a path travels on
+  <code>PROJECT</code>; every step re-reads the folder, so a file changed on disk is picked up by the
+  next run rather than hidden behind a cached payload.</p>
+  <div class="node"><div class="tablewrap"><table>
+    <tr><th>Socket</th><th>Payload</th><th>Produced by</th></tr>
+    <tr><td class="t">MEMOACTS_PROJECT</td><td class="about"><code>{project_dir}</code></td><td class="about">Set Narration, Project</td></tr>
+    <tr><td class="t">MEMOACTS_ALIGNMENT</td><td class="about"><code>{alignment, project_dir}</code> — the one expensive result, on its own socket so editing the table costs no second pass over the audio</td><td class="about">Align</td></tr>
+    <tr><td class="t">MEMOACTS_SHOTS</td><td class="about"><code>{doc, project_dir}</code> plus an optional <code>effects</code> map keyed by scene id</td><td class="about">Shot Table, Set Motion, Set Shot Image, Apply Effects</td></tr>
+    <tr><td class="t">MEMOACTS_SUBS</td><td class="about">Caption fields of <code>RenderOptions</code>. Settings only, never files</td><td class="about">Subtitles</td></tr>
+    <tr><td class="t">MEMOACTS_EFFECTS</td><td class="about">An <code>effects.EffectStack</code></td><td class="about">the eight effect nodes</td></tr>
+    <tr><td class="t">MEMOACTS_SFX</td><td class="about"><code>{project_dir, doc, csv, cues, placed}</code> — <code>cues</code> is what the table says, <code>placed</code> what it means against this shot table</td><td class="about">Sound Design</td></tr>
+    <tr><td class="t">MEMOACTS_SFX_CUE</td><td class="about"><code>SFX</code> plus <code>{cue, seed, seconds}</code>, so generated audio returns to the row that asked for it</td><td class="about">SFX Prompt</td></tr>
+  </table></div></div>
+</section>
+
+<section id="csv">
+  <h2><code>shots.csv</code> columns</h2>
+  <p class="lede">One row per scene you want to say something about; every column but <code>shot</code>
+  is optional and blank means "keep the default". A row whose <code>shot</code> cell starts with
+  <code>#</code> is a comment and is ignored entirely.</p>
+  <div class="node"><div class="tablewrap"><table>
+    <tr><th>Column</th><th>Decides</th></tr>
+    <tr><td class="n">shot</td><td class="about">Which scene: 1-based number, <code>S01</code>, or the cue timecode written in the script.</td></tr>
+    <tr><td class="n">media</td><td class="about">Bare filename, resolved across <code>images · composites · maps · videos</code>.</td></tr>
+    <tr><td class="n">in</td><td class="about">In-point for footage. <code>2:14</code> or seconds.</td></tr>
+    <tr><td class="n">motion</td><td class="about">One of the nine presets. Blank cycles a default by scene number.</td></tr>
+    <tr><td class="n">rate</td><td class="about">Zoom fraction. Ignored when a focus or path is set.</td></tr>
+    <tr><td class="n">anchor</td><td class="about"><code>center</code> or <code>top</code>.</td></tr>
+    <tr><td class="n">speed</td><td class="about">Footage playback rate; 0.4 is slow motion.</td></tr>
+    <tr><td class="n">focus</td><td class="about"><code>cx cy w</code> in source fractions — one destination window. Honoured by <code>static · zoom_in · zoom_out</code> only; the pans ignore it and warn.</td></tr>
+    <tr><td class="n">path</td><td class="about">Several stops: <code>t:cx,cy[,w]</code> space-separated, <code>t</code> a fraction of the scene. Width carries forward; two stops sharing a <code>t</code> hold. Overrides preset, rate and focus. <span class="chip plain">schema 1.6</span></td></tr>
+    <tr><td class="n">label</td><td class="about">Corner tag, held <code>label_hold</code> seconds from the scene's start.</td></tr>
+    <tr><td class="n">credit</td><td class="about">Source line, held for the whole scene.</td></tr>
+    <tr><td class="n">effects</td><td class="about">Preset name for this scene alone.</td></tr>
+    <tr><td class="n">notes</td><td class="about">Not read by the pack.</td></tr>
+  </table></div></div>
+</section>
+
+<section id="routes">
+  <h2>HTTP routes</h2>
+  <p class="lede">Registered on ComfyUI's own aiohttp app, so they live on the same origin as the UI
+  and need no CORS or second port. These are what the Storyline panel calls.</p>
+  <div class="node"><div class="tablewrap"><table>
+    <tr><th>Method</th><th>Route</th><th>Returns / does</th></tr>
+    <tr><td class="d">GET</td><td class="n">/memoacts/projects</td><td class="about">Folder names under <code>projects/</code>.</td></tr>
+    <tr><td class="d">GET</td><td class="n">/memoacts/shots</td><td class="about">The whole editing surface: scenes, their text, resolved media, row cells, per-scene timing when <code>generated/shots.json</code> matches the current script, sentence boundaries, the media list with per-file zoom headroom, and warnings.</td></tr>
+    <tr><td class="d">POST</td><td class="n">/memoacts/shots</td><td class="about">Writes cells back, keeping the header, unknown columns and comment rows. A no-edit round trip leaves <code>git diff</code> clean.</td></tr>
+    <tr><td class="d">GET</td><td class="n">/memoacts/thumb</td><td class="about">One media file as JPEG; <code>px</code> sets the longest edge (128–1600, default 480). Video yields its first frame.</td></tr>
+    <tr><td class="d">GET</td><td class="n">/memoacts/sfx</td><td class="about"><code>sfx.csv</code> as text, or a starter table.</td></tr>
+    <tr><td class="d">GET / POST</td><td class="n">/memoacts/script</td><td class="about">Reads and writes <code>script.md</code> verbatim.</td></tr>
+    <tr><td class="d">POST</td><td class="n">/memoacts/scene</td><td class="about"><code>{action: merge|split, id, at}</code> — moves a scene boundary in <code>script.md</code> <em>and</em> renumbers <code>shots.csv</code> with it.</td></tr>
+    <tr><td class="d">POST</td><td class="n">/memoacts/project</td><td class="about">Creates an empty project. Refuses an existing name.</td></tr>
+  </table></div></div>
+</section>
+
+<section id="limits">
+  <h2>Constraints that shape every framing decision</h2>
+  <p class="lede">Three rules in the geometry, worth knowing before a shot is planned. Two are
+  arithmetic and one is policy.</p>
+
+  <div class="note"><b>A crop cannot leave its source.</b> The window is a rectangle inside the
+  picture, so a point closer to an edge than half the window cannot be centred — it is approached
+  instead. Asking for a point 4.5 % down a page centres on 22.7 % when half the window is 1280 px
+  and only 773 px of page lie above it. Every unreachable stop is named in the report with the
+  coordinate it will actually land on. Putting a corner in the middle of the frame requires a surface
+  behind the picture, which only <code>tools/render_move.py</code> and a composite provide.</div>
+
+  <div class="note"><b>The widest window is the base 9:16 rectangle.</b> Past it there is no more
+  picture. This ceiling is arithmetic and is enforced.</div>
+
+  <div class="note"><b>Enlargement is allowed and never silent.</b> A window narrower than the 1080 px
+  output stretches the source; there is no floor stopping it. The panel prints the factor while the
+  rectangle is drawn, the report names it per scene, and <code>on_upscale</code> decides whether the
+  render warns, refuses or stays quiet. For a 4096-px-wide page the 1:1 window is
+  <code>w = 0.264</code> and the deepest 9:16 push-in is 2.94×.</div>
+</section>
+
+<footer>
+  Generated from <code>/object_info</code> on a running ComfyUI 0.34.0, frontend 1.49.6, 2026-09-02.
+  28 nodes registered. Editing decisions are made in the Storyline sidebar panel
+  (<code>web/memoacts_storyline.js</code>), not in the nodes.
+</footer>
+
+</main>
+</div></div>
+
+</body>
+</html>
