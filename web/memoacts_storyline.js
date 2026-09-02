@@ -178,6 +178,14 @@ class StorylinePanel {
         } else {
           this.model.setCell(shot, "focus",
             `${fit.cx.toFixed(3)} ${fit.cy.toFixed(3)} ${fit.w.toFixed(3)}`);
+          // A focus is ignored by the pans, and the *default* motion cycles by
+          // scene number — so drawing a rectangle on a scene whose motion was
+          // never set lands on a pan every other time and does nothing at all.
+          // Naming the motion is the difference between a decision and a
+          // coincidence. An explicit pan is left alone and still warns.
+          if (!(shot.row.motion || "").trim()) {
+            this.model.setCell(shot, "motion", "zoom_in");
+          }
         }
         this.drawScenes();
         this.drawDetail();

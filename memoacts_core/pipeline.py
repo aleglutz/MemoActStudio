@@ -473,6 +473,30 @@ def _copy_row(project: Path, src: int, dst: int) -> None:
             return
 
 
+def _decisions_in_comments(table) -> int:
+    """How many commented rows carry an edit decision rather than a note.
+
+    `words` and `notes` are somebody writing to themselves; every other column
+    changes what reaches the screen. A file full of the first kind needs
+    tidying; one row of the second kind is a decision that quietly did not
+    happen, and the warning should not call them the same thing.
+    """
+    from .shotlist import row_key
+
+    keep = {"words", "notes"}
+    n = 0
+    for raw in table.rows:
+        if not row_key(raw).startswith("#"):
+            continue
+        for k, v in raw.items():
+            name = (k or "").strip().lower()
+            if name in ("shot", *keep) or not (v or "").strip():
+                continue
+            n += 1
+            break
+    return n
+
+
 def read_project(project: Path) -> ProjectRead:
     """Read the script, the media and the shot list. No model, no ffmpeg.
 
@@ -522,12 +546,21 @@ def read_project(project: Path) -> ProjectRead:
     commented = mislabelled_comments(table)
     if commented:
         first = commented[0]
+        # Whether anything is actually *lost* is worth checking rather than
+        # asserting. Thirty-four rows carrying only the scene's words are old
+        # notes and cost nothing; one carrying a picture is a decision that
+        # silently did not happen, and those are different sentences.
+        decided = _decisions_in_comments(table)
         warnings.append(
             f"shots.csv: {len(commented)} row(s) are commented out and being "
             f"ignored — their shot column starts with '#', which this format "
-            f"reads as a comment. Everything decided on them is lost. Write "
-            f"{first!r} as {first.lstrip('#').strip()!r}, and the same for the "
-            f"rest")
+            f"reads as a comment. "
+            + (f"{decided} of them decide something (media, motion, focus…), "
+               f"and none of it is happening. " if decided
+               else "None of them decides anything, so nothing is lost — they "
+                    "are notes. ")
+            + f"Write {first!r} as {first.lstrip('#').strip()!r} to bring one "
+              f"back")
     for i, p in enumerate(picks):
         if p.media is not None:
             media[i] = p.media
