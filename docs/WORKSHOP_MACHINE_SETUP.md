@@ -84,6 +84,29 @@ arbitrary:
    `requirements.txt` in the pack is the authority; if it and this line
    disagree, the file wins and this line is stale.
 
+   ⚠ **numba must be new enough for whatever numpy is installed, and nothing
+   says so until an alignment is attempted.** `stable-ts` → `openai-whisper` →
+   `whisper.timing` → `numba`, and numba pins numpy *from above*: 0.62 wants
+   `numpy<2.4`, 0.66 `<2.5`, 0.67 `<2.6`. Broken here on 2026-09-01 with
+   `ImportError: Numba needs NumPy 2.3 or less. Got NumPy 2.4` — numpy had gone
+   to 2.4.6 on 24 August and took the aligner with it.
+
+   Fix by moving **numba**, not numpy: `pip install --upgrade numba` took it to
+   0.67.0 with llvmlite 0.49.0 and touched nothing else. Downgrading numpy in a
+   ComfyUI install is the worse half of the trade — a dozen packages here pin it
+   in both directions and several already disagree with each other.
+
+   Verify it properly, because importing numba is not the test:
+
+   ```
+   .\python_embeded\python.exe -c "import stable_whisper, whisper.timing; from numba import njit; print(njit(lambda a,b: a+b)(2,3))"
+   ```
+
+   **And note how long it hid.** Alignment is cached on the script and the
+   recording, so a week of editing passed without anyone running it. The one
+   step that needs this dependency is also the one step that rarely runs — on a
+   workshop machine, check it on the day you image, not on the day you use it.
+
 4. ⚠ **`ComfyUI_essentials`** was hand-cloned into `custom_nodes` on the dev
    machine, with its heavy requirements deliberately *not* installed. Check
    whether anything still needs it before cloning it onto A — the subtitle font
