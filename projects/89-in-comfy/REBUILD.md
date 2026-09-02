@@ -3,6 +3,51 @@
 Media is never versioned, so everything here is an *output*: rebuilt from
 `sources/`, not copied between machines. Run from the repository root.
 
+## The four documents, upscaled 2026-09-02
+
+Four scenes hold a typed sheet still enough to be read, and three of them were
+smaller than the frame — the reel was enlarging them just to fill 1080 px, with
+nothing left over for a move. Upscaled with **4x_foolhardy_Remacri**, which
+`docs/UPSCALE.md` chose for archival material: it adds the least invented detail
+of the five models installed (1.44 against a lanczos floor of 1.32), where
+UltraSharp and NMKD are disqualified for hardening edges into plastic.
+
+| Scene | File | Before | After | Headroom | Tightest window |
+|---|---|---|---|---|---|
+| S01 | `67_Page_x2.png` | 4096×5640 | 8192×11280 | 2.94× → **5.88×** | 0.264 → 0.132 |
+| S08 | `2301-EN_x4.png` | 768×1057 | 3072×4228 | 0.55× → **2.20×** | 0.774 → 0.352 |
+| S16 | `GIoS_Wehrmacht_Signed_Ru_p1_x4.png` | 1024×1410 | 4096×5640 | 0.73× → **2.94×** | 0.775 → 0.264 |
+| S17 | `8-5-RU_x4.png` | 768×1057 | 3072×4228 | 0.55× → **2.20×** | 0.774 → 0.352 |
+
+Headroom below 1.0× means the source cannot fill a 9:16 frame at all. Three of
+the four were there; none is now.
+
+Run against the local ComfyUI, one graph per file —
+`LoadImage → UpscaleModelLoader → ImageUpscaleWithModel → SaveImage`, with
+`ImageScaleBy 0.5` after the model on the page only:
+
+```
+model:  4x_foolhardy_Remacri.safetensors
+S08, S16, S17   4× native, no reduction
+S01             4× then ×0.5, i.e. 2×
+```
+
+**Why the page is 2× and not 4×.** At 4× it would be 16384×22560 — 370
+megapixels, 4.4 GB as one float32 tensor, and 1.1 GB resident every time the
+renderer opens it for a shot. 2× is 92 megapixels and halves the tightest legal
+window, which is what a camera move needs.
+
+The consequence, stated because it decides what S01 can be: **the pencilled `67`
+still cannot be centred.** It sits 4.5 % down the page, and a crop cannot leave
+its source, so centring it needs half the window above it — `H ≥ 960 / 0.045 =
+21333 px`, which is the 4× page. At 2× the window can approach it and stop. The
+alternative is a composite, where the sheet lies on a surface and may leave the
+frame; `tools/render_move.py --at` does that and `S01_hook_move.mp4` is one,
+rendered and verified, waiting only for a re-render at the scene's own 135
+frames.
+
+The originals are kept beside the upscales. Nothing was deleted.
+
 ## S01 — the hook sheet, three beats
 
 `sources/composites/S01_hook_move.mp4`
