@@ -58,7 +58,7 @@ from pathlib import Path
 
 import numpy as np
 
-from .shotlist import parse_timecode
+from .shotlist import parse_timecode, write_csv
 
 #: Where recordings live, generated or found. Beside `images/` and `maps/`,
 #: because a plate the tool drew and a scan a person found are the same kind of
@@ -182,14 +182,15 @@ def read_table(path: Path) -> CueTable:
 
 
 def write_table(path: Path, table: CueTable) -> Path:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    with path.open("w", newline="", encoding="utf-8") as fh:
-        writer = csv.DictWriter(fh, fieldnames=table.fieldnames,
-                                extrasaction="ignore")
-        writer.writeheader()
-        for row in table.rows:
-            writer.writerow({k: (row.get(k) or "") for k in table.fieldnames})
-    return path
+    """Write `sfx.csv` back, through the crash-safe path `shots.csv` uses.
+
+    A sound design is as hand-made and as unregenerable as an edit decision,
+    and Save SFX rewrites this file from inside a graph run — which is exactly
+    where an interruption lands.
+    """
+    return write_csv(path, table.fieldnames,
+                     ({k: (row.get(k) or "") for k in table.fieldnames}
+                      for row in table.rows))
 
 
 def parse_text(text: str) -> CueTable:

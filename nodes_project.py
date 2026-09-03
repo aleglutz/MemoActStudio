@@ -26,8 +26,8 @@ from pathlib import Path
 
 from comfy_api.latest import io, ui
 
-from .memoacts_core.pipeline import (ProjectError, read_project,
-                                     set_narration)
+from .memoacts_core.pipeline import (ProjectError, clean_project_name,
+                                     read_project, set_narration)
 from .memoacts_core.project import MEDIA_DIRS
 from .nodes_audio import audio_at_own_rate
 from .nodes_types import Project
@@ -136,26 +136,6 @@ def _resolve(project: str, project_dir: str) -> Path:
     return PROJECTS_DIR / project
 
 
-#: Characters a project name may not contain, because a name is a folder name
-#: and nothing else. A path separator would let a graph write outside
-#: `projects/`, and a leading dot hides the folder from the picker that is
-#: supposed to list it.
-_BAD_NAME = ("/", "\\", ":", "*", "?", '"', "<", ">", "|")
-
-
-def _clean_name(name: str) -> str:
-    """A project name, or a refusal that says which character was the problem."""
-    name = (name or "").strip().strip(".")
-    if not name:
-        raise ValueError("give the project a name — it becomes the folder your "
-                         "script, your recording and your pictures live in")
-    bad = [c for c in _BAD_NAME if c in name]
-    if bad:
-        raise ValueError(f"{''.join(bad)!r} cannot be in a project name: it is "
-                         f"a folder name, not a path")
-    return name
-
-
 class MemoActsSetNarration(io.ComfyNode):
     @classmethod
     def define_schema(cls):
@@ -220,7 +200,10 @@ class MemoActsSetNarration(io.ComfyNode):
 
     @classmethod
     def execute(cls, audio, project, create_if_missing):
-        name = _clean_name(project)
+        try:
+            name = clean_project_name(project)
+        except ProjectError as exc:
+            raise ValueError(str(exc)) from exc
         folder = PROJECTS_DIR / name
         data, rate = audio_at_own_rate(audio)
         try:

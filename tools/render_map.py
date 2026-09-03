@@ -561,11 +561,7 @@ def compose(plate: np.ndarray, washes: list[Wash],
     return img
 
 
-def _ease(t: float) -> float:
-    """Cosine ease, matching `memoacts_core.schedule` so a wash arriving and a
-    camera moving feel like the same hand."""
-    t = min(max(t, 0.0), 1.0)
-    return (1 - math.cos(math.pi * t)) / 2
+
 
 
 def stagger(n: int, t: float, *, fill: float, fade: float) -> list[float]:
@@ -579,6 +575,18 @@ def stagger(n: int, t: float, *, fill: float, fade: float) -> list[float]:
         return []
     step = 0.0 if n == 1 else max(fill - fade, 0.0) / (n - 1)
     return [_ease((t - i * step) / fade if fade > 0 else 1.0) for i in range(n)]
+
+
+def _ease(t: float) -> float:
+    """`memoacts_core.schedule.ease_cosine`, restated rather than imported.
+
+    This file keeps its `memoacts_core` imports inside the one function that
+    encodes, so the map-drawing half runs with nothing but PIL on the path.
+    Two lines is a cheaper price for that than a module-level dependency —
+    but if the curve ever changes, it changes in `schedule.py` first and here
+    second.
+    """
+    return (1 - math.cos(math.pi * min(max(t, 0.0), 1.0))) / 2
 
 
 def parse_marker(spec: str) -> tuple[float, float, str]:

@@ -20,14 +20,12 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from memoacts_core.pipeline import (ProjectError, align_project,  # noqa: E402
+                                    console_progress,
                                     compose_project, read_project)
 
 
-def printer(stage: str, done: int = 0, total: int = 0, message: str = "",
-            preview=None) -> None:
-    """Show the lines the pipeline phrases; ignore the counters and frames."""
-    if message:
-        print(message)
+#: The pipeline's own phrasing, straight to stdout.
+printer = console_progress()
 
 
 def main() -> int:

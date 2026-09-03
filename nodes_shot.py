@@ -28,7 +28,7 @@ from pathlib import Path
 from comfy_api.latest import io, ui
 
 from .memoacts_core.pipeline import compose_project, read_project
-from .memoacts_core.project import MEDIA_DIRS
+from .memoacts_core.project import MEDIA_DIRS, find_media
 from .memoacts_core.schedule import PRESETS
 from .nodes_types import Alignment, Shots
 
@@ -191,8 +191,7 @@ class MemoActsSetImage(io.ComfyNode):
         # All four media folders, in the one search order there is. Looking only
         # in images/ meant a map plate or a stacked composite could not be
         # assigned here at all, though shots.csv has always allowed it.
-        found = next((project / d / media_filename for d in MEDIA_DIRS
-                      if (project / d / media_filename).exists()), None)
+        found = find_media(project, media_filename)
         if found is None:
             raise ValueError(f"{media_filename!r} is in none of "
                              f"{', '.join(MEDIA_DIRS)} under {project}")

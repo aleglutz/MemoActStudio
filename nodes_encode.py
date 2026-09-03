@@ -33,10 +33,16 @@ PREVIEW_PX = 512
 
 
 def _cost_list() -> str:
-    """The presets by what they cost, cheapest first — see `effects.COST`."""
-    return ", ".join(f"{name} {mult:.1f}x"
-                     for name, mult in sorted(COST.items(), key=lambda kv: kv[1])
-                     if name != "none")
+    """The presets by what they cost, cheapest first — see `effects.COST`.
+
+    Walks `PRESETS`, not `COST`, so a look added without a measurement shows
+    up as unmeasured instead of vanishing from the tooltip: this line is the
+    one place SPEC asks the cost decision to be visible on a shared machine.
+    """
+    named = sorted(((name, COST.get(name)) for name in PRESETS if name != "none"),
+                   key=lambda kv: (kv[1] is None, kv[1] or 0.0))
+    return ", ".join(f"{name} {mult:.1f}x" if mult is not None
+                     else f"{name} (unmeasured)" for name, mult in named)
 
 
 def _output_path(filename_prefix: str) -> tuple[Path, str]:

@@ -221,8 +221,8 @@ class ResolvedShot:
         return self.media is not None and self.media.suffix.lower() in VIDEO_EXTS
 
 
-#: The columns `write_template` emits, and the order a file gets when the
-#: editor writes one from nothing. A file already on disk keeps its own header.
+#: The order a file gets when the editor writes one from nothing. A file
+#: already on disk keeps its own header.
 COLUMNS = ("shot", "media", "in", "motion", "rate", "anchor", "speed",
            "focus", "path", "label", "credit", "effects", "notes")
 
@@ -276,15 +276,28 @@ def write_table(path: Path, table: ShotTable) -> Path:
     `\\r\\n` is `csv.writer`'s own default and what every `shots.csv` in this
     repository already uses, so a save with no edits is a no-op to git.
     """
-    path.parent.mkdir(parents=True, exist_ok=True)
     fieldnames = table.fieldnames or list(COLUMNS)
+    return write_csv(path, fieldnames,
+                     ({k: row.get(k, "") for k in fieldnames}
+                      for row in table.rows))
+
+
+def write_csv(path: Path, fieldnames: list[str], rows) -> Path:
+    """A decision table, written so a crash cannot leave half of one.
+
+    Both `shots.csv` and `sfx.csv` are hand-made, unregenerable, and rewritten
+    from inside a graph run that can be interrupted — so both need this. It
+    lives here because `shots.csv` needed it first; `sfx.csv` was still writing
+    straight over itself until 2026-09-03.
+    """
+    path.parent.mkdir(parents=True, exist_ok=True)
     tmp = path.with_suffix(path.suffix + ".tmp")
     try:
         with tmp.open("w", newline="", encoding="utf-8") as fh:
             w = csv.DictWriter(fh, fieldnames=fieldnames, extrasaction="ignore")
             w.writeheader()
-            for row in table.rows:
-                w.writerow({k: row.get(k, "") for k in fieldnames})
+            for row in rows:
+                w.writerow(row)
         # Replace rather than truncate-and-write: a crash mid-write would
         # otherwise leave the author's edit decisions half gone, and they are
         # not regenerable.
@@ -428,11 +441,6 @@ def rows_with_edits(table: ShotTable) -> list[tuple[dict[str, str], ShotEdit]]:
     return list(zip(table.data_rows(), edits_from_table(table)))
 
 
-def read_shot_list(path: Path) -> list[ShotEdit]:
-    """Read `shots.csv`. A missing file is not an error — it means no overrides."""
-    return edits_from_table(read_table(path))
-
-
 def apply_shot_list(shots: list[ScriptShot], edits: list[ShotEdit],
                     project: Path) -> tuple[list[ResolvedShot], list[str]]:
     """Combine the script with the shot list.
@@ -540,21 +548,3 @@ def apply_shot_list(shots: list[ScriptShot], edits: list[ShotEdit],
         target.effects = edit.effects or target.effects
 
     return resolved, warnings
-
-
-def write_template(path: Path, shots: list[ScriptShot]) -> Path:
-    """Write a shot list pre-filled with one row per shot, media left blank.
-
-    Starting from the script's own cues means the operator fills in decisions
-    rather than transcribing timings, and a cue typo becomes impossible.
-    """
-    path.parent.mkdir(parents=True, exist_ok=True)
-    with path.open("w", newline="", encoding="utf-8") as fh:
-        w = csv.writer(fh)
-        w.writerow(list(COLUMNS))
-        for i, s in enumerate(shots, 1):
-            cue = ("" if s.cue is None
-                   else f"{int(s.cue) // 60}:{int(s.cue) % 60:02d}")
-            w.writerow([cue or i, "", "", "", "", "", "", "", "", "",
-                        s.text[:60] + ("…" if len(s.text) > 60 else "")])
-    return path

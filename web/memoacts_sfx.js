@@ -15,7 +15,7 @@
  * the server, in `memoacts_core.sfx`, where the CLI can reach them too.
  */
 import { app } from "../../scripts/app.js";
-import { findProject } from "./memoacts_shots.js";
+import { el, findProject } from "./memoacts_shots.js";
 
 const CSS = `
 .memoacts-sfx-bar { display:flex; gap:6px; align-items:center;
@@ -25,12 +25,6 @@ const CSS = `
 .memoacts-sfx-bar button:hover { background:#3d3d3d; }
 .memoacts-sfx-bar .status { color:#888; margin-left:auto; }
 `;
-
-function el(tag, props = {}, children = []) {
-  const node = Object.assign(document.createElement(tag), props);
-  for (const child of children) node.append(child);
-  return node;
-}
 
 class SfxBar {
   constructor(node) {

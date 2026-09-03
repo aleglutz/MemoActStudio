@@ -21,7 +21,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from memoacts_core.project import MEDIA_DIRS  # noqa: E402
+from memoacts_core.project import MEDIA_DIRS, find_narration  # noqa: E402
 
 
 def build_chunk_workflow(image_name: str, csvs: dict[str, str], text: str,
@@ -151,7 +151,10 @@ def main() -> int:
     render_s = time.time() - t0
     print(f"{n_jobs} segments in {render_s:.1f}s")
 
-    narration = next(args.project.glob("narration.*"))
+    # `find_narration`, not a glob of the project root: the recording has
+    # lived in `sources/` since Set Narration started writing it there, and
+    # a bare root glob raises StopIteration on every project made since.
+    narration = find_narration(args.project)
     out = args.project / "reel_p1.mp4"
     r = subprocess.run([sys.executable, str(Path(__file__).parent / "assemble_reel.py"),
                         "--segments-dir", str(seg_dir),

@@ -48,7 +48,8 @@ from .project import (MEDIA_DIRS, ScriptShot, apply_shot_lead,
 from .render import ShotRender, render_reel
 from .schedule import FOCUSABLE, Motion, compute, default_motion, frames_for
 from .shotlist import (ResolvedShot, apply_shot_list, edits_from_table,
-                       mislabelled_comments, read_table)
+                       mislabelled_comments, parse_shot_key, read_table,
+                       row_key, write_table)
 from .video import is_video, probe
 
 #: `progress(stage, done, total, message, preview)`.
@@ -68,6 +69,23 @@ class ProjectError(ValueError):
 def _noop(stage: str, done: int = 0, total: int = 0, message: str = "",
           preview: Image.Image | None = None) -> None:
     pass
+
+
+def console_progress(prefix: str = "") -> Progress:
+    """A `Progress` that prints the lines and drops the counters and frames.
+
+    Every door onto this pipeline wants exactly this, and four of them had
+    written it out: two in `tools/`, byte for byte identical, and two in the
+    node layer with a `[MemoActs]` prefix. The phrasing is the pipeline's, on
+    purpose — two doors describing the same fact differently is the drift this
+    module exists to make impossible — so the adapter belongs beside the type
+    it adapts.
+    """
+    def progress(stage: str, done: int = 0, total: int = 0, message: str = "",
+                 preview: Image.Image | None = None) -> None:
+        if message:
+            print(f"{prefix}{message}")
+    return progress
 
 
 @dataclass
@@ -170,6 +188,34 @@ class RenderResult:
 #: `MEDIA_DIRS` even though it prefixes all of them, so that a project with no
 #: pictures yet still has somewhere to put the recording.
 PROJECT_DIRS = ("sources", *MEDIA_DIRS, "generated", "out", "archive")
+
+
+#: Characters a project name may not contain, because a name is a folder name
+#: and nothing else. A path separator would let a graph write outside
+#: `projects/`, and a leading dot hides the folder from the picker that is
+#: supposed to list it.
+BAD_NAME_CHARS = ("/", "\\", ":", "*", "?", '"', "<", ">", "|")
+
+
+def clean_project_name(name: str) -> str:
+    """A project name, or a refusal that says which character was the problem.
+
+    One list, for the same reason `create_project` is one function: the node
+    and the `POST /memoacts/project` route both answer "is this a folder name",
+    and until 2026-09-03 they answered differently — the route allowed
+    `: * ? " < > |`, every one of which Windows refuses in a path, so a name
+    typed in the panel could be accepted and then fail to become a folder.
+    """
+    name = (name or "").strip().strip(".")
+    if not name:
+        raise ProjectError("give the project a name — it becomes the folder "
+                           "your script, your recording and your pictures "
+                           "live in")
+    bad = [c for c in BAD_NAME_CHARS if c in name]
+    if bad:
+        raise ProjectError(f"{''.join(bad)!r} cannot be in a project name: it "
+                           f"is a folder name, not a path")
+    return name
 
 
 def create_project(folder: Path) -> bool:
@@ -317,7 +363,6 @@ def _renumber_rows(project: Path, remap: dict[int, int | None],
     picture, then push in" survive being made into one scene — the first row
     has the picture, the second has the focus, and the merged scene wants both.
     """
-    from .shotlist import parse_shot_key, read_table, row_key, write_table
 
     path = project / "shots.csv"
     table = read_table(path)
@@ -452,7 +497,6 @@ def split_scene(project: Path, index: int, at_sentence: int) -> SceneEdit:
 
 def _copy_row(project: Path, src: int, dst: int) -> None:
     """Give a newly split scene the row its parent had."""
-    from .shotlist import parse_shot_key, read_table, row_key, write_table
 
     path = project / "shots.csv"
     table = read_table(path)
@@ -535,7 +579,7 @@ def read_project(project: Path) -> ProjectRead:
 
     # shots.csv wins over the script's own [[refs]] and over cycling: it is the
     # edit decision, made after both. The table is read once here rather than
-    # inside `read_shot_list`, because the rows it *drops* are worth a word too.
+    # inside a one-line reader, because the rows it *drops* are worth a word too.
     table = read_table(project / "shots.csv")
     picks, edit_warnings = apply_shot_list(
         script_shots, edits_from_table(table), project)
@@ -753,18 +797,24 @@ def read_sound_design(project: Path, doc: dict[str, Any], *,
                        is_template=is_template, warnings=warnings + more)
 
 
-def build_sfx_bed(project: Path, doc: dict[str, Any], design: SoundDesign, *,
+def build_sfx_bed(project: Path, doc: dict[str, Any],
+                  placed: list[sfxlib.Placed], *,
                   master_db: float = 0.0, duck: bool = True,
                   out: Path | None = None,
                   progress: Progress = _noop) -> tuple[Path, list[str]]:
     """Mix the sound design into one track the length of the reel.
+
+    Takes the placed cues rather than the whole `SoundDesign`, because that is
+    all it ever read — and asking for the wider type made the SFX Bed node
+    build a `SoundDesign` with an empty `CueTable` in it purely to have
+    something to pass.
 
     The narration is opened read-only, to find where the voice is; the only
     signal written is the sound effects layer (SPEC §5.6). The bed lands in
     `generated/`, beside `shots.json`, because it is derived from files the
     project already holds and can be thrown away and remade.
     """
-    if not design.placed:
+    if not placed:
         raise ProjectError("no sound cues to mix — sfx.csv has no live rows")
     total = float(doc.get("duration_s") or 0.0)
     if total <= 0:
@@ -776,12 +826,12 @@ def build_sfx_bed(project: Path, doc: dict[str, Any], design: SoundDesign, *,
         if not narration.exists():
             narration = find_narration(project)
 
-    have = sum(1 for p in design.placed if p.path is not None)
+    have = sum(1 for p in placed if p.path is not None)
     progress("sfx", 0, 0,
-             f"mixing {have} of {len(design.placed)} sound(s) over "
+             f"mixing {have} of {len(placed)} sound(s) over "
              f"{total:.2f}s" + (", ducked under the narration" if narration
                                 else ", no ducking"))
-    bed, notes = sfxlib.render_bed(design.placed, total, narration=narration,
+    bed, notes = sfxlib.render_bed(placed, total, narration=narration,
                                    master_db=master_db)
     path = sfxlib.write_wav(out or project / "generated" / "sfx_bed.wav", bed)
     for n in notes:

@@ -17,7 +17,8 @@ from pathlib import Path
 
 from comfy_api.latest import io
 
-from .memoacts_core.pipeline import align_project, read_project
+from .memoacts_core.pipeline import (align_project, console_progress,
+                                     read_project)
 from .memoacts_core.project import find_narration
 from .nodes_types import Alignment, Project
 
@@ -91,12 +92,8 @@ class MemoActsAlign(io.ComfyNode):
                               "project_dir": str(folder)})
 
 
-def _progress(stage, done=0, total=0, message="", preview=None):
-    """Say what is happening, since nothing else can.
-
-    `align()` is one opaque call into stable-whisper: no callback, no chunks,
-    no fraction to report. A line before it starts is the honest maximum, and
-    it matters because the first run also downloads the model.
-    """
-    if message:
-        print(f"[MemoActs] {message}")
+#: Say what is happening, since nothing else can: `align()` is one opaque call
+#: into stable-whisper — no callback, no chunks, no fraction to report. A line
+#: before it starts is the honest maximum, and it matters because the first run
+#: also downloads the model.
+_progress = console_progress("[MemoActs] ")

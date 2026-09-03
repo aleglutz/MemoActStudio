@@ -89,8 +89,18 @@ class ShotSchedule:
         return out
 
 
-def _ease(t: float) -> float:
-    return (1 - math.cos(math.pi * t)) / 2
+def ease_cosine(t: float) -> float:
+    """The pack's one easing curve, clamped to 0..1.
+
+    Public because `tools/render_map.py` and `tools/render_move.py` each wrote
+    their own copy of it for want of a name to import — and a wash arriving
+    and a camera moving are supposed to feel like the same hand.
+    """
+    return (1 - math.cos(math.pi * min(max(t, 0.0), 1.0))) / 2
+
+
+#: The old private name, kept because this module uses it in a dozen places.
+_ease = ease_cosine
 
 
 def base_window(src_w: int, src_h: int, aspect: float = ASPECT

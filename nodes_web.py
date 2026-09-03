@@ -32,10 +32,12 @@ except (ImportError, AttributeError):       # imported without a running server
 from .memoacts_core import effects as fx
 from .memoacts_core import sfx as sfxlib
 from .memoacts_core import shotlist
-from .memoacts_core.pipeline import (ProjectError, create_project,
+from .memoacts_core.pipeline import (ProjectError, clean_project_name,
+                                     create_project,
                                      merge_scene, read_project,
                                      split_scene)
-from .memoacts_core.project import MEDIA_DIRS, sentences_of
+from .memoacts_core.project import (MEDIA_DIRS, find_media,
+                                    sentences_of)
 from .memoacts_core.schedule import (FOCUSABLE, PRESETS as MOTION_PRESETS,
                                      base_window, focus_limits)
 from .memoacts_core.video import is_video, probe
@@ -339,10 +341,19 @@ async def thumb(request: web.Request) -> web.Response:
         px = min(max(int(request.query.get("px") or THUMB_PX), 128), 1600)
     except ValueError:
         px = THUMB_PX
-    found = next((folder / d / name for d in MEDIA_DIRS
-                  if (folder / d / name).is_file()), None)
+    found = find_media(folder, name)
     if found is None:
         raise web.HTTPNotFound(reason=f"no media named {name}")
+
+    # A thumbnail is a pure function of (file, mtime, size, px), so it can be
+    # revalidated instead of rebuilt. Without this the panel re-decoded the
+    # full-resolution source on every redraw — 416 ms for a 9000x6360 scan,
+    # times every tile on the shelf, on every click.
+    stat = found.stat()
+    etag = f'"{stat.st_mtime_ns:x}-{stat.st_size:x}-{px}"'
+    if request.headers.get("If-None-Match") == etag:
+        return web.Response(status=304, headers={"ETag": etag,
+                                                 "Cache-Control": "no-cache"})
 
     from PIL import Image
     if is_video(found):
@@ -355,7 +366,7 @@ async def thumb(request: web.Request) -> web.Response:
     buf = BytesIO()
     image.save(buf, format="JPEG", quality=82)
     return web.Response(body=buf.getvalue(), content_type="image/jpeg",
-                        headers={"Cache-Control": "no-cache"})
+                        headers={"Cache-Control": "no-cache", "ETag": etag})
 
 
 @_ROUTES.get("/memoacts/sfx")
@@ -452,9 +463,10 @@ async def new_project(request: web.Request) -> web.Response:
     overwrites a neighbour's work on a shared machine.
     """
     body = await request.json()
-    name = (body.get("name") or "").strip()
-    if not name or "/" in name or "\\" in name or name.startswith("."):
-        raise web.HTTPBadRequest(reason="a project name, without a path")
+    try:
+        name = clean_project_name(body.get("name") or "")
+    except ProjectError as exc:
+        raise web.HTTPBadRequest(reason=str(exc))
     folder = PROJECTS_DIR / name
     if folder.exists():
         raise web.HTTPBadRequest(reason=f"{name} already exists")

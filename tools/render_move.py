@@ -58,7 +58,9 @@ from PIL import Image
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from memoacts_core import subs  # noqa: E402
-from memoacts_core.project import COMPOSITES, MEDIA_DIRS, parse_hook  # noqa: E402
+from memoacts_core.project import (COMPOSITES, MEDIA_DIRS,  # noqa: E402
+                                   find_media, parse_hook)
+from memoacts_core.schedule import ease_cosine  # noqa: E402
 from memoacts_core.render import RESAMPLE, encode, load_source  # noqa: E402
 
 OUT_W, OUT_H = 1080, 1920
@@ -123,15 +125,14 @@ def parse_bed(spec: str) -> tuple[int, int, int]:
 
 
 def resolve(project: Path, name: str) -> Path:
-    for folder in MEDIA_DIRS:
-        cand = project / folder / name
-        if cand.exists():
-            return cand
-    raise SystemExit(f"{name}: in none of {', '.join(MEDIA_DIRS)}")
+    """`find_media`, with the CLI's way of giving up."""
+    found = find_media(project, name)
+    if found is None:
+        raise SystemExit(f"{name}: in none of {', '.join(MEDIA_DIRS)}")
+    return found
 
 
-def ease_cosine(t: float) -> float:
-    return (1 - math.cos(math.pi * min(max(t, 0.0), 1.0))) / 2
+
 
 
 def at(keys, t: float, ease) -> tuple[float, float, float, int]:

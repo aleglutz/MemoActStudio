@@ -34,8 +34,8 @@ import torch
 from comfy_api.latest import io, ui
 
 from .memoacts_core import sfx
-from .memoacts_core.pipeline import (ProjectError, SoundDesign,
-                                     build_sfx_bed, read_sound_design)
+from .memoacts_core.pipeline import (ProjectError, build_sfx_bed,
+                                     console_progress, read_sound_design)
 from .nodes_types import Shots, SfxCue, SfxCues
 
 #: Appended to every prompt unless the widget is emptied. Stable Audio Open and
@@ -337,10 +337,8 @@ class MemoActsSfxBed(io.ComfyNode):
         placed = design["placed"]
         total = float(doc.get("duration_s") or 0.0)
 
-        plan = SoundDesign(csv=Path(design["csv"]), table=sfx.CueTable(),
-                           cues=design["cues"], placed=placed)
         try:
-            out, notes = build_sfx_bed(project, doc, plan,
+            out, notes = build_sfx_bed(project, doc, placed,
                                        master_db=master_gain_db,
                                        duck=duck_under_voice,
                                        progress=_say)
@@ -362,15 +360,11 @@ class MemoActsSfxBed(io.ComfyNode):
         return io.NodeOutput(audio, ui=ui.PreviewAudio(audio, cls=cls))
 
 
-def _say(stage, done=0, total=0, message="", preview=None) -> None:
-    """The pipeline's own phrasing, in the ComfyUI console.
-
-    Deliberately not reworded here. The CLI prints these lines verbatim too,
-    and two doors describing the same fact differently is the drift this pack
-    was restructured to make impossible.
-    """
-    if message:
-        print(f"[MemoActs] {message}")
+#: The pipeline's own phrasing, in the ComfyUI console. Deliberately not
+#: reworded: the CLI prints these lines verbatim too, and two doors describing
+#: the same fact differently is the drift this pack was restructured to make
+#: impossible.
+_say = console_progress("[MemoActs] ")
 
 
 def _clock(seconds: float) -> str:

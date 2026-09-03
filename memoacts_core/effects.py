@@ -22,13 +22,14 @@ No GPU and no model anywhere in this module, by construction (SPEC §3 Branch A)
 from __future__ import annotations
 
 import math
-import shutil
 import subprocess
 from dataclasses import dataclass, field
 from pathlib import Path
 
 import numpy as np
 from PIL import Image, ImageFilter
+
+from .render import ffmpeg_exe
 
 BLEND_MODES = ("overlay", "soft_light", "screen", "multiply", "normal")
 
@@ -97,8 +98,24 @@ class EffectStack:
     sharpen: Sharpen | None = None
 
     def is_empty(self) -> bool:
+        """Nothing set at all, shake included."""
         return all(getattr(self, f) is None for f in
                    ("grade", "grain", "texture", "frame", "shake", "sharpen"))
+
+    def touches_pixels(self) -> bool:
+        """Whether `EffectPipeline` would change a single pixel.
+
+        Shake is not in this list, and that is the whole point of the
+        distinction: it is geometric, consumed by the renderer as a crop offset
+        (`render.shot_frames`), which is what makes the node's "free" claim
+        true. Asking `is_empty()` here instead put a shake-only shot through
+        the full uint8 → float32 → uint8 round trip for no visible change —
+        measured at 34 ms/frame, about +55% on a 61 ms frame, and two minutes
+        on a full reel. The round trip was not even neutral: `astype(uint8)`
+        truncates, so a pixel could come back one value darker than it went in.
+        """
+        return any(getattr(self, f) is not None for f in
+                   ("grade", "grain", "texture", "frame", "sharpen"))
 
 
 #: Named presets, expressed as settings of the families above — extend this
@@ -363,19 +380,12 @@ class TextureSource:
                 (out_w, out_h), Image.Resampling.LANCZOS)
             self._still = np.asarray(img, dtype=np.float32) / 255.0
 
-    def _ffmpeg(self) -> str:
-        exe = shutil.which("ffmpeg")
-        if exe:
-            return exe
-        import imageio_ffmpeg
-        return imageio_ffmpeg.get_ffmpeg_exe()
-
     def _open(self) -> None:
         self.close()
         import tempfile
         self._log = tempfile.TemporaryFile()
         self._proc = subprocess.Popen(
-            [self._ffmpeg(), "-v", "error", "-i", str(self.path),
+            [ffmpeg_exe(), "-v", "error", "-i", str(self.path),
              "-f", "rawvideo", "-pix_fmt", "rgb24",
              "-vf", f"scale={self.out_w}:{self.out_h}", "-"],
             stdout=subprocess.PIPE, stderr=self._log)
@@ -456,7 +466,7 @@ class EffectPipeline:
 
     def apply(self, image: Image.Image, frame_index: int) -> Image.Image:
         s = self.stack
-        if s.is_empty():
+        if not s.touches_pixels():
             return image
 
         rgb = np.asarray(image, dtype=np.float32) / 255.0

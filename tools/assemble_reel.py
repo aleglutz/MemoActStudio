@@ -45,15 +45,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
+from memoacts_core.render import ffmpeg_exe  # noqa: E402
 from memoacts_core.video import probe  # noqa: E402
-
-
-def ffmpeg_exe() -> str:
-    exe = shutil.which("ffmpeg")
-    if exe:
-        return exe
-    import imageio_ffmpeg
-    return imageio_ffmpeg.get_ffmpeg_exe()
 
 
 _SRT_TIME = re.compile(r"(\d{2}):(\d{2}):(\d{2}),(\d{3})")

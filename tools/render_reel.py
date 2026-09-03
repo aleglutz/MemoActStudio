@@ -31,15 +31,13 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from memoacts_core.effects import PRESETS  # noqa: E402
 from memoacts_core.pipeline import (ProjectError, RenderOptions,  # noqa: E402
+                                    console_progress,
                                     build_sfx_bed, read_sound_design,
                                     render_project)
 
 
-def printer(stage: str, done: int = 0, total: int = 0, message: str = "",
-            preview=None) -> None:
-    """Show the lines the pipeline phrases; ignore the counters and frames."""
-    if message:
-        print(message)
+#: The pipeline's own phrasing, straight to stdout.
+printer = console_progress()
 
 
 def main() -> int:
@@ -102,7 +100,7 @@ def main() -> int:
     if args.sfx:
         try:
             design = read_sound_design(proj, doc)
-            bed, _ = build_sfx_bed(proj, doc, design,
+            bed, _ = build_sfx_bed(proj, doc, design.placed,
                                    master_db=args.sfx_gain,
                                    duck=not args.no_duck, progress=printer)
         except ProjectError as exc:

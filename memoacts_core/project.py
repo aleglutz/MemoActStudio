@@ -366,6 +366,23 @@ MEDIA_DIRS = tuple(f"{SOURCES_DIR}/{d}"
                    for d in ("images", "composites", "maps", "videos"))
 
 
+def find_media(project: Path, name: str) -> Path | None:
+    """A bare filename, looked for in the four media folders in search order.
+
+    One implementation, because "which folders count as media" is one fact.
+    It was four: this function, `MemoActsSetImage`, the thumbnail route, and
+    an identical `resolve()` in two of the `tools/` renderers — so a change to
+    the order, or a fifth folder, had to be remembered five times.
+    """
+    if not name:
+        return None
+    for folder in MEDIA_DIRS:
+        cand = project / folder / name
+        if cand.exists():
+            return cand
+    return None
+
+
 def resolve_media(project: Path, shot: dict) -> Path:
     """Where a shot's media actually is.
 
@@ -381,10 +398,9 @@ def resolve_media(project: Path, shot: dict) -> Path:
         if cand.exists():
             return cand
     name = shot.get("image", "")
-    for folder in MEDIA_DIRS:
-        cand = project / folder / name
-        if cand.exists():
-            return cand
+    found = find_media(project, name)
+    if found is not None:
+        return found
     return project / MEDIA_DIRS[0] / name     # report the conventional path
 
 
