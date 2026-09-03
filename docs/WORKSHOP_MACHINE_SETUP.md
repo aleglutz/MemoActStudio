@@ -307,6 +307,6 @@ Recorded so they are not rediscovered as open questions:
 - **Local-vs-Cloud behaviour differences** — not a machine-setup concern.
   They live in `GAPS.md` (#4 content-addressed uploads, #5 zeroed telemetry),
   which is where the two recorded so far already are.
-- **An explicit local model path for `nodes_align.py`** — a code item, not a
+- **An explicit local model path for `nodes/align.py`** — a code item, not a
   provisioning one. It is worth doing for reproducibility and it makes §3.7
   trivial, but it is now the pack's business rather than this document's.

@@ -30,8 +30,8 @@ import numpy as np
 import torch
 from comfy_api.latest import io, ui
 
-from .memoacts_core import voice
-from .nodes_audio import audio_at_own_rate
+from ..memoacts_core import voice
+from .audio import audio_at_own_rate
 
 #: The voice workflow's own submenu. The reel nodes sit in `memoacts`; these
 #: are a stage before it and are opened from a different graph, so they are one

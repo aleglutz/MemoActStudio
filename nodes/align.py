@@ -17,10 +17,10 @@ from pathlib import Path
 
 from comfy_api.latest import io
 
-from .memoacts_core.pipeline import (align_project, console_progress,
+from ..memoacts_core.pipeline import (align_project, console_progress,
                                      read_project)
-from .memoacts_core.project import find_narration
-from .nodes_types import Alignment, Project
+from ..memoacts_core.project import find_narration
+from .types import Alignment, Project
 
 
 class MemoActsAlign(io.ComfyNode):

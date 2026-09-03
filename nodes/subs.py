@@ -22,8 +22,8 @@ from dataclasses import replace
 
 from comfy_api.latest import io, ui
 
-from .memoacts_core import caption, subs as core_subs
-from .nodes_types import Shots, Subs
+from ..memoacts_core import caption, subs as core_subs
+from .types import Shots, Subs
 
 #: Defaults come from `subs.SubStyle` itself rather than being restated here.
 #: They used to be restated, and drifted: the node offered margin_v 420 and a

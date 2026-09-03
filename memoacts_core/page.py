@@ -1,7 +1,7 @@
 """A markdown file typed on a sheet of paper, rendered as a page (SPEC 5.2).
 
 The work, with no opinion about who asks for it. `tools/render_page.py` is the
-command line over this module and `nodes_page.py` is the graph over it, and
+command line over this module and `nodes/page.py` is the graph over it, and
 they are a parser and a set of widgets respectively -- neither owns a line of
 what follows. That split is the pack's own rule (`__init__`: "the nodes are
 widgets and reporting; the work is `memoacts_core`"), and it is here for the

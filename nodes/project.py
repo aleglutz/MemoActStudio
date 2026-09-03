@@ -26,16 +26,18 @@ from pathlib import Path
 
 from comfy_api.latest import io, ui
 
-from .memoacts_core.pipeline import (ProjectError, clean_project_name,
+from ..memoacts_core.pipeline import (ProjectError, clean_project_name,
                                      project_state, read_project,
                                      set_narration)
-from .memoacts_core.project import MEDIA_DIRS
-from .nodes_audio import audio_at_own_rate
-from .nodes_types import Project
+from ..memoacts_core.project import MEDIA_DIRS
+from .audio import audio_at_own_rate
+from .types import Project
 
 #: Where projects live: `projects/` beside this file. A student's own project
 #: is a folder here, which is also how `tools/` and every document refer to it.
-PROJECTS_DIR = Path(__file__).resolve().parent / "projects"
+#: `projects/` at the repository root — two levels up from `nodes/project.py`.
+#: Was one level up when this module lived at the root, before 2026-09-03.
+PROJECTS_DIR = Path(__file__).resolve().parents[1] / "projects"
 
 
 def _projects() -> list[str]:

@@ -15,8 +15,8 @@ import copy
 
 from comfy_api.latest import io
 
-from .memoacts_core import effects as fx
-from .nodes_types import Effects, Shots
+from ..memoacts_core import effects as fx
+from .types import Effects, Shots
 
 
 def _extend(stack: fx.EffectStack | None, **families) -> fx.EffectStack:

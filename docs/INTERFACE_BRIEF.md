@@ -58,7 +58,7 @@ terminal command. A plan that ends with "and then the student runs
   / `io.Schema`, not one `INPUT_TYPES`): `MemoActsAlignShots`,
   `MemoActsRenderReel`, `MemoActsSubtitles`, `MemoActsSetMotion`,
   `MemoActsSetImage`, `MemoActsShotReport`, and seven effect nodes in
-  `nodes_layers.py`. P2 extends this pack; there is nothing to migrate.
+  `nodes/layers.py`. P2 extends this pack; there is nothing to migrate.
 - `projects/legends_of_surrender/` — a finished 168.97 s reel that exercises
   every part of the machinery, with `REBUILD.md` regenerating every asset from
   the repository. The obvious worked example, and real work rather than a toy.
@@ -96,7 +96,7 @@ should pick and justify rather than hedge:
 - something else the machinery suggests once you have looked at it.
 
 `SPEC.md` §0 carries the module priority for the September cut and names
-`nodes_layers.py` (the six effect families) as the designated **first cut** if
+`nodes/layers.py` (the six effect families) as the designated **first cut** if
 time runs short. That is a standing decision, not a suggestion.
 
 ## Method

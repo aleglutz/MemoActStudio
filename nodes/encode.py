@@ -17,10 +17,10 @@ from pathlib import Path
 
 from comfy_api.latest import io, ui
 
-from .memoacts_core.effects import COST, PRESETS
-from .memoacts_core.pipeline import RenderOptions, render_project
-from .nodes_audio import audio_to_numpy
-from .nodes_types import Effects, Shots, Subs
+from ..memoacts_core.effects import COST, PRESETS
+from ..memoacts_core.pipeline import RenderOptions, render_project
+from .audio import audio_to_numpy
+from .types import Effects, Shots, Subs
 
 #: How often a frame is pushed to the node's preview. Every frame would be a
 #: websocket message per 30th of a second of reel; twelve is often enough to

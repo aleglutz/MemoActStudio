@@ -213,7 +213,7 @@ in a browser.
 | `example_workflows/` | `voice.json`, `reel_stills.json`, `sound_design.json`, `hook_page.json` |
 | `projects/first_reel/` | The example above, media included |
 | `docs/` | [Node reference](docs/NODES.html), [handout](docs/WORKSHOP_HANDOUT.md), [shot table schema](docs/SHOTS_SCHEMA.md), [sound design](docs/SOUND_DESIGN.md), [machine setup](docs/WORKSHOP_MACHINE_SETUP.md) |
-| `SPEC.md` | The specification, and the reasoning behind each decision |
+| `docs/SPEC.md` | The specification, and the reasoning behind each decision |
 
 ## Licence
 

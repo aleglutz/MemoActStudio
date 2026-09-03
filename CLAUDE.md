@@ -6,19 +6,19 @@ Persistent context for Claude Code. Read this first, every session.
 
 A ComfyUI-based production workflow replicating the subset of CapCut functionality used in historical vertical video production, for the MemoActs 2026 project (video series "How do wars end?" + online intensive curriculum).
 
-**Authoritative spec: `SPEC.md`.** Read it before any task. If a patch or addendum file exists in the repo root that has not yet been merged into `SPEC.md`, say so and offer to merge rather than working from two sources.
+**Authoritative spec: `docs/SPEC.md`.** Read it before any task. If a patch or addendum file exists in the repo root that has not yet been merged into `docs/SPEC.md`, say so and offer to merge rather than working from two sources.
 
 ## Current phase
 
 **P1 — Cloud PoC.** Assemble a working reel graph on Comfy Cloud from stock / Cloud-supported nodes only. Reduced functionality is expected and acceptable. Deadline: demonstrable at seminar 4–5 of the running online intensive.
 
-Not P1: the custom node pack, six effect families, video fragments, per-shot GUI editing. Those are P2, scoped by `GAPS.md`.
+Not P1: the custom node pack, six effect families, video fragments, per-shot GUI editing. Those are P2, scoped by `docs/GAPS.md`.
 
 **Scope corrections, SPEC v3.1 (2026-07-28) — read §changelog before planning:**
 - **English only.** Translation (RU/DE/HY) is out of project scope — handled separately with local DeepL + whisperX. No multilingual burn-in, no Armenian, no RU normalisation.
 - **`projects/sidur` is not a dev fixture.** A new English script + narration is awaited from the project owner; until then `projects/demo_en` is the only working fixture.
 - **Two audiences, two environments** (SPEC §0): August online intensive — 30 students, 8 lessons, **Comfy Cloud**, overview-level; September offline workshop — 16 of those students, **local ComfyUI on two rented machines**, practical/production.
-- **The September workshop teaches `comfyui-memoacts` itself.** So **P2 has a hard September deadline** — P1 and P2 both have weeks, not months. P1 must be *finished, not polished*: there is no longer slack in P2 to absorb P1 overrun. Module priority for the September cut is in SPEC §0; `nodes_layers.py` (six effect families) is the designated first cut — **reversed
+- **The September workshop teaches `comfyui-memoacts` itself.** So **P2 has a hard September deadline** — P1 and P2 both have weeks, not months. P1 must be *finished, not polished*: there is no longer slack in P2 to absorb P1 overrun. Module priority for the September cut is in SPEC §0; `nodes/layers.py` (six effect families) is the designated first cut — **reversed
 2026-08-21**, see the interface decision below.
 **The command line is not the teaching surface (2026-08-21).** In the owner's
 words: *CLI-first is my own setup. I cannot and do not want to teach it to
@@ -34,7 +34,7 @@ panel** in the sidebar: scenes with duration bars, a shelf of pictures, click a
 scene then click a picture. Two scope decisions taken
 with it: students arrive with **their own script, recording and images**, and
 **per-shot focus and per-shot effects are in the September scope**, which
-reverses SPEC §0's "`nodes_layers.py` is the designated first cut" the same way
+reverses SPEC §0's "`nodes/layers.py` is the designated first cut" the same way
 `nodes_video.py` was reinstated on 2026-08-11.
 
 - Stretch goal — teaching students to build their own tools from the pack as a worked example — is a **golden achievement, never a requirement**. Its only actionable consequence now: write the pack legibly from the first commit, since that is cheap early and expensive to retrofit. No separate teaching version, no tutorial content in scope.
@@ -64,16 +64,21 @@ reverses SPEC §0's "`nodes_layers.py` is the designated first cut" the same way
 
 | File | Role |
 |---|---|
-| `SPEC.md` | Authoritative specification |
-| `SURVEY.md` | Existing-node survey + Comfy Cloud coverage, adopt/wrap/build decisions |
-| `ALIGNERS.md` | Aligner evaluation. Decided: stable-ts primary, behind an `Aligner` interface |
-| `GAPS.md` | Every compromise forced by stock nodes in P1 — this is the P2 backlog |
-| ~~`HARDENING.md`~~ | **Retired 2026-08-29.** Everything live in it moved into `docs/WORKSHOP_MACHINE_SETUP.md`; the file is `archive/20260829_HARDENING.md`. `SPEC.md` still names it in prose — read those as pointing at the setup document |
-| `README.md` | The public front door: what this is, install, the five nodes. Written for a stranger arriving from GitHub |
-| `HANDOFF.md` | Where the last session stopped and what the next one does first. Rewritten, not appended to; superseded versions go to `archive/handoffs/` |
-| `docs/` | Working documents: `PLAN.md` (current task list), `WALKTHROUGH.md` (the long form of all three workflows, written to be walked), `WORKSHOP_HANDOUT.md` (what a September student is given), `CLI.md` (the author's terminal path, cold start to rendered reel), `P1_GRAPH.md` + `PARTICIPANT_GRAPH_RECIPE.md` (August intensive), `WORKSHOP_MACHINE_SETUP.md` (September provisioning — it absorbed `HARDENING.md`), `NODES.html` (the generated node reference — every parameter, default and range, read from a running server's `/object_info`; open it in a browser), `SHOTS_SCHEMA.md`, `SOUND_DESIGN.md` (the SFX stage: `sfx.csv`, the four nodes, and why the narration is never touched), `THREEBAND_TOOL.md`, `UPSCALE.md`, `EDITING.md`, `INTERFACE_BRIEF.md` (the brief for the student-facing interface — paste it to open that session) |
+| `README.md` | The public front door — what this is, install, the five nodes. Written for a stranger arriving from GitHub. **The only reference document at the repo root.** |
+| `CLAUDE.md` | This file. Persistent context for Claude Code; convention keeps it at root |
+| `docs/` | **Everything else that used to be at root is here now** (2026-09-03) plus every other working document. Grouped below by kind |
+| `docs/SPEC.md` | Authoritative specification. If a patch or addendum file exists in the repo root that has not yet been merged into it, say so and offer to merge rather than working from two sources |
+| `docs/SURVEY.md` | Existing-node survey + Comfy Cloud coverage, adopt/wrap/build decisions |
+| `docs/ALIGNERS.md` | Aligner evaluation. Decided: stable-ts primary, behind an `Aligner` interface |
+| `docs/GAPS.md` | Every compromise forced by stock nodes in P1 — this is the P2 backlog |
+| `docs/HANDOFF.md` | Where the last session stopped and what the next one does first. Rewritten, not appended to; superseded versions go to `archive/handoffs/` |
+| `docs/PLAN.md` | The current task list, structured. Read it after HANDOFF |
+| `docs/WALKTHROUGH.md`, `docs/WORKSHOP_HANDOUT.md` | Student-facing prose |
+| `docs/CLI.md` | The author's terminal path, cold start to rendered reel |
+| `docs/INTERFACE_BRIEF.md`, `docs/P1_GRAPH.md`, `docs/PARTICIPANT_GRAPH_RECIPE.md`, `docs/WORKSHOP_MACHINE_SETUP.md`, `docs/SHOTS_SCHEMA.md`, `docs/SOUND_DESIGN.md`, `docs/THREEBAND_TOOL.md`, `docs/UPSCALE.md`, `docs/EDITING.md`, `docs/NODES.html` | The rest of the working documents: briefs, per-topic notes, and the generated node reference |
+| ~~`HARDENING.md`~~ | **Retired 2026-08-29.** Everything live in it moved into `docs/WORKSHOP_MACHINE_SETUP.md`; the file is `archive/20260829_HARDENING.md`. `docs/SPEC.md` still names it in prose — read those as pointing at the setup document |
 | `example_workflows/` | `voice.json` — the graph *before* the reel, where the recording is shaped and put into a project; `reel_stills.json` — the five-node graph a student opens; `sound_design.json` — the same graph with the SFX stage on the end; `hook_page.json` — the typed sheet. Load them in ComfyUI rather than reading them |
-| `web/` + `nodes_web.py` | The **Storyline panel** — a sidebar tab where each scene gets its picture — the Sound Design buttons, and the `/memoacts/` routes behind them |
+| `web/` + `nodes/web.py` | The **Storyline panel** — a sidebar tab where each scene gets its picture — the Sound Design buttons, and the `/memoacts/` routes behind them |
 | `archive/` | Superseded documents, kept for their reasoning. Not authoritative, not maintained — see `archive/README.md` |
 | `projects/legends_of_surrender/` | **The live project** — English reel "Signed After Midnight" for Museum Berlin-Karlshorst. Media is unversioned; `REBUILD.md` regenerates it |
 | `projects/demo_en/` | Working fixture (4 shots, 13.8 s) — pipeline mechanics only. Its stills are unversioned but are on disk, in `sources/images/` |
@@ -108,7 +113,7 @@ folders precisely so the `.md` files survive.
 
 ## Non-negotiables
 
-- **Open source end to end** on anything production-critical — the grant (Auswärtiges Amt, Zuwendungsbescheid) commits the project to open-source AI tools. Non-commercial-licensed components are tolerable for demos and fallbacks only, and every adopted component's licence goes in `SURVEY.md`.
+- **Open source end to end** on anything production-critical — the grant (Auswärtiges Amt, Zuwendungsbescheid) commits the project to open-source AI tools. Non-commercial-licensed components are tolerable for demos and fallbacks only, and every adopted component's licence goes in `docs/SURVEY.md`.
 - **Subtitles are never transcribed.** The script is ground truth; alignment computes timings only. Verbatim script text reaches the screen. (This survives v3.1 unchanged — it is *why* the workflow beats CapCut's auto-subtitles, independent of language count.)
 - **Never silently upscale** an image beyond its native resolution.
 - Cloud runs cost credits per GPU-second. Iterate locally, validate on Cloud.

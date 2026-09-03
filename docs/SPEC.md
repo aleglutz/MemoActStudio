@@ -61,12 +61,12 @@ Proposed priority for the September cut — **to be confirmed before implementat
 | Module | September | Rationale |
 |---|---|---|
 | `memoacts_core/` | **Must** | Everything else is a thin wrapper over it; largely exists already |
-| `nodes_align.py` | **Must** | The shot table is the workflow's spine; logic exists in `generate_shots.py` |
-| `nodes_shot.py` | **Must** | Motion + per-shot assembly — the actual CapCut replacement, and the frame-streaming rewrite (#2) lives here |
-| `nodes_subs.py` | **Must** | libass burn-in; justified by #3 alone now that #1 is withdrawn |
-| `nodes_encode.py` | **Must** | Thin ffmpeg wrapper; a reel that cannot be exported is not a workflow |
-| `nodes_audio.py` | **Should** | Narration passthrough is small and already in `assemble_reel.py`; SFX can slip |
-| `nodes_layers.py` | ~~Could~~ **Built 2026-07-28** | Six effect families, chainable per shot. Kept rather than cut, by decision. Two amendments came out of building it — see §5.4 (shake order) and §5.7 (bitrate) |
+| `nodes/align.py` | **Must** | The shot table is the workflow's spine; logic exists in `generate_shots.py` |
+| `nodes/shot.py` | **Must** | Motion + per-shot assembly — the actual CapCut replacement, and the frame-streaming rewrite (#2) lives here |
+| `nodes/subs.py` | **Must** | libass burn-in; justified by #3 alone now that #1 is withdrawn |
+| `nodes/encode.py` | **Must** | Thin ffmpeg wrapper; a reel that cannot be exported is not a workflow |
+| `nodes/audio.py` | **Should** | Narration passthrough is small and already in `assemble_reel.py`; SFX can slip |
+| `nodes/layers.py` | ~~Could~~ **Built 2026-07-28** | Six effect families, chainable per shot. Kept rather than cut, by decision. Two amendments came out of building it — see §5.4 (shake order) and §5.7 (bitrate) |
 | `nodes_video.py` | ~~**Won't**~~ **In scope, 2026-08-11** | Video fragments. Reinstated by the project owner: the reel's Tempelhof arrival is the reel's worst still (768×514, ×3.7 enlargement — `GAPS.md`), and the KAPFILM footage it was taken from is the fix, not a production-only nicety. So the case is no longer "Oct–Nov production", it is the September teaching reel's weakest shot |
 
 ### The stretch goal — teach students to build their own tools
@@ -198,7 +198,7 @@ Media and text enter through loader nodes and widgets; the graph is the project.
 [Comfy Cloud graph]  shots.json + images + audio → reel
 ```
 
-`shots.json` is uploaded as an input asset. This is acceptable and arguably good pedagogy: participants see the timing data explicitly as a file they can read and edit, rather than as a hidden step. For the intensive, `shots.json` can be produced by the facilitator for prepared exercises. In P2 it becomes a node (`nodes_align.py`).
+`shots.json` is uploaded as an input asset. This is acceptable and arguably good pedagogy: participants see the timing data explicitly as a file they can read and edit, rather than as a hidden step. For the intensive, `shots.json` can be produced by the facilitator for prepared exercises. In P2 it becomes a node (`nodes/align.py`).
 
 Still recommended (not enforced) on-disk layout for tidiness:
 
@@ -422,7 +422,7 @@ New in v3: RU digit/date normalisation quality (§5.1) — the dominant drift so
 7. Branch B teaching graphs (restoration / colourisation / img2vid) — governed by the ethics module; never in a published reel without a disclosed intervention statement.
 8. **Publish `comfyui-memoacts` to the ComfyUI Registry** (P3) — open-source commitment + the only route toward eventual Comfy Cloud support; after the pack stabilises, not before September.
 
-*(Deferred portability/offline items — explicit local model path for `nodes_align.py`, USB model install for 16 participants on museum Wi-Fi, base-vs-small model question, Armenian narration alignment, local-vs-Cloud behaviour diffs — live in `HARDENING.md`, not here.)*
+*(Deferred portability/offline items — explicit local model path for `nodes/align.py`, USB model install for 16 participants on museum Wi-Fi, base-vs-small model question, Armenian narration alignment, local-vs-Cloud behaviour diffs — live in `HARDENING.md`, not here.)*
 
 ---
 
@@ -442,5 +442,5 @@ New in v3: RU digit/date normalisation quality (§5.1) — the dominant drift so
 - [x] **Does the September offline workshop still exist?** — **resolved 2026-07-28: yes**, and the provisioning problem is far smaller than assumed. Not sixteen unknown personal machines but **two rented, project-controlled machines**. `HARDENING.md` rewritten accordingly; the USB-distribution and unknown-hardware-audit items are retired as solving a non-problem, replaced by a two-machine provisioning checklist.
 - [ ] English narration + script for the retargeted test project (§6.2) — awaited from the project owner; P2 acceptance cannot be evaluated until it exists.
 - [x] **Does the September workshop use the pack, or stock local ComfyUI?** — **resolved 2026-07-28: the pack.** P2 therefore has a hard September deadline (§0 milestone reality, corrected). New acceptance criteria §6.2.10–12 cover workshop installability, rotation-slot latency and legible failure. Stretch goal — teaching students to build their own tooling from the pack as an example — is explicitly a *golden achievement*, never a requirement (§0).
-- [ ] **Confirm the September module cut** (§0 priority table) before implementation starts. Proposed: `memoacts_core` + align/shot/subs/encode as must-have, audio as should, **`nodes_layers.py` (six effect families) as the first thing to cut**, ~~video fragments out~~ — video fragments were reinstated 2026-08-11 (§0). The effect families are the largest body of work in the pack and the most deferrable — but they are also the most *visible* part of a CapCut replacement, so cutting them is a teaching decision as much as an engineering one.
+- [ ] **Confirm the September module cut** (§0 priority table) before implementation starts. Proposed: `memoacts_core` + align/shot/subs/encode as must-have, audio as should, **`nodes/layers.py` (six effect families) as the first thing to cut**, ~~video fragments out~~ — video fragments were reinstated 2026-08-11 (§0). The effect families are the largest body of work in the pack and the most deferrable — but they are also the most *visible* part of a CapCut replacement, so cutting them is a teaching decision as much as an engineering one.
 - [ ] **Rented-machine specification** — a September deliverable with a hard lead time (the machines must be chosen and booked). Input exists: `GAPS.md` #2's ~11.5 GiB per 240-frame shot at source resolution, which scales with *source* image resolution rather than output. Derive RAM/CPU/disk from the intended workshop project size before booking, and note that per §6.2.8 no GPU is required by construction — a GPU is opportunistic, not a rental requirement.

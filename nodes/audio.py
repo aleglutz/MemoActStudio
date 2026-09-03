@@ -33,10 +33,10 @@ from pathlib import Path
 import torch
 from comfy_api.latest import io, ui
 
-from .memoacts_core import sfx
-from .memoacts_core.pipeline import (ProjectError, build_sfx_bed,
+from ..memoacts_core import sfx
+from ..memoacts_core.pipeline import (ProjectError, build_sfx_bed,
                                      console_progress, read_sound_design)
-from .nodes_types import Shots, SfxCue, SfxCues
+from .types import Shots, SfxCue, SfxCues
 
 #: Appended to every prompt unless the widget is emptied. Stable Audio Open and
 #: its relatives were trained on sound libraries, and a library recording is

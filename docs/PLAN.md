@@ -170,7 +170,7 @@ scipy — was **not a git repository, carried no version, and appeared in
 nobody's requirements file**. It was one folder deletion from not existing, and
 it would not have been on machine A in September.
 
-It is now `nodes_voice.py` (widgets, ranges, tooltips) + `memoacts_core/voice.py`
+It is now `nodes/voice.py` (widgets, ranges, tooltips) + `memoacts_core/voice.py`
 (the DSP, torch-free like the rest of the library), category `memoacts/audio`,
 V3 API. `requirements.txt` and `pyproject.toml` declare `pedalboard` and
 `pyloudnorm`; `docs/WORKSHOP_MACHINE_SETUP.md` §3.3 now installs from the file

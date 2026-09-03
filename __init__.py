@@ -35,22 +35,22 @@ from typing_extensions import override
 
 from comfy_api.latest import ComfyExtension, io
 
-from .nodes_align import MemoActsAlign
-from .nodes_audio import (MemoActsSaveSfx, MemoActsSfxBed, MemoActsSfxPrompt,
+from .nodes.align import MemoActsAlign
+from .nodes.audio import (MemoActsSaveSfx, MemoActsSfxBed, MemoActsSfxPrompt,
                           MemoActsSoundDesign)
-from .nodes_encode import MemoActsPreviewShot, MemoActsRenderReel
-from .nodes_layers import (MemoActsApplyEffects, MemoActsEffectPreset,
+from .nodes.encode import MemoActsPreviewShot, MemoActsRenderReel
+from .nodes.layers import (MemoActsApplyEffects, MemoActsEffectPreset,
                            MemoActsFrameOverlay, MemoActsGrade,
                            MemoActsGrain, MemoActsShake, MemoActsSharpen,
                            MemoActsTexture)
-from .nodes_page import (MemoActsPageFile, MemoActsPaperMask,
+from .nodes.page import (MemoActsPageFile, MemoActsPaperMask,
                          MemoActsPencilCrop, MemoActsPencilGraft,
                          MemoActsPencilLift, MemoActsPencilPrompt,
                          MemoActsTypePage)
-from .nodes_project import MemoActsProject, MemoActsSetNarration
-from .nodes_shot import MemoActsSetImage, MemoActsSetMotion, MemoActsShotTable
-from .nodes_subs import MemoActsSubtitles
-from .nodes_voice import (MemoActsAudioAutoTune, MemoActsAudioDeEsser,
+from .nodes.project import MemoActsProject, MemoActsSetNarration
+from .nodes.shot import MemoActsSetImage, MemoActsSetMotion, MemoActsShotTable
+from .nodes.subs import MemoActsSubtitles
+from .nodes.voice import (MemoActsAudioAutoTune, MemoActsAudioDeEsser,
                           MemoActsAudioLoudnessMeter, MemoActsAudioNormalize,
                           MemoActsAudioPitchTime, MemoActsAudioSpeechDenoise,
                           MemoActsAudioVocalCompressor)
@@ -58,7 +58,7 @@ from .nodes_voice import (MemoActsAudioAutoTune, MemoActsAudioDeEsser,
 # Importing this registers the /memoacts/... routes the shot-table widget calls.
 # It has to happen at load time, before ComfyUI hands its aiohttp app the route
 # table it collected.
-from . import nodes_web  # noqa: F401,E402
+from .nodes import web  # noqa: F401,E402
 
 #: The shot-table widget, served from web/ (SPEC §5.2 — the edit is a table,
 #: and a node graph is poor at tables).

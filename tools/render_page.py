@@ -9,7 +9,7 @@
 
 The command line over `memoacts_core.page`, which is where the sheet actually
 lives -- the file format, the paper, the typing, the pencil and the light are
-all documented there, and `nodes_page.py` is the same module behind a graph.
+all documented there, and `nodes/page.py` is the same module behind a graph.
 
 What is here and nowhere else: reading the arguments, opening the two optional
 images, and printing. `--anchor` prints, for each thing named, where it sits on

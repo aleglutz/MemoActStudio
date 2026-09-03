@@ -27,10 +27,10 @@ from pathlib import Path
 
 from comfy_api.latest import io, ui
 
-from .memoacts_core.pipeline import compose_project, read_project
-from .memoacts_core.project import MEDIA_DIRS, find_media
-from .memoacts_core.schedule import PRESETS
-from .nodes_types import Alignment, Shots
+from ..memoacts_core.pipeline import compose_project, read_project
+from ..memoacts_core.project import MEDIA_DIRS, find_media
+from ..memoacts_core.schedule import PRESETS
+from .types import Alignment, Shots
 
 
 class MemoActsShotTable(io.ComfyNode):

@@ -40,7 +40,7 @@ scipy that were **not a git repository, carried no version, and appeared in
 nobody's requirements file**. One folder deletion from not existing, and
 certain not to be on machine A in September.
 
-They are now `nodes_voice.py` + `memoacts_core/voice.py`, category
+They are now `nodes/voice.py` + `memoacts_core/voice.py`, category
 `memoacts/audio`, V3 API, split the way the rest of the pack is split: the
 node file is widgets, ranges and tooltips; the core file is torch-free DSP that
 `tools/` could call tomorrow.

@@ -93,4 +93,4 @@ Note the environment shift (SPEC v3.1 §3): students run on Cloud, where alignme
 
 1. **Acceptance §6.8 "no model downloads":** every viable aligner needs a model (~150–500 MB, one-time, CPU-run). Strictest reading forces aeneas (rejected). Proposed amendment: *"no GPU-class/diffusion checkpoints; the aligner's speech model (≤500 MB, auto-fetched once, CPU-executed) is exempt."*
 2. **NC licenses** (MMS weights; ComfyUI-Whisper teaching node): acceptable as demo/fallback under the grant's open-source commitment, or excluded entirely?
-3. Confirm stable-ts as primary so `nodes_align.py` is designed around a direct-alignment API (with the engine behind an interface, per the fallback chain).
+3. Confirm stable-ts as primary so `nodes/align.py` is designed around a direct-alignment API (with the engine behind an interface, per the fallback chain).

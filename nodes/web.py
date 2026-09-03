@@ -29,19 +29,19 @@ try:
 except (ImportError, AttributeError):       # imported without a running server
     _ROUTES = web.RouteTableDef()
 
-from .memoacts_core import effects as fx
-from .memoacts_core import sfx as sfxlib
-from .memoacts_core import shotlist
-from .memoacts_core.pipeline import (ProjectError, clean_project_name,
+from ..memoacts_core import effects as fx
+from ..memoacts_core import sfx as sfxlib
+from ..memoacts_core import shotlist
+from ..memoacts_core.pipeline import (ProjectError, clean_project_name,
                                      create_project, merge_scene,
                                      project_state, read_project,
                                      split_scene)
-from .memoacts_core.project import (MEDIA_DIRS, find_media,
+from ..memoacts_core.project import (MEDIA_DIRS, find_media,
                                     sentences_of)
-from .memoacts_core.schedule import (FOCUSABLE, PRESETS as MOTION_PRESETS,
+from ..memoacts_core.schedule import (FOCUSABLE, PRESETS as MOTION_PRESETS,
                                      base_window, focus_limits)
-from .memoacts_core.video import is_video, probe
-from .nodes_project import PROJECTS_DIR
+from ..memoacts_core.video import is_video, probe
+from .project import PROJECTS_DIR
 
 #: Longest edge of a thumbnail. Big enough to frame a crop on, small enough
 #: that twenty of them arrive at once without thought.

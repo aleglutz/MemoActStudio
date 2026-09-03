@@ -31,9 +31,13 @@ import torch
 from comfy_api.latest import io, ui
 from PIL import Image
 
-from .memoacts_core import page as pg
+from ..memoacts_core import page as pg
 
-ROOT = Path(__file__).resolve().parent
+#: Repository root — two levels up from `nodes/page.py` since 2026-09-03,
+#: one level when this module lived at the root. The optional widgets accept a
+#: relative path and resolve it here, so `assets/fonts/foo.ttf` still means the
+#: same file it always did.
+ROOT = Path(__file__).resolve().parents[1]
 FONTS = ROOT / "assets" / "fonts"
 
 #: A page with nothing on it but the four directives, so the node explains its
