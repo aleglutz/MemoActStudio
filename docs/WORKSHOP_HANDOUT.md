@@ -1,5 +1,17 @@
 # Workshop handout — assembling a reel
 
+> ⚠ **Stale as of 2026-09-03, and not yet rewritten. Do not hand this to a
+> student.** It describes the interface as it stood on 2026-08-21: a table
+> *inside* the Shot Table node, with a media dropdown and a rectangle dragged
+> on a thumbnail. That widget was removed on 2026-09-01 and the edit moved to
+> the **Storyline** panel in the sidebar (`docs/PLAN.md` item M). It also says
+> the pack is six nodes — it registers 35 — and it never mentions the voice
+> workflow, so it does not say where a recording comes from.
+>
+> Until it is rewritten, `README.md` is the accurate walkthrough and
+> `docs/WALKTHROUGH.md` is the long form of it. Rewriting this file against the
+> current interface is the next item after the README.
+
 By the end of the session you will have produced a vertical video from your own
 script, your own recording and your own images, with subtitles carrying the
 script text exactly as written.
