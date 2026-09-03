@@ -45,7 +45,52 @@ CONTROLLED = {
 }
 
 
-def check(path: Path) -> list[str]:
+#: Where a running ComfyUI answers `/object_info`. Asked only when `--server`
+#: is given, because the file-only check has to keep working on a machine with
+#: nothing running.
+SERVER = "http://127.0.0.1:8188"
+
+
+#: Socket types that carry a value rather than a wire, and so take a slot in
+#: `widgets_values`. A COMBO arrives either as its list of options (older
+#: frontends) or as the string, with the options beside it.
+WIDGET_TYPES = {"INT", "FLOAT", "STRING", "BOOLEAN", "COMBO"}
+
+
+def widget_names(schema: dict) -> list[str]:
+    """The widget inputs of a node, in the order `widgets_values` stores them.
+
+    Optional inputs count — `MemoActsPageFile` carries seven of them, and they
+    are exactly the ones the editor leaves out of the file.
+    """
+    order = schema.get("input_order") or {}
+    names = list(order.get("required", [])) + list(order.get("optional", []))
+    spec = {**schema["input"].get("required", {}),
+            **schema["input"].get("optional", {})}
+    out = []
+    for name in names:
+        kind = spec.get(name, [None])[0]
+        if isinstance(kind, list) or kind in WIDGET_TYPES:
+            out.append(name)
+    return out
+
+
+def installed_widgets(server: str) -> dict[str, list[str]]:
+    """Every installed node's widgets, read off a running ComfyUI.
+
+    The file's own `inputs` array is not a reliable account of them: the
+    editor omits optional widget inputs that were never linked, so
+    `hook_page.json` reads as one widget with eight values when the node
+    really has eight. Asking the server is the only way to tell that apart
+    from a genuine shift.
+    """
+    import urllib.request
+    with urllib.request.urlopen(f"{server}/object_info", timeout=20) as fh:
+        info = json.load(fh)
+    return {name: widget_names(schema) for name, schema in info.items()}
+
+
+def check(path: Path, installed: dict[str, list[str]] | None = None) -> list[str]:
     d = json.loads(path.read_text(encoding="utf-8"))
     ids = {n["id"]: n for n in d.get("nodes", [])}
     bad: list[str] = []
@@ -71,7 +116,16 @@ def check(path: Path) -> list[str]:
     for n in d.get("nodes", []):
         if n["type"] in ("MarkdownNote", "Note", "Reroute"):
             continue
-        widgets = [i["name"] for i in n.get("inputs", []) if "widget" in i]
+        # The schema is asked only about this pack's own nodes. Everything in
+        # them is a primitive or a combo, so `widget_names` is exact — whereas
+        # a third-party node may register a widget type of its own (LoadAudio
+        # has two), and for those the file's own account is the better guess.
+        ours = installed is not None and n["type"].startswith("MemoActs")
+        if installed is not None and n["type"].startswith("MemoActs")                 and n["type"] not in installed:
+            bad.append(f"node {n['id']} {n['type']}: no such node is installed")
+            continue
+        widgets = (installed[n["type"]] if ours
+                   else [i["name"] for i in n.get("inputs", []) if "widget" in i])
         want = len(widgets) + sum((n["type"], a) in CONTROLLED for a in widgets)
         got = len(n.get("widgets_values", []))
         if want != got:
@@ -84,10 +138,16 @@ def check(path: Path) -> list[str]:
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("workflow", type=Path, nargs="+")
+    ap.add_argument("--server", action="store_true",
+                    help="count widgets from a running ComfyUI's /object_info "
+                         "rather than from the file's own inputs array, which "
+                         "omits optional widgets that were never linked")
+    ap.add_argument("--url", default=SERVER, help=f"where that is ({SERVER})")
     args = ap.parse_args()
+    installed = installed_widgets(args.url) if args.server else None
     hurt = 0
     for p in args.workflow:
-        bad = check(p)
+        bad = check(p, installed)
         d = json.loads(p.read_text(encoding="utf-8"))
         print(f"{p}  {len(d.get('nodes', []))} nodes, {len(d.get('links', []))} links")
         for line in bad:

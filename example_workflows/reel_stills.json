@@ -1,6 +1,6 @@
 {
   "revision": 0,
-  "last_node_id": 6,
+  "last_node_id": 7,
   "last_link_id": 6,
   "nodes": [
     {
@@ -8,7 +8,7 @@
       "type": "MemoActsProject",
       "pos": [
         40,
-        40
+        140
       ],
       "size": [
         270,
@@ -48,14 +48,14 @@
           ]
         }
       ],
-      "title": "1 · Project — this is my material",
+      "title": "1 · Project · this is my material",
       "properties": {
         "aux_id": "aleglutz/memoacts-studio",
         "ver": "b01640c2fd9405aef994501b59e28c519e565ad4",
         "Node name for S&R": "MemoActsProject"
       },
       "widgets_values": [
-        "workshop_starter",
+        "first_reel",
         ""
       ]
     },
@@ -63,8 +63,8 @@
       "id": 2,
       "type": "MemoActsAlign",
       "pos": [
-        480,
-        40
+        360,
+        140
       ],
       "size": [
         270,
@@ -118,7 +118,7 @@
           ]
         }
       ],
-      "title": "2 · Align — my words become timings",
+      "title": "2 · Align · my words become timings",
       "properties": {
         "aux_id": "aleglutz/memoacts-studio",
         "ver": "b01640c2fd9405aef994501b59e28c519e565ad4",
@@ -134,8 +134,8 @@
       "id": 3,
       "type": "MemoActsShotTable",
       "pos": [
-        40,
-        360
+        680,
+        140
       ],
       "size": [
         280,
@@ -201,7 +201,7 @@
           ]
         }
       ],
-      "title": "3 · Shot Table — I decide what is seen",
+      "title": "3 · Shot Table · I decide what is seen",
       "properties": {
         "aux_id": "aleglutz/memoacts-studio",
         "ver": "b01640c2fd9405aef994501b59e28c519e565ad4",
@@ -211,16 +211,15 @@
         30,
         100,
         true,
-        30,
-        ""
+        30
       ]
     },
     {
       "id": 4,
       "type": "MemoActsSubtitles",
       "pos": [
-        980,
-        360
+        1010,
+        140
       ],
       "size": [
         270,
@@ -292,7 +291,7 @@
           ]
         }
       ],
-      "title": "4 · Subtitles — the words become captions",
+      "title": "4 · Subtitles · the words become captions",
       "properties": {
         "aux_id": "aleglutz/memoacts-studio",
         "ver": "b01640c2fd9405aef994501b59e28c519e565ad4",
@@ -310,8 +309,8 @@
       "id": 5,
       "type": "MemoActsRenderReel",
       "pos": [
-        980,
-        700
+        1340,
+        140
       ],
       "size": [
         271.960546875,
@@ -379,7 +378,7 @@
         }
       ],
       "outputs": [],
-      "title": "5 · Render Reel — the reel is made",
+      "title": "5 · Render Reel · the reel is made",
       "properties": {
         "aux_id": "aleglutz/memoacts-studio",
         "ver": "b01640c2fd9405aef994501b59e28c519e565ad4",
@@ -396,8 +395,8 @@
       "id": 6,
       "type": "MemoActsPreviewShot",
       "pos": [
-        980,
-        1010
+        1340,
+        420
       ],
       "size": [
         278.9263671875,
@@ -449,7 +448,7 @@
         }
       ],
       "outputs": [],
-      "title": "One shot, in seconds",
+      "title": "Preview Shot · one scene, in seconds",
       "properties": {
         "aux_id": "aleglutz/memoacts-studio",
         "ver": "b01640c2fd9405aef994501b59e28c519e565ad4",
@@ -460,6 +459,30 @@
         "none",
         "warn"
       ]
+    },
+    {
+      "id": 7,
+      "type": "MarkdownNote",
+      "pos": [
+        -620,
+        140
+      ],
+      "size": [
+        560,
+        640
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "title": "Read me first",
+      "properties": {},
+      "widgets_values": [
+        "# The reel\n\nFive nodes, left to right, and each one is a sentence. Press **Run** once; they\ngo in order on their own.\n\n| | | |\n|---|---|---|\n| 1 | **Project** | this is my material |\n| 2 | **Align** | my words become timings |\n| 3 | **Shot Table** | I decide what is seen |\n| 4 | **Subtitles** | the words become captions |\n| 5 | **Render Reel** | the reel is made |\n\n## The edit is not in this graph\n\nOpen the **Storyline** tab in the sidebar (the left-hand rail). That is where\nscenes get their pictures: click a scene, click a picture. It writes\n`shots.csv`, which is the file this graph reads.\n\nThere is nothing to edit inside the Shot Table node. It compiles the table and\nprints the report; the report is worth reading, and it is where the tool tells\nyou an image is too small before you have spent a render finding out.\n\n## Where the recording comes from\n\nNot from here. Open `voice.json` first, shape your take, and let **MemoActs -\nSet Narration** write it into a project. Every timing below is measured against\nwhat that graph produced, so the pace is decided there and nowhere later.\n\n## What costs what\n\n**Align** is the only slow step -- about 90 seconds the first time, then\nnothing: it is cached on the script and the recording, so changing a picture\nand running again does not pay for it twice.\n\n**Render Reel** is the long one, and roughly 61 ms a frame. A 22-second reel is\nabout 40 seconds of rendering. An `effect_preset` other than `none` multiplies\nthat -- the tooltip carries the measured figure for each look.\n\n**Preview Shot** renders one scene, without audio or captions. Use it to check\na framing rather than re-rendering the reel.\n\n## If it stops\n\n- *no narration.\\** -- the project has no recording yet. That is `voice.json`.\n- *script.md has no shots* -- the scene headings are missing or escaped. A\n  heading is `## S01` at the start of a line; `\\## S01` is not one.\n- *source supplies only N px* -- the picture is smaller than the frame. It\n  still renders; `on_upscale` decides whether that warns, refuses, or passes.\n"
+      ],
+      "color": "#432",
+      "bgcolor": "#653"
     }
   ],
   "links": [
@@ -512,8 +535,34 @@
       "MEMOACTS_SHOTS"
     ]
   ],
-  "groups": [],
+  "groups": [
+    {
+      "id": 1,
+      "title": "compile — reads the folder, hears the voice",
+      "bounding": [
+        20,
+        70,
+        950,
+        260
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    },
+    {
+      "id": 2,
+      "title": "make the film",
+      "bounding": [
+        990,
+        70,
+        640,
+        540
+      ],
+      "color": "#8A8",
+      "flags": {}
+    }
+  ],
   "config": {},
   "extra": {},
-  "version": 0.4
+  "version": 0.4,
+  "id": "c13105c8-2f19-498f-9fc3-9fee17906f05"
 }
