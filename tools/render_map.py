@@ -44,6 +44,14 @@ FLAGS: dict[str, tuple[str, list[str]]] = {
 }
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
+
+#: The pack's one easing curve. A wash arriving and a camera moving are meant
+#: to feel like the same hand, which is only true while there is one curve.
+#: `memoacts_core.schedule` costs `math` and `dataclasses` to import and
+#: nothing else, so the map-drawing half is still as light as it was.
+from memoacts_core.schedule import ease_cosine as _ease  # noqa: E402
+
 DEFAULT_GEOJSON = ROOT / "assets" / "geo" / "ne_50m_admin_0_countries.geojson"
 DEFAULT_RELIEF = ROOT / "assets" / "geo" / "relief_europe_50m.png"
 
@@ -577,18 +585,6 @@ def stagger(n: int, t: float, *, fill: float, fade: float) -> list[float]:
     return [_ease((t - i * step) / fade if fade > 0 else 1.0) for i in range(n)]
 
 
-def _ease(t: float) -> float:
-    """`memoacts_core.schedule.ease_cosine`, restated rather than imported.
-
-    This file keeps its `memoacts_core` imports inside the one function that
-    encodes, so the map-drawing half runs with nothing but PIL on the path.
-    Two lines is a cheaper price for that than a module-level dependency —
-    but if the curve ever changes, it changes in `schedule.py` first and here
-    second.
-    """
-    return (1 - math.cos(math.pi * min(max(t, 0.0), 1.0))) / 2
-
-
 def parse_marker(spec: str) -> tuple[float, float, str]:
     """`lon,lat[,label]` -> (lon, lat, label). Decimal degrees, east/north +."""
     parts = [p.strip() for p in spec.split(",")]
@@ -718,7 +714,8 @@ def sequence(features: list[dict], highlight: list[str], dest: Path, *,
             img = compose(plate, held + arriving, alphas)
             yield Image.fromarray(np.clip(img, 0, 255).astype(np.uint8))
 
-    sys.path.insert(0, str(ROOT))
+    # Imported here rather than at the top: `render` pulls the encoder, and
+    # everything above this function draws without it.
     from memoacts_core.render import encode
     dest.parent.mkdir(parents=True, exist_ok=True)
     # crf 8: flat washes over shaded relief band badly at ordinary rates, and
