@@ -31,6 +31,7 @@ import torch
 from comfy_api.latest import io, ui
 
 from .memoacts_core import voice
+from .nodes_audio import audio_at_own_rate
 
 #: The voice workflow's own submenu. The reel nodes sit in `memoacts`; these
 #: are a stage before it and are opened from a different graph, so they are one
@@ -38,31 +39,24 @@ from .memoacts_core import voice
 CATEGORY = "memoacts/audio"
 
 
-def _unpack(audio: dict):
-    """An AUDIO socket as float32 `[batch, channels, samples]` + sample rate.
-
-    Deliberately not `nodes_audio.audio_to_numpy`, which forces 44.1 kHz stereo
-    because the sound-effects bed has to be one shape. This is the master
-    recording: whatever rate and channel count it was authored in survives to
-    `sources/narration.wav`.
-    """
-    waveform = audio["waveform"]
-    sample_rate = int(audio["sample_rate"])
-    if waveform.dim() == 2:                     # [channels, samples]
-        waveform = waveform.unsqueeze(0)
-    return waveform.detach().cpu().float().numpy(), sample_rate
-
-
 def _pack(items, sample_rate: int) -> dict:
     """A list of `[channels, samples]` arrays back into an AUDIO socket."""
-    stacked = np.stack(items, axis=0).astype(np.float32)
+    stacked = np.stack(items, axis=0).astype(np.float32, copy=False)
     return {"waveform": torch.from_numpy(stacked), "sample_rate": sample_rate}
 
 
 def _per_take(audio: dict, fn) -> dict:
-    """Apply `fn(item, sample_rate)` to every take in the batch."""
-    data, sample_rate = _unpack(audio)
-    return _pack([fn(item, sample_rate) for item in data], sample_rate)
+    """Apply `fn(item, sample_rate)` to every take in the batch.
+
+    A missing DSP package becomes a `ValueError` here, which is how every other
+    node in this pack hands a domain error to ComfyUI — the message already
+    names the package and the pip command.
+    """
+    data, sample_rate = audio_at_own_rate(audio, keep_batch=True)
+    try:
+        return _pack([fn(item, sample_rate) for item in data], sample_rate)
+    except voice.MissingDependency as exc:
+        raise ValueError(str(exc)) from exc
 
 
 class MemoActsAudioPitchTime(io.ComfyNode):
@@ -324,8 +318,11 @@ class MemoActsAudioLoudnessMeter(io.ComfyNode):
 
     @classmethod
     def execute(cls, audio):
-        data, sample_rate = _unpack(audio)
-        reading = voice.measure_loudness(data[0], sample_rate)
+        data, sample_rate = audio_at_own_rate(audio, keep_batch=True)
+        try:
+            reading = voice.measure_loudness(data[0], sample_rate)
+        except voice.MissingDependency as exc:
+            raise ValueError(str(exc)) from exc
         report = str(reading)
         return io.NodeOutput(audio, report, reading.lufs,
                              ui=ui.PreviewText(report))

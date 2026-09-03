@@ -29,6 +29,7 @@ from comfy_api.latest import io, ui
 from .memoacts_core.pipeline import (ProjectError, read_project,
                                      set_narration)
 from .memoacts_core.project import MEDIA_DIRS
+from .nodes_audio import audio_at_own_rate
 from .nodes_types import Project
 
 #: Where projects live: `projects/` beside this file. A student's own project
@@ -155,23 +156,6 @@ def _clean_name(name: str) -> str:
     return name
 
 
-def _audio_array(audio: dict):
-    """An AUDIO socket as float32 [channels, samples], with its own rate.
-
-    Deliberately not `nodes_audio.audio_to_numpy`, which resamples to 44.1 kHz
-    and forces stereo — right for a layer about to be mixed, wrong for a voice
-    about to be muxed. Whatever came out of the voice workflow is what lands on
-    disk.
-    """
-    wave = audio["waveform"]
-    if wave.ndim == 3:                  # [batch, channels, samples]
-        wave = wave[0]
-    if wave.ndim == 1:
-        wave = wave[None, :]
-    return wave.detach().to("cpu").float().numpy(), int(
-        audio.get("sample_rate") or 44100)
-
-
 class MemoActsSetNarration(io.ComfyNode):
     @classmethod
     def define_schema(cls):
@@ -238,7 +222,7 @@ class MemoActsSetNarration(io.ComfyNode):
     def execute(cls, audio, project, create_if_missing):
         name = _clean_name(project)
         folder = PROJECTS_DIR / name
-        data, rate = _audio_array(audio)
+        data, rate = audio_at_own_rate(audio)
         try:
             res = set_narration(folder, data, rate, create=create_if_missing)
         except ProjectError as exc:

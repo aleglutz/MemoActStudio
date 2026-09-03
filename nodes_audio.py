@@ -399,6 +399,32 @@ def audio_to_numpy(audio: dict):
     return np.ascontiguousarray(data[:2])
 
 
+def audio_at_own_rate(audio: dict, *, keep_batch: bool = False):
+    """An AUDIO socket as float32, at the rate and channels it arrived in.
+
+    The other reading of the same socket is `audio_to_numpy` above, which
+    resamples to 44.1 kHz and forces stereo — right for a layer about to be
+    mixed, wrong for a voice about to be muxed. This one is the master
+    recording: whatever the voice workflow produced is what lands in
+    `sources/narration.wav`, and every timing in the reel is measured against
+    it.
+
+    `keep_batch` says which end of the batch dimension the caller wants. The
+    voice nodes shape a whole batch of takes; the narration writer takes the
+    first and writes one file.
+    """
+    wave = audio["waveform"]
+    if wave.ndim == 1:                      # bare mono, no channel axis
+        wave = wave[None, :]
+    if keep_batch:
+        if wave.ndim == 2:                  # [channels, samples]
+            wave = wave[None, ...]
+    elif wave.ndim == 3:                    # [batch, channels, samples]
+        wave = wave[0]
+    rate = int(audio.get("sample_rate") or sfx.SAMPLE_RATE)
+    return wave.detach().to("cpu", torch.float32).numpy(), rate
+
+
 #: Kept in front of the onset, so the attack transient survives the trim. An
 #: event cut exactly at its threshold crossing loses its front edge, which is
 #: most of what makes a slam sound like a slam.

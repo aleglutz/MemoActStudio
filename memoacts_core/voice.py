@@ -50,7 +50,7 @@ MIN_LOUDNESS_S = 0.4
 
 #: How to install a missing package, for machines where the reflex — running
 #: `pip` in a shell — installs into a different interpreter and changes nothing.
-_PIP = ("<ComfyUI-Easy-Install>\\python_embeded\\python.exe -m pip install")
+_PIP = "<ComfyUI-Easy-Install>\\python_embeded\\python.exe -m pip install"
 
 
 class MissingDependency(RuntimeError):
@@ -204,6 +204,10 @@ def track_f0(mono, sample_rate: int, hop: int, frame: int, fmin: float,
              fmax: float):
     """YIN pitch tracking. Returns per-frame f0 in Hz, NaN where unvoiced.
 
+    The frames are `hop` apart and the caller needs that spacing to turn the
+    result back into a time base, so it stays the caller's own constant rather
+    than being handed back from here.
+
     Written out here rather than pulled from librosa, whose numba paths are
     broken against the NumPy in this env.
     """
@@ -211,7 +215,7 @@ def track_f0(mono, sample_rate: int, hop: int, frame: int, fmin: float,
     tau_max = min(int(sample_rate / fmin), frame // 2)
     window = frame - tau_max
     if window < 64 or len(mono) < frame:
-        return np.zeros(0), hop
+        return np.zeros(0)
 
     n_frames = 1 + (len(mono) - frame) // hop
     out = np.full(n_frames, np.nan)
@@ -256,7 +260,7 @@ def track_f0(mono, sample_rate: int, hop: int, frame: int, fmin: float,
         else:
             shift = 0.0
         out[i] = sample_rate / (taus[k] + shift)
-    return out, hop
+    return out
 
 
 def auto_tune(item, sample_rate: int, *, key: str, scale: str,
@@ -283,7 +287,7 @@ def auto_tune(item, sample_rate: int, *, key: str, scale: str,
 
     n_samples = item.shape[-1]
     mono = item.mean(axis=0).astype(np.float64)
-    f0, hop_used = track_f0(mono, sample_rate, hop, frame, fmin=55.0, fmax=500.0)
+    f0 = track_f0(mono, sample_rate, hop, frame, fmin=55.0, fmax=500.0)
     if len(f0) == 0:
         return item
 
@@ -302,12 +306,12 @@ def auto_tune(item, sample_rate: int, *, key: str, scale: str,
         # than the stretcher can track and just adds noise.
         correction = np.interp(np.arange(len(f0)), np.flatnonzero(voiced), delta)
 
-    frame_rate = sample_rate / float(hop_used)
+    frame_rate = sample_rate / float(hop)
     alpha = float(np.exp(-1.0 / max(frame_rate * retune_ms / 1000.0, 1e-6)))
     correction = lfilter([1.0 - alpha], [1.0, -alpha], correction)
 
     # per-frame correction -> per-sample curve pedalboard can consume
-    centres = np.arange(len(correction)) * hop_used + frame / 2.0
+    centres = np.arange(len(correction)) * hop + frame / 2.0
     per_sample = np.interp(
         np.arange(n_samples), centres, correction, left=0.0, right=0.0
     ).astype(np.float64)
