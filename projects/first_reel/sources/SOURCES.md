@@ -21,11 +21,20 @@ example has to allow.
 
 ## Recording
 
-`narration.wav` — the four scenes of `script.md`, read aloud.
+`narration.wav` — the four scenes of `script.md`, spoken. 20.31 s, mono,
+24 kHz, 24-bit PCM, written by **MemoActs — Set Narration**, which is why it
+kept the rate and channel count it was made at.
 
-Recorded for this repository and published with it under the same licence as
-the code. It is short on purpose: 22 seconds is enough to show forced
-alignment doing its job and small enough to live in git.
+**Synthesised, not recorded**, with **Kokoro** (`kokoro-onnx` 0.4.2, through
+`custom_nodes/comfyui-kokoro`). Kokoro-82M's weights are Apache-2.0 and its
+voices ship with them, so the audio carries no separate claim and travels with
+this repository like the code does.
+
+That choice is the example's, not the pipeline's. A synthetic voice is a
+convenience for a fixture that has to live in git and be regenerable by
+anybody; nothing in the pack prefers one, and forced alignment does not care —
+it is measuring a waveform against a text it was given either way. A student's
+own voice is the ordinary case and the workshop's.
 
 ## Sound effects
 

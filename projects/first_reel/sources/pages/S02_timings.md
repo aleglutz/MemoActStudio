@@ -11,10 +11,10 @@ T I M I N G S
 
   scene   starts   ends
   -----   ------   ----
-  S01      0.00    4.30
-  S02      4.30    8.60
-  S03      8.60   13.10
-  S04     13.10   17.40
+  S01      0.00    4.26
+  S02      4.26    9.58
+  S03      9.58   15.22
+  S04     15.22   20.31
 
 The words were never in
 question. Only the clock

@@ -383,6 +383,17 @@ The August intensive (`docs/P1_GRAPH.md`, `projects/module03/`,
 
 ## Still open, carried forward
 
+- **`Set Narration`'s project box should offer the folders that exist.**
+  Raised by the owner 2026-09-03, on the first real use of it. It is a free
+  `io.String.Input`, so an existing project has to be typed exactly and a typo
+  quietly starts a second one — while `MemoActs — Project` two nodes along has
+  had a combo of `_projects()` since it was written. The node cannot simply
+  take that combo: its whole job is to accept a name that does *not* exist
+  yet. So it wants both — the list to pick from and a free field to name a new
+  one — which is the `project` + `project_dir` pair `MemoActsProject` already
+  solves the other way round, or a combo with a `(new project…)` entry.
+  Small, and it is on the path every student walks first.
+
 - ~~`New_York_May-8_1945.jpg` has no `SOURCES.md` entry and unchecked rights.~~
   **Closed 2026-08-29.** Recorded in the project's `SOURCES.md`: Museum
   Berlin-Karlshorst's own page, credited *"unknown, akg images, Berlin"*, and

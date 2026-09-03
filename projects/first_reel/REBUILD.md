@@ -10,7 +10,7 @@ scan, a stock library or anybody's archive.
 
 ## What it is
 
-Four scenes, 22.2 seconds, 665 frames at 1080×1920. The script is about what
+Four scenes, 20.3 seconds, 609 frames at 1080×1920. The script is about what
 the tool does, so the example teaches while it demonstrates, and each picture
 is the document the scene is talking about.
 
@@ -18,7 +18,7 @@ is the document the scene is talking about.
 
 Stated here so the next person knows the constraint exists rather than
 discovering it. Current: four pictures at ~470 KB each (1.84 MB) plus a
-22-second mono recording (~0.95 MB) — about 2.8 MB. **A picture that pushes the
+20-second mono recording (1.43 MB) — 3.3 MB. **A picture that pushes the
 project past 4 MB does not belong in this example**; make a second project for
 it and leave this one small.
 
@@ -55,9 +55,11 @@ off every line.
 
 ## Recording — `sources/narration.wav`
 
-The four scenes of `script.md`, read aloud, mono. Made the way the README tells
-a stranger to make one: `example_workflows/voice.json`, with **MemoActs — Set
-Narration** at the end of the chain writing into this folder.
+The four scenes of `script.md`, spoken by **Kokoro** (open weights, Apache-2.0
+— `sources/SOURCES.md` says why a fixture uses a synthetic voice and a student
+does not have to), then written into this folder by **MemoActs — Set
+Narration**, which is the seam the README teaches. 20.31 s, mono, 24 kHz,
+24-bit PCM: the rate is Kokoro's own and Set Narration kept it.
 
 ## Generated — `generated/`, `out/`
 
@@ -72,9 +74,16 @@ Or, which is the point of the example, the same two steps as graphs:
 `example_workflows/voice.json` then `example_workflows/reel_stills.json`, with
 the edit made in the **Storyline** panel.
 
-Expect: 4 shots, 665 frames, 22.167 s of video against 22.156 s of narration —
-drift +11 ms — 12 subtitle cues, and no enlargement warnings, every shot at
+Expect: 4 shots, 609 frames, 20.300 s of video against 20.309 s of narration —
+drift −9 ms — 12 subtitle cues, and no enlargement warnings, every shot at
 `max_zoom 1.25x`.
+
+**The timings sheet carries those numbers.** `S02_timings.md` prints
+`0.00 4.26 / 4.26 9.58 / 9.58 15.22 / 15.22 20.31`, which is what this
+recording actually aligned to — the document in shot 2 is telling the truth
+about the film it is in. Re-record the narration and the sheet is stale: read
+the four `t_start`/`t_end` pairs out of `generated/shots.json`, put them in the
+page, and remake that one picture.
 
 ## The edit — `shots.csv`
 
