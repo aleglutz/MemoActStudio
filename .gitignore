@@ -14,6 +14,14 @@ projects/*/sources/**
 !projects/*/sources/**/
 !projects/*/sources/**/*.md
 
+# One exception, and it is the whole reason the exception exists:
+# projects/first_reel is the example README walks, and a quickstart whose first
+# step is "find four pictures and record a voice" is not one. Its media travels
+# with the repository — four typed sheets the pack drew itself and a 22-second
+# reading, about 2.8 MB. The budget is 4 MB and it is written into that
+# project's REBUILD.md. No other project may do this.
+!projects/first_reel/sources/**
+
 # Superseded takes and the Audacity project they came out of. The rules above
 # stop at sources/, and a 60 MB .aup3 sat in archive/ one `git add .` from the
 # history. Prose in archive/ stays versioned — that is what the folder is for.

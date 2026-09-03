@@ -1,0 +1,5 @@
+shot,media,in,motion,rate,anchor,speed,focus,path,label,credit,effects,notes
+1,01_script.jpg,,static,,,,,,,,,holds the whole sheet: this one is meant to be read
+2,02_timings.jpg,,zoom_in,0.06,,,0.43 0.30 0.72,,,,,"the only focus in the reel, and it ends on the timings table"
+3,03_caption.jpg,,static,,,,,,,,,"still again, because the caption under it says the same words"
+4,04_folder.jpg,,zoom_out,0.05,,,,,,,,pulls back off the file list as the reel ends

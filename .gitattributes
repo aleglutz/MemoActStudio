@@ -7,6 +7,13 @@
 # state the repository is in rather than converting anything.
 * text=auto eol=lf
 
+# Except the decision tables. `csv.writer`'s own line ending is CRLF and
+# `shotlist.write_csv` keeps it, so storing these as LF would make every save
+# from the Storyline panel a whole-file diff — which is exactly the noise the
+# rule above exists to remove. Matters from 2026-09-03, when
+# projects/first_reel became the first project whose shots.csv is in git.
+*.csv  text eol=crlf
+
 # Never line-ending-converted, never diffed as text.
 *.png  binary
 *.jpg  binary
