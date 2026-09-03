@@ -127,9 +127,19 @@ class MemoActsSetMotion(io.ComfyNode):
             ),
             inputs=[
                 Shots.Input("shots"),
+                io.Combo.Input(
+                    "scope", options=["this shot", "every shot"],
+                    default="this shot",
+                    tooltip="Every shot rewrites the motion of the whole reel, "
+                            "including the per-shot choices made in the "
+                            "Storyline panel. It is the useful setting for "
+                            "trying a look out and the expensive one to reach "
+                            "by accident, so it has to be chosen.",
+                ),
                 io.Int.Input(
-                    "shot_id", default=0, min=0, max=999,
-                    tooltip="1-based shot number, or 0 to apply to every shot.",
+                    "shot_id", default=1, min=1, max=999,
+                    tooltip="1-based shot number, as the shot report numbers "
+                            "them. Ignored when scope is every shot.",
                 ),
                 io.Combo.Input("preset", options=list(PRESETS), default="zoom_in"),
                 io.Float.Input(
@@ -143,14 +153,18 @@ class MemoActsSetMotion(io.ComfyNode):
         )
 
     @classmethod
-    def execute(cls, shots, shot_id, preset, rate, anchor):
+    def execute(cls, shots, scope, shot_id, preset, rate, anchor):
         out = copy.deepcopy(shots)
         entries = out["doc"]["shots"]
-        if shot_id and not any(s["id"] == shot_id for s in entries):
+        # Until 2026-09-03 this was `shot_id` defaulting to 0, and 0 meant every
+        # shot: one Run before typing a number silently replaced the motion of
+        # a whole reel, and the report said nothing because 0 was a legal value.
+        every = scope == "every shot"
+        if not every and not any(s["id"] == shot_id for s in entries):
             raise ValueError(
                 f"no shot {shot_id}; this table has 1..{len(entries)}")
         for s in entries:
-            if shot_id in (0, s["id"]):
+            if every or s["id"] == shot_id:
                 # The focus survives a preset change: it says what the shot is
                 # about, which changing the direction of travel does not revise.
                 # Overwriting the dict wholesale would silently discard it.

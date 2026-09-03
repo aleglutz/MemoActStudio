@@ -91,6 +91,7 @@ const CSS = `
 .ma-flag.auto { background:#4a4030; color:#ffcc80; }
 .ma-flag.dup { background:#4a3030; color:#ff9e80; }
 .ma-flag.gone { background:#5a2020; color:#ff8a80; }
+.ma-flag.est { background:#3a3550; color:#b0a8ff; }
 
 .ma-detail { flex:0 0 auto; border-top:1px solid var(--border-color,#444);
   padding:6px 8px; max-height:46vh; overflow:auto; }
@@ -114,6 +115,11 @@ const CSS = `
 .ma-fields input, .ma-fields select { font:inherit; font-size:11px; width:100%;
   padding:2px 4px; border-radius:3px; border:1px solid var(--border-color,#555);
   background:var(--comfy-input-bg,#333); color:inherit; }
+.ma-todo { flex:0 0 auto; margin:0 8px 6px; padding:8px 10px; border-radius:4px;
+  background:#2b2b2b; border-left:3px solid #ffcc80; font-size:11px;
+  line-height:1.5; }
+.ma-todo-head { opacity:.75; margin-bottom:4px; }
+.ma-todo-step { color:#ffcc80; }
 .ma-note { font-size:10px; opacity:.7; margin-top:4px; }
 .ma-note.warn { color:#ffcc80; opacity:1; }
 .ma-note.bad { color:#ff8a80; opacity:1; }
@@ -137,10 +143,11 @@ const CSS = `
   display:flex; padding:24px; }
 .ma-overlay > .ma-story { flex:1 1 auto; border-radius:8px; overflow:hidden;
   border:1px solid var(--border-color,#555); }
-.ma-story.wide { display:grid; grid-template-rows:auto auto 1fr;
+.ma-story.wide { display:grid; grid-template-rows:auto auto auto 1fr;
   grid-template-columns:1fr 360px;
-  grid-template-areas:"bar bar" "shelf shelf" "scenes detail"; }
+  grid-template-areas:"bar bar" "todo todo" "shelf shelf" "scenes detail"; }
 .ma-story.wide .ma-bar { grid-area:bar; }
+.ma-story.wide .ma-todo { grid-area:todo; }
 .ma-story.wide .ma-shelf-wrap { grid-area:shelf; }
 .ma-story.wide .ma-scenes { grid-area:scenes; }
 .ma-story.wide .ma-detail { grid-area:detail; border-top:none; max-height:none;
@@ -214,17 +221,25 @@ class StorylinePanel {
     ]);
     this.scenes = el("div", { className: "ma-scenes" });
     this.detail = el("div", { className: "ma-detail" });
+    // What the project still needs, in the order it has to arrive. Empty and
+    // hidden for a finished project; the server phrases every line of it
+    // (`pipeline.project_state`), so this says what Set Narration says.
+    this.todo = el("div", { className: "ma-todo", hidden: true });
 
     this.root = el("div", { className: "ma-story" }, [
       el("div", { className: "ma-bar" }, [
         this.picks,
+        el("button", {
+          textContent: "New", title: "Make an empty project folder",
+          onclick: () => this.newProject(),
+        }),
         el("button", { textContent: "Reload", onclick: () => this.load() }),
         el("button", { textContent: "Save", onclick: () => this.model.persist() }),
         el("span", { className: "grow" }),
         this.expandBtn,
         this.status,
       ]),
-      this.shelfWrap, this.scenes, this.detail,
+      this.todo, this.shelfWrap, this.scenes, this.detail,
     ]);
   }
 
@@ -264,7 +279,8 @@ class StorylinePanel {
       this.picks.value = wanted;
       await this.load(wanted);
     } else {
-      this.model.say(names.length ? "choose a project" : "no projects yet", true);
+      this.model.say(names.length ? "choose a project"
+        : "no projects yet — press New to make one", true);
     }
   }
 
@@ -313,13 +329,50 @@ class StorylinePanel {
     return this.data?.shots.find((s) => s.id === this.selectedId) || null;
   }
 
+  /** Make an empty project and open it. The route refuses a name it dislikes. */
+  async newProject() {
+    const name = (prompt("Name the project — it becomes the folder your "
+      + "script, your recording and your pictures live in") || "").trim();
+    if (!name) return;
+    this.model.say("making the project…");
+    try {
+      const res = await fetch("/memoacts/project", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name }),
+      });
+      if (!res.ok) throw new Error(res.statusText || `HTTP ${res.status}`);
+      const made = await res.json();
+      this.picks.append(el("option", { value: made.project,
+        textContent: made.project }));
+      await this.load(made.project);
+    } catch (err) {
+      this.model.say(String(err.message || err), true);
+    }
+  }
+
   draw() {
+    this.drawTodo();
     this.drawShelf();
     this.drawScenes();
     if (!this.selected() && this.data?.shots.length) {
       this.selectedId = this.data.shots[0].id;
     }
     this.drawDetail();
+  }
+
+  /** The next steps, when the project is not finished. Nothing otherwise. */
+  drawTodo() {
+    const todo = this.data?.todo || [];
+    this.todo.hidden = !todo.length;
+    if (!todo.length) { this.todo.replaceChildren(); return; }
+    this.todo.replaceChildren(
+      el("div", { className: "ma-todo-head",
+        textContent: this.data.have?.length
+          ? `${this.data.have.join(" · ")} — still to come:`
+          : "This project is empty. To make a reel:" }),
+      ...todo.map((t, i) => el("div", { className: "ma-todo-step",
+        textContent: `${i + 1}. ${t}` })));
   }
 
   drawShelf() {
@@ -374,6 +427,17 @@ class StorylinePanel {
       }
       if (!shot.exists) {
         flags.push(el("span", { className: "ma-flag gone", textContent: "missing" }));
+      }
+      // The bar above is drawn from timings the aligner never measured: Align
+      // was run with skip_alignment, which spreads the words by count. It looks
+      // exactly like a real reel until you watch it against the voice.
+      if (shot.timing?.estimated) {
+        flags.push(el("span", {
+          className: "ma-flag est", textContent: "guessed timing",
+          title: "Align ran with skip_alignment, so this scene's length was "
+            + "divided up by word count rather than heard. Run Align again "
+            + "with it off before you cut anything to this.",
+        }));
       }
 
       const head = [

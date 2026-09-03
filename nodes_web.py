@@ -33,8 +33,8 @@ from .memoacts_core import effects as fx
 from .memoacts_core import sfx as sfxlib
 from .memoacts_core import shotlist
 from .memoacts_core.pipeline import (ProjectError, clean_project_name,
-                                     create_project,
-                                     merge_scene, read_project,
+                                     create_project, merge_scene,
+                                     project_state, read_project,
                                      split_scene)
 from .memoacts_core.project import (MEDIA_DIRS, find_media,
                                     sentences_of)
@@ -157,8 +157,14 @@ async def shots(request: web.Request) -> web.Response:
     folder = _project(request)
     try:
         read = read_project(folder)
-    except ProjectError as exc:
-        return web.json_response({"error": str(exc)}, status=400)
+    except ProjectError:
+        # A project that is not finished is not an error, and answering 400
+        # with a path was the panel's worst moment: it drew nothing at all for
+        # a folder whose script.md already had scenes in it. The scenes are
+        # what the person came to see; the missing pieces are what they came to
+        # find out. Both, in `pipeline.project_state`'s words, which are also
+        # Set Narration's.
+        return web.json_response(_incomplete(folder))
 
     table = shotlist.read_table(folder / "shots.csv")
     cues = [s.cue for s in read.script_shots]
@@ -284,6 +290,46 @@ def _shot_column(table: shotlist.ShotTable) -> str:
         if (name or "").strip().lower() == "shot":
             return name
     return "shot"
+
+
+def _incomplete(folder: Path) -> dict:
+    """The same response shape, for a project that is not finished yet.
+
+    Every key the panel reads is present and the shot list is as long as the
+    script is — so the storyline draws, the shelf fills with whatever pictures
+    are there, and `todo` says what to do next. `incomplete` is what tells the
+    panel to show the next step instead of timing bars.
+    """
+    state = project_state(folder)
+    shots = [{
+        "id": i + 1,
+        "cue": _cue_text(shot.cue),
+        "text": shot.text,
+        "label_in_script": shot.label,
+        "resolved": "",
+        "resolved_dir": "",
+        "exists": False,
+        "row": {c: "" for c in EDIT_COLUMNS},
+        "timing": None,
+        "sentences": sentences_of([shot.text]),
+    } for i, shot in enumerate(state.scenes)]
+    return {
+        "project": folder.name,
+        "incomplete": True,
+        "have": state.have,
+        "todo": state.todo,
+        "timing_note": "no timings yet — the reel has not been compiled",
+        "duration_s": None,
+        "columns": EDIT_COLUMNS,
+        "motions": list(MOTION_PRESETS),
+        "focusable": list(FOCUSABLE),
+        "anchors": ["", "center", "top"],
+        "effects": [""] + sorted(set(fx.PRESETS) - {"none"}),
+        "effect_cost": fx.COST,
+        "shots": shots,
+        "media": _media(folder),
+        "warnings": [],
+    }
 
 
 def _media(folder: Path) -> list[dict]:

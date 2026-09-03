@@ -218,6 +218,78 @@ def clean_project_name(name: str) -> str:
     return name
 
 
+@dataclass
+class ProjectState:
+    """What a project has, what it still needs, and what to do next.
+
+    The three things `read_project` refuses on — no recording, no script, no
+    pictures — are not faults while a project is being made. They are the order
+    in which a project comes into existence, and a person standing in the
+    middle of that order needs the next step, not a path and a refusal.
+
+    Said once, here, because two surfaces ask it: `MemoActs — Set Narration`,
+    which is the only node that knows a project is brand new, and the Storyline
+    panel, which until 2026-09-03 answered the same question with
+    `no narration.* in C:\\…\\sources or C:\\…` and drew nothing at all.
+    """
+    project: Path
+    narration: Path | None
+    scenes: list[ScriptShot]
+    images: list[Path]
+
+    @property
+    def ready(self) -> bool:
+        """Whether `read_project` would get past its three refusals."""
+        return bool(self.narration and self.scenes and self.images)
+
+    @property
+    def have(self) -> list[str]:
+        """What is already there, in the order it arrives."""
+        out = []
+        if self.narration:
+            out.append(f"{self.narration.relative_to(self.project).as_posix()}")
+        if self.scenes:
+            out.append(f"script.md: {len(self.scenes)} scene(s)")
+        if self.images:
+            out.append(f"{MEDIA_DIRS[0]}/: {len(self.images)} image(s)")
+        return out
+
+    @property
+    def todo(self) -> list[str]:
+        """The next steps, in the order they have to happen. Empty when ready."""
+        out = []
+        if not self.narration:
+            out.append("record your voice and run MemoActs — Set Narration; "
+                       "it writes sources/narration.wav and every timing in "
+                       "the reel is measured against it")
+        if not self.scenes:
+            out.append("write your scenes into script.md — one '## S01' "
+                       "heading per scene, and the words under it")
+        if not self.images:
+            out.append(f"put your pictures in {MEDIA_DIRS[0]}/")
+        return out
+
+
+def project_state(project: Path) -> ProjectState:
+    """Where a folder stands, without raising on the parts that are missing.
+
+    Deliberately quiet: a folder that is not there yet, a `script.md` that does
+    not exist, an `images/` nobody has made — all of them are states this
+    answers rather than refuses, because the caller is asking precisely because
+    something is missing.
+    """
+    try:
+        scenes = parse_script_shots(project / "script.md")
+    except OSError:
+        scenes = []
+    try:
+        images = list_images(project / MEDIA_DIRS[0])
+    except OSError:
+        images = []
+    return ProjectState(project=project, narration=find_narration(project),
+                        scenes=scenes, images=images)
+
+
 def create_project(folder: Path) -> bool:
     """Make an empty project. True if it was made, False if it already existed.
 

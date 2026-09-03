@@ -27,7 +27,8 @@ from pathlib import Path
 from comfy_api.latest import io, ui
 
 from .memoacts_core.pipeline import (ProjectError, clean_project_name,
-                                     read_project, set_narration)
+                                     project_state, read_project,
+                                     set_narration)
 from .memoacts_core.project import MEDIA_DIRS
 from .nodes_audio import audio_at_own_rate
 from .nodes_types import Project
@@ -225,25 +226,19 @@ class MemoActsSetNarration(io.ComfyNode):
             lines.append(f"moved aside: {p.name} — it would have beaten "
                          f"narration.wav alphabetically")
 
-        # What is still missing, in the order it has to arrive. This is the
-        # only place that knows the project is brand new, so it is the only
-        # place that can say what to do next without guessing.
-        todo = []
-        shots = _script_shots(folder)
-        if shots:
-            lines.append(f"script.md: {len(shots)} scene(s), "
-                         f"{res.seconds / len(shots):.1f}s each on average")
-        else:
-            todo.append("write your scenes into script.md — one '## S01' "
-                        "heading per scene, and the words under it")
-        images = _count_images(folder)
-        if images:
-            lines.append(f"{MEDIA_DIRS[0]}/: {images} image(s)")
-        else:
-            todo.append(f"put your pictures in {MEDIA_DIRS[0]}/")
-        if todo:
+        # What is still missing, in the order it has to arrive. The words are
+        # `pipeline.project_state`'s, because the Storyline panel answers the
+        # same question about the same folder and the two must not phrase it
+        # differently.
+        state = project_state(folder)
+        if state.scenes:
+            lines.append(f"script.md: {len(state.scenes)} scene(s), "
+                         f"{res.seconds / len(state.scenes):.1f}s each on average")
+        if state.images:
+            lines.append(f"{MEDIA_DIRS[0]}/: {len(state.images)} image(s)")
+        if state.todo:
             lines += ["", "Before MemoActs — Project will run:"]
-            lines += [f"  {i}. {t}" for i, t in enumerate(todo, 1)]
+            lines += [f"  {i}. {t}" for i, t in enumerate(state.todo, 1)]
         else:
             lines += ["", "Ready — run MemoActs — Project next."]
         if res.warnings:
@@ -252,20 +247,3 @@ class MemoActsSetNarration(io.ComfyNode):
 
         return io.NodeOutput({"project_dir": str(folder)},
                              ui=ui.PreviewText("\n".join(lines)))
-
-
-def _script_shots(folder: Path):
-    """The scenes in `script.md`, or none — a brand-new project has an empty one."""
-    from .memoacts_core.project import parse_script_shots
-    try:
-        return parse_script_shots(folder / "script.md")
-    except OSError:
-        return []
-
-
-def _count_images(folder: Path) -> int:
-    from .memoacts_core.project import list_images
-    try:
-        return len(list_images(folder / MEDIA_DIRS[0]))
-    except OSError:
-        return 0
