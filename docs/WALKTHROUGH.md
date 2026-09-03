@@ -88,24 +88,30 @@ own canvas is what stops an EQ tweak from costing you ninety seconds.
 
 ## 1 · Voice
 
-**Open:** `MemoActs_VO_Speed_Normalize`.
+**Open:** `example_workflows/voice.json`, from this pack.
 
 The chain is already built and already numbered:
 
 | | Node | What it is for |
 |---|---|---|
 | 1 | **Load narration** | your take |
-| 2 | **Denoise** | room noise. **Bypassed by default** — turn it on only if you need it; it costs quality |
-| 3 | **Speed up** | tempo, and pitch separately. The default is 1.15× with pitch left alone |
-| 4 | **EQ** | cut rumble, lift presence |
+| 2 | **Speech Denoise** | room noise. On at `0.5` — turn it off (ctrl+B) if the source is clean; any denoiser costs a little detail |
+| 3 | **Pitch / Time** | tempo, and pitch separately. The default is 1.15× with pitch left alone |
+| 4 | **EQ** | cut rumble, lift presence. ComfyUI's own 3-band, the one node here that is not ours |
 | 5 | **De-esser** | the `s` sounds |
-| 6 | **Compressor** | evens out loud and quiet |
-| 7 | **Normalize** | brings the peak to −1 dBFS |
-| 9 | **Save** | writes the file |
+| 6 | **Vocal Compressor** | evens out loud and quiet |
+| 7 | **Normalize (peak)** | brings the peak to −1 dBFS |
+| 8 | **Loudness Meter** | what you actually made, in LUFS. Aim near −14 |
+| 9 | **Set Narration** | writes it into a project — see 1.1 |
+
+They are in the node menu under **`memoacts/audio`**, and every one of them
+takes audio and returns audio, so you can cut the chain anywhere or bypass a
+node you do not want.
 
 Work top to bottom. Listen after each change — the nodes preview audio, so you
-do not have to render anything to hear what you just did. When it sounds right,
-go on to 1.1, which is the node that puts it into a project.
+do not have to render anything to hear what you just did. Node 8 is worth
+running early: it tells you whether the problem is level or tone before you
+start turning knobs.
 
 **On speed.** Changing tempo here is fine and it is the only place it is fine.
 Everything after this listens to the *result*: the timings of every subtitle and
@@ -115,9 +121,8 @@ then leave it.
 
 ### 1.1 Set Narration — where your project begins
 
-Add **MemoActs — Set Narration** at the end of the chain and wire the last
-audio node into it. You can delete the Save node, or leave it: what reaches the
-project is this one.
+Node 9 is already at the end of the chain. There is no save node in front of
+it and there should not be: the file it writes is the one the reel reads.
 
 Type a name into **project**. If nothing under `projects/` has that name yet, it
 is made now — folders, an empty `script.md`, and a `shots.csv` with a header and
@@ -152,7 +157,8 @@ folder tree ready for the rest.
 
 ## 2 · Reel
 
-**Open:** `memoacts_reel_stills`. Six nodes, left to right. Five make the reel;
+**Open:** `example_workflows/reel_stills.json`, from this pack. Six nodes,
+left to right. Five make the reel;
 the sixth renders one scene for checking.
 
 ### 2.1 Project — "this is my material"

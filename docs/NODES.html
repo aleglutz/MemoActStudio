@@ -168,12 +168,12 @@ footer{border-top:1px solid var(--rule); margin-top:10px; padding-top:18px; colo
 <header class="top"><div class="wrap">
   <h1>MemoActs Node Reference</h1>
   <p class="sub">Every node in <code>comfyui-memoacts</code>, its parameters and its sockets, read from
-  the running server's <code>/object_info</code> on 2026-09-02. This is the interface surface — what
+  the running server's <code>/object_info</code> on 2026-09-02, and the seven <code>memoacts/audio</code> nodes on 2026-09-03. This is the interface surface — what
   each node accepts, what it returns, and what it writes to disk.</p>
   <div class="facts">
-    <div class="fact"><b>28</b><span>nodes</span></div>
+    <div class="fact"><b>35</b><span>nodes</span></div>
     <div class="fact"><b>7</b><span>custom sockets</span></div>
-    <div class="fact"><b>3</b><span>categories</span></div>
+    <div class="fact"><b>4</b><span>categories</span></div>
     <div class="fact"><b>13</b><span>shots.csv columns</span></div>
     <div class="fact"><b>9</b><span>HTTP routes</span></div>
     <div class="fact"><b>1.6</b><span>shots.json schema</span></div>
@@ -182,6 +182,14 @@ footer{border-top:1px solid var(--rule); margin-top:10px; padding-top:18px; colo
 
 <div class="wrap"><div class="cols">
 <nav class="index">
+  <h4>Voice</h4>
+  <a href="#MemoActsAudioPitchTime">Pitch / Time</a>
+  <a href="#MemoActsAudioSpeechDenoise">SpeechDenoise</a>
+  <a href="#MemoActsAudioDeEsser">DeEsser</a>
+  <a href="#MemoActsAudioVocalCompressor">VocalCompressor</a>
+  <a href="#MemoActsAudioAutoTune">AutoTune</a>
+  <a href="#MemoActsAudioNormalize">Normalize</a>
+  <a href="#MemoActsAudioLoudnessMeter">LoudnessMeter</a>
   <h4>Reel pipeline</h4>
   <a href="#MemoActsSetNarration">SetNarration</a>
   <a href="#MemoActsProject">Project</a>
@@ -239,6 +247,132 @@ footer{border-top:1px solid var(--rule); margin-top:10px; padding-top:18px; colo
   <p class="lede"><b>Cost profile.</b> Align is the only slow step (~90 s, Whisper). Project, Shot
   Table and Subtitles are disk reads and complete in under a second. Render Reel is CPU-bound at
   roughly 61 ms/frame at 1080×1920 — a 142-second reel took 301 s including alignment.</p>
+</section>
+
+<section id="voice">
+  <h2>Category <code>memoacts/audio</code> — the voice</h2>
+  <p class="lede">Seven nodes, and a workflow of its own that runs before the reel:
+  <code>example_workflows/voice.json</code>. Every one takes an <code>AUDIO</code> and returns an
+  <code>AUDIO</code>, so the chain can be cut anywhere and any node bypassed. <strong>The sample
+  rate and channel count are never changed</strong>, and neither is the length — except by
+  Pitch / Time, whose whole job is length. That is the reason this is a separate graph: Align
+  measures every timing in the reel against the recording it hears, and the alignment cache keys on
+  that file's mtime, so a chain that rewrites the recording on every Queue would cost a
+  ninety-second re-alignment for turning a knob. The DSP is <code>memoacts_core.voice</code> on
+  pedalboard (Rubber Band + JUCE), scipy and pyloudnorm; all three are imported lazily, so a machine
+  without them loads the rest of the pack and fails here with the install command.</p>
+
+  <article class="node" id="MemoActsAudioPitchTime">
+    <div class="head"><span class="id">MemoActsAudioPitchTime</span><span class="display">MemoActs — Pitch / Time</span><span class="cat">memoacts/audio</span></div>
+    <p class="desc">Independent tempo and pitch change through Rubber Band, formants preserved — so
+    a faster read stays the same person. <strong>The only node here that changes the length of the
+    take</strong>, which is why the pace is decided in this graph and nowhere after it. A
+    <code>tempo_factor</code> of 1.0 with no pitch shift returns the input untouched rather than
+    re-encoding it.</p>
+    <div class="tablewrap"><table>
+      <tr><th>Parameter</th><th>Type</th><th>Default</th><th>Notes</th></tr>
+      <tr><td class="n">audio</td><td class="t">AUDIO</td><td class="d">—</td><td class="about"></td></tr>
+      <tr><td class="n">pitch_semitones</td><td class="t">FLOAT</td><td class="d">0.0</td><td class="about"><code>-24 … 24</code>, step 0.1. <code>-2</code> already reads as a different person; past <code>±4</code> speech turns artificial.</td></tr>
+      <tr><td class="n">tempo_factor</td><td class="t">FLOAT</td><td class="d">1.0</td><td class="about"><code>0.5 … 2.0</code>, step 0.01. 1.15 is the usual fix for a careful read that is too slow for a vertical reel.</td></tr>
+    </table></div>
+    <div class="out"><b>→ AUDIO</b></div>
+  </article>
+
+  <article class="node" id="MemoActsAudioSpeechDenoise">
+    <div class="head"><span class="id">MemoActsAudioSpeechDenoise</span><span class="display">MemoActs — Speech Denoise</span><span class="cat">memoacts/audio</span></div>
+    <p class="desc">Steady hiss and hum, reduced without stripping the room. <code>spectral_gate</code>
+    builds a noise floor from the 10th percentile of each frequency bin and applies a Wiener-style
+    soft mask, which is what avoids the musical artefacts of a hard gate; <code>noise_gate</code> is
+    pedalboard's, blunt, for bad takes. <code>strength 0</code> is passthrough.</p>
+    <div class="tablewrap"><table>
+      <tr><th>Parameter</th><th>Type</th><th>Default</th><th>Notes</th></tr>
+      <tr><td class="n">audio</td><td class="t">AUDIO</td><td class="d">—</td><td class="about"></td></tr>
+      <tr><td class="n">method</td><td class="t">COMBO</td><td class="d">"spectral_gate"</td><td class="about"><code>spectral_gate · noise_gate</code></td></tr>
+      <tr><td class="n">strength</td><td class="t">FLOAT</td><td class="d">0.5</td><td class="about"><code>0 … 1</code>, step 0.05. Past ~0.7 the floor breathes between words, which is more distracting than the hiss was.</td></tr>
+    </table></div>
+    <div class="out"><b>→ AUDIO</b></div>
+  </article>
+
+  <article class="node" id="MemoActsAudioDeEsser">
+    <div class="head"><span class="id">MemoActsAudioDeEsser</span><span class="display">MemoActs — De-esser</span><span class="cat">memoacts/audio</span></div>
+    <p class="desc">Downward compression on the sibilance band only: a 2nd-order high-pass splits the
+    take, the high band is compressed against a channel-linked envelope, and the two are summed
+    again — so the rest of the voice is untouched and the stereo image does not shift when gain is
+    pulled.</p>
+    <div class="tablewrap"><table>
+      <tr><th>Parameter</th><th>Type</th><th>Default</th><th>Notes</th></tr>
+      <tr><td class="n">audio</td><td class="t">AUDIO</td><td class="d">—</td><td class="about"></td></tr>
+      <tr><td class="n">freq</td><td class="t">INT</td><td class="d">7000</td><td class="about"><code>2000 … 16000</code>, step 100. Clamped to 99% of Nyquist, so it cannot be set above the rate.</td></tr>
+      <tr><td class="n">threshold_db</td><td class="t">FLOAT</td><td class="d">-8.0</td><td class="about"><code>-60 … 0</code>, step 0.5. Measured inside the band, not on the whole take.</td></tr>
+      <tr><td class="n">ratio</td><td class="t">FLOAT</td><td class="d">3.0</td><td class="about"><code>1 … 20</code>, step 0.1. Above ~8 the S disappears rather than softens.</td></tr>
+    </table></div>
+    <div class="out"><b>→ AUDIO</b></div>
+  </article>
+
+  <article class="node" id="MemoActsAudioVocalCompressor">
+    <div class="head"><span class="id">MemoActsAudioVocalCompressor</span><span class="display">MemoActs — Vocal Compressor</span><span class="cat">memoacts/audio</span></div>
+    <p class="desc">pedalboard's JUCE compressor with makeup gain in one node, so narration sits at a
+    steady level under a phone speaker in a noisy room.</p>
+    <div class="tablewrap"><table>
+      <tr><th>Parameter</th><th>Type</th><th>Default</th><th>Notes</th></tr>
+      <tr><td class="n">audio</td><td class="t">AUDIO</td><td class="d">—</td><td class="about"></td></tr>
+      <tr><td class="n">threshold_db</td><td class="t">FLOAT</td><td class="d">-18.0</td><td class="about"><code>-60 … 0</code>, step 0.5. Set it where the loud lines are, not where the peaks are.</td></tr>
+      <tr><td class="n">ratio</td><td class="t">FLOAT</td><td class="d">3.0</td><td class="about"><code>1 … 20</code>, step 0.1</td></tr>
+      <tr><td class="n">attack_ms</td><td class="t">FLOAT</td><td class="d">8.0</td><td class="about"><code>0.1 … 100</code>, step 0.1. Below ~5 ms it eats the front of consonants, which reads as a lisp.</td></tr>
+      <tr><td class="n">release_ms</td><td class="t">FLOAT</td><td class="d">120.0</td><td class="about"><code>10 … 1000</code>, step 1</td></tr>
+      <tr><td class="n">makeup_gain_db</td><td class="t">FLOAT</td><td class="d">4.0</td><td class="about"><code>-12 … 24</code>, step 0.5. Roughly the gain reduction asked for.</td></tr>
+    </table></div>
+    <div class="out"><b>→ AUDIO</b></div>
+  </article>
+
+  <article class="node" id="MemoActsAudioAutoTune">
+    <div class="head"><span class="id">MemoActsAudioAutoTune</span><span class="display">MemoActs — Auto-Tune</span><span class="cat">memoacts/audio</span></div>
+    <p class="desc">Pitch pulled toward a scale — drift tuned, and a processed sheen. YIN tracking is
+    written out in <code>memoacts_core.voice.track_f0</code> rather than taken from librosa, whose
+    numba paths are broken against this environment's NumPy; the correction is carried across
+    unvoiced gaps and one-pole smoothed before it reaches the stretcher. <strong>Not a hard
+    snap</strong>, and it cannot be made into one: Rubber Band follows a pitch curve to about
+    1–2 Hz (measured: correlation 0.95 at 1 Hz, 0.00 at 8 Hz) while speech moves at 4–8 Hz, which is
+    why <code>retune_ms</code> floors at 150. Length is pinned back to the input, because a varying
+    curve makes the stretcher drift a few ms and this audio is the reel's master clock.</p>
+    <div class="tablewrap"><table>
+      <tr><th>Parameter</th><th>Type</th><th>Default</th><th>Notes</th></tr>
+      <tr><td class="n">audio</td><td class="t">AUDIO</td><td class="d">—</td><td class="about"></td></tr>
+      <tr><td class="n">key</td><td class="t">COMBO</td><td class="d">"C"</td><td class="about">The twelve chromatic roots.</td></tr>
+      <tr><td class="n">scale</td><td class="t">COMBO</td><td class="d">"chromatic"</td><td class="about"><code>chromatic · major · minor · pentatonic_major · pentatonic_minor</code></td></tr>
+      <tr><td class="n">retune_ms</td><td class="t">FLOAT</td><td class="d">300.0</td><td class="about"><code>150 … 1500</code>, step 10. Lower is stronger; the floor is the backend's limit, not taste.</td></tr>
+      <tr><td class="n">strength</td><td class="t">FLOAT</td><td class="d">0.7</td><td class="about"><code>0 … 1</code>, step 0.05. 0 returns the input untouched.</td></tr>
+      <tr><td class="n">max_correction</td><td class="t">FLOAT</td><td class="d">2.0</td><td class="about"><code>0.5 … 12</code> semitones. Caps how far a note may move, so a mis-tracked octave cannot throw a word.</td></tr>
+      <tr><td class="n">preserve_formants</td><td class="t">BOOLEAN</td><td class="d">true</td><td class="about">Off makes the correction audible as a character change.</td></tr>
+    </table></div>
+    <div class="out"><b>→ AUDIO</b> &nbsp;·&nbsp; length always equals the input</div>
+  </article>
+
+  <article class="node" id="MemoActsAudioNormalize">
+    <div class="head"><span class="id">MemoActsAudioNormalize</span><span class="display">MemoActs — Normalize (peak)</span><span class="cat">memoacts/audio</span></div>
+    <p class="desc">Scales the take so its loudest sample lands exactly on <code>peak_dbfs</code>.
+    Run it last: compression after it undoes the result. Silence passes through unchanged rather
+    than dividing by zero.</p>
+    <div class="tablewrap"><table>
+      <tr><th>Parameter</th><th>Type</th><th>Default</th><th>Notes</th></tr>
+      <tr><td class="n">audio</td><td class="t">AUDIO</td><td class="d">—</td><td class="about"></td></tr>
+      <tr><td class="n">peak_dbfs</td><td class="t">FLOAT</td><td class="d">-1.0</td><td class="about"><code>-30 … 0</code>, step 0.1. -1 leaves the headroom the single AAC encode at the end of the reel needs.</td></tr>
+    </table></div>
+    <div class="out"><b>→ AUDIO</b></div>
+  </article>
+
+  <article class="node" id="MemoActsAudioLoudnessMeter">
+    <div class="head"><span class="id">MemoActsAudioLoudnessMeter</span><span class="display">MemoActs — Loudness Meter (LUFS)</span><span class="cat">memoacts/audio</span></div>
+    <p class="desc">ITU-R BS.1770 integrated loudness and sample peak, measured on the first take of
+    the batch and passed through unchanged. Instagram and TikTok normalise to about
+    <code>-14 LUFS</code>: land near it and the platform leaves the reel alone. Under 0.4 s there is
+    less than one BS.1770 block to integrate and the report says so instead of guessing.</p>
+    <div class="tablewrap"><table>
+      <tr><th>Parameter</th><th>Type</th><th>Default</th><th>Notes</th></tr>
+      <tr><td class="n">audio</td><td class="t">AUDIO</td><td class="d">—</td><td class="about"></td></tr>
+    </table></div>
+    <div class="out"><b>→ AUDIO · STRING (report) · FLOAT (lufs)</b> &nbsp;·&nbsp; output node</div>
+  </article>
 </section>
 
 <section id="core">

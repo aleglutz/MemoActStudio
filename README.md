@@ -22,6 +22,11 @@ Developed for MemoActs, a documentary series and its production workshop.
 - **Forced alignment** (stable-ts) of a known script against a recording, at
   word level. Falls back to proportional timing when alignment fails, and marks
   the affected shots.
+- **Voice shaping** in a graph of its own, before the film: tempo without
+  pitch (Rubber Band), de-essing, compression, denoise, peak normalisation and
+  an ITU-R BS.1770 loudness meter. Separate because alignment is cached on the
+  recording, so a chain that rewrites it on every Run costs a re-alignment for
+  every knob.
 - **Per-frame pan and zoom** computed in Python and streamed to ffmpeg. Memory
   use is constant in reel length.
 - **Resolution guard.** A source that cannot fill the output frame is reported
@@ -41,7 +46,7 @@ Developed for MemoActs, a documentary series and its production workshop.
 - ComfyUI
 - Python 3.10 or later (ComfyUI's own interpreter)
 - ffmpeg **built with libass**, on `PATH`
-- `stable-ts`, `num2words`
+- `stable-ts`, `num2words`, `pedalboard`, `pyloudnorm`
 
 ## Installation
 
@@ -53,8 +58,11 @@ git clone https://github.com/aleglutz/MemoActStudio.git
 Install the Python dependencies into ComfyUI's interpreter, not a system one:
 
 ```
-python -m pip install stable-ts num2words
+python -m pip install -r MemoActStudio/requirements.txt
 ```
+
+`pedalboard` is a compiled wheel. If none exists for your Python, everything
+except the voice graph still works — the other nodes do not import it.
 
 Verify that ffmpeg has libass. A build without it fails at render time rather
 than at install time:
@@ -78,6 +86,16 @@ node.
 | **Subtitles** | Caption style, and a preview of the cues that will be generated |
 | **Render Reel** | Renders the MP4, with per-frame progress and preview |
 | **Preview Shot** | Renders a single shot without audio or captions, for checking framing |
+
+The recording comes from a graph before it. Load
+`example_workflows/voice.json`, point **Load Audio** at your take, and shape it
+left to right: **Pitch / Time** (tempo without pitch), **Speech Denoise**,
+**De-esser**, **Vocal Compressor**, **Normalize (peak)** and **Loudness Meter
+(LUFS)**, all under `memoacts/audio`. The chain ends in **Set Narration**,
+which makes the project if the name is new and writes
+`sources/narration.wav` — 24-bit PCM at the rate you recorded at. Decide the
+pace here: every timing in the reel is measured against what this graph
+produced.
 
 A project is a directory containing `script.md`, `shots.csv` and a `sources/`
 directory holding the recording and the media. `projects/workshop_starter/` is

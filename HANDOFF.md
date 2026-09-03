@@ -1,162 +1,122 @@
-# HANDOFF — session state as of 2026-09-02
+# HANDOFF — session state as of 2026-09-03
 
 Read `CLAUDE.md` and `SPEC.md` first. This file is the delta, and it supersedes
-`archive/handoffs/20260821_HANDOFF.md`, whose plan items A–F are all built.
+`archive/handoffs/20260902_HANDOFF.md`, whose one open item — S01's camera move
+— was closed the same day.
 
-**The reel exists.** `projects/89-in-comfy` rendered end to end on 2026-09-02:
-26 scenes, 4260 frames, 1080×1920, **142.000 s against 141.99 s of narration,
-drift +10 ms**, 85 subtitle cues, 301 s including alignment. It is
-`output/memoacts/89_00001.mp4`. That is the crash test's first complete pass and
-the first time this project has produced a film from an empty folder.
+**The pack is now the whole pipeline.** Thirty-five nodes, in four categories,
+and nothing the workflow needs lives outside git any more.
 
 ---
 
-## Do this first: S01's camera move is wrong, and the diagnosis is complete
+## Do this first: item G, and it is not code
 
-**What you see:** the hook page drifts slowly upward for 4.5 seconds.
-**What was wanted:** two fast moves with stops — `M E M O A C T S`, then the
-pencilled `67`, then the `8, 9` in the numbers row.
+`docs/PLAN.md` item **H is done**, which was the last thing blocking it.
+Provision **machine A** by executing `docs/WORKSHOP_MACHINE_SETUP.md` on a
+clean box for the first time, correcting the document as it fails, and measure
+three numbers on the rented hardware:
 
-**Why.** Read straight out of `generated/shots.json`:
+- one clean render,
+- one `archive_soft` render,
+- one cold alignment.
 
-```json
-"image":  "67_Page.png",
-"motion": {"preset": "pan_ud", "rate": 0.06, "focus": null, "path": null}
-```
+Those three decide how long the September exercise project can be, and they
+cannot be guessed from this machine — a 3090 Ti is not what the workshop rents.
+**Step 3 is the one to watch**: `pedalboard` is a compiled wheel, it is now a
+declared dependency, and if no wheel exists for that machine's Python this is
+where it fails. Better there than mid-workshop.
 
-`pan_ud` is a vertical pan — literally the document moving up. Three separate
-things are true at once and each one needs a decision:
-
-1. **The composite is not assigned.** `sources/composites/S01_hook_move.mp4`
-   exists, was rendered with the three stops, and was verified frame by frame —
-   but S01's `media` column still says `67_Page.png`.
-2. **The composite is the wrong length.** It is 180 frames (6.00 s); the scene
-   is **135 frames (4.50 s)**. Assigned as it stands, the reel would take the
-   first 135 frames and the third beat — the `8, 9` — would never arrive.
-   Re-render with `--frames 135`; the command is in
-   `projects/89-in-comfy/REBUILD.md`.
-3. **The row's focus was silently dropped.** S01 carries
-   `focus = 0.257 0.300 0.465`, and a pan ignores a focus. The render warned;
-   the panel warns too. It is dead weight either way once the move is a
-   composite or a path.
-
-**Two routes, and the choice is real.** They are not interchangeable, and the
-reason is geometry rather than preference:
-
-| | |
-|---|---|
-| **Composite** (`tools/render_move.py`) | The sheet sits on a surface and can leave the frame, so the corner `67` can genuinely reach the centre. Costs a second encode and a frame count that must match the scene by hand. Already rendered and verified — only the length is wrong. |
-| **Path in the schedule** (`shots.csv` `path` column, schema 1.6) | No intermediate file, no second encode, length always equals the scene. But the window is a crop *inside* the picture: two of the three stops cannot be centred. Measured — asking for `(0.281, 0.137)` lands on `(0.281, 0.227)`, and `(0.891, 0.045)` lands on `(0.824, 0.227)`. |
-
-**Recommendation:** re-render the composite at 135 frames and assign it. The
-three beats in 4.5 s is what "two fast moves with stops" means, and the desk
-showing behind the corner reads as a document being handled rather than
-photographed — which suits a hook. The path column stays the right answer for
-every ordinary scene where the target is not near an edge.
-
-A third option, if the corner in dead centre matters more than the surface:
-**re-render the page larger.** `67_Page.png` is 4096 px wide, giving a 1:1
-window of `w = 0.264` and a 2.94× ceiling. `render_page.py` defaults to 7440 px,
-which would take that to `w = 0.145`. A tighter window reaches further into a
-corner before the crop hits the edge.
+The other open items, unchanged and none of them blocking: `docs/WALKTHROUGH.md`
+§6 is still empty; no project has an `sfx.csv`; `generated/mix.wav` is still
+only inside the MP4; Stable Audio Open's licence is still unanswered against
+the Zuwendungsbescheid.
 
 ---
 
-## What landed since 2026-08-21
+## What landed 2026-09-03 — the voice comes inside (PLAN item H)
 
-Twenty commits. In dependency order rather than chronological:
+`custom_nodes/memoacts_audio/` was seven nodes on pedalboard, pyloudnorm and
+scipy that were **not a git repository, carried no version, and appeared in
+nobody's requirements file**. One folder deletion from not existing, and
+certain not to be on machine A in September.
 
-**The door in** — `MemoActs — Set Narration`. The pipeline had no entrance: a
-project could not be created from the interface (the route existed, no button
-called it) and the voice could not be put into one, because ComfyUI's save nodes
-sanitise `filename_prefix` and cannot write outside `output/`. One node closes
-both. Writes 24-bit PCM at the incoming rate, moves any competing
-`narration.*` to `archive/`, and skips the write when the samples match so the
-alignment cache survives a re-queue.
+They are now `nodes_voice.py` + `memoacts_core/voice.py`, category
+`memoacts/audio`, V3 API, split the way the rest of the pack is split: the
+node file is widgets, ranges and tooltips; the core file is torch-free DSP that
+`tools/` could call tomorrow.
 
-**The Storyline panel** — `web/memoacts_storyline.js`, a sidebar tab. The table
-inside the Shot Table node is gone; `web/memoacts.js` is deleted and what was
-underneath it moved to `web/memoacts_shots.js` unchanged. Scenes stack in spoken
-order with a duration bar each, pictures are a shelf above them, and assignment
-is click-a-scene then click-a-picture. `auto` marks a scene whose picture nobody
-chose; `same as previous` marks a cut that will not read as a cut. Expand puts
-the same panel full screen by moving the root element, so unsaved edits survive.
+**Three decisions worth knowing, because each one changes something on disk:**
 
-**Scene boundaries** — merge and split, in the panel, editing `script.md` **and
-renumbering `shots.csv` with it**. That second half is the load-bearing one: a
-boundary moving shifts every scene after it. Merging folds the absorbed row into
-the survivor cell by cell, which is how "hold this picture, then push in"
-survives becoming one scene. Used in anger: 34 scenes → 26, eight duplicate pairs
-gone, zero rows misplaced.
+1. **The ids changed.** `AudioPitchTime`, `AudioNormalize`, `AudioDeEsser` —
+   names general enough that the Registry hands them to somebody else
+   eventually, and a collision there resolves silently in favour of whichever
+   pack loaded last. They are `MemoActsAudio*` now. The one saved workflow that
+   used the old ids was being rewritten anyway.
+2. **The old folder is `custom_nodes/memoacts_audio.disabled`** — renamed, not
+   deleted, because ComfyUI skips that suffix and a rename is undone in a
+   second. Delete it once the September image is built from
+   `requirements.txt`.
+3. **The dependencies are declared.** `pedalboard` and `pyloudnorm` are in
+   `requirements.txt` and `pyproject.toml`; `docs/WORKSHOP_MACHINE_SETUP.md` §3
+   installs from the file rather than a hand-typed list. Both licences went
+   into `SURVEY.md`, and one of them matters: **pedalboard is GPL-3.0**, and we
+   *import* it rather than sit beside it in a graph. This pack is already
+   GPL-3.0-or-later for the same reason, so the obligation is satisfied by
+   construction — but nothing here can be re-licensed more permissively while
+   that import stands.
 
-**Keyed paths** — `Motion.path`, `schedule.keyed()`, the `path` column, schema
-1.6. Built out of `focus_window` so the resolution guard is the same code. In the
-panel the rectangle is the scale, its position the stop, the times between stops
-the speed. Every stop the crop cannot reach is reported with the coordinate it
-will actually land on.
+**The workflow gained the end it was missing.**
+`user/default/workflows/MemoActs_VO_Speed_Normalize.json` is now
+`example_workflows/voice.json`, and it no longer finishes at
+`SaveAudioAdvanced` writing **`narration.mp3`** — which is precisely the file
+that beats a `narration.wav` in `find_narration`'s alphabetical pick, the trap
+`Set Narration` was built to close. It finishes at **Loudness Meter → Set
+Narration**: measured, then written into the project as 24-bit PCM. The
+markdown note beside it was rewritten with it, and `docs/WALKTHROUGH.md` §1 now
+opens a file that exists on a student's machine.
 
-**The enlargement floor came out.** A window narrower than the output used to be
-widened back, which made the guard a refusal. `CLAUDE.md`'s rule is that
-enlargement is never *silent* — so the floor is gone, the factor is printed
-beside the rectangle as it is drawn and named per scene in the report, and
-`on_upscale` still decides warn / error / allow. Audited first: no focus in any
-project sat below its floor, so nothing existing renders differently. The
-ceiling stays and is arithmetic.
+**Verified by running it, not by reading it.** Every function exercised on a
+synthetic take; then the graph itself queued on the server:
 
-**Three defects the crash test found by being walked:**
+```
+20.06 s in → 17.45 s out at tempo 1.15      (the arithmetic agrees to the sample)
+44100 Hz, 2 ch, 24-bit PCM written          (rate and channels never touched)
+-13.41 LUFS | peak -1.00 dBFS | 17.45s      (off the meter node)
+project created, narration.wav written      (Set Narration's own report)
+```
 
-- **Escaped headings.** `script.md` arrived with every `## S01` written
-  `\## S01` — an editor escaping the hash on paste. Markdown says that means
-  "not a heading", so the parser was right, and 34 scenes read as 69 blocks with
-  the heading lines aligned and subtitled. `project.escaped_headings()` now
-  counts them and `read_project` says so first.
-- **A spreadsheet holding the file.** LibreOffice's lock made `write_table`'s
-  atomic replace fail with `WinError 5`; aiohttp turned it into a text 500 and
-  the panel called `.json()` on it, so the person saw a JSON parser error
-  describing a spreadsheet. Now `TableLocked` names the lock file, the route
-  answers 400, and the panel reads the body as text before trusting it.
-- **numba against numpy.** `ImportError: Numba needs NumPy 2.3 or less. Got
-  NumPy 2.4` — numpy went to 2.4.6 on 24 August and took the aligner with it.
-  Nobody noticed for eight days **because alignment is cached**, so the one step
-  that needed the dependency was the one step that never ran. Fixed by upgrading
-  numba to 0.67 (`numpy<2.6`), not by downgrading numpy.
+The scratch project used for it is deleted. `docs/NODES.html` gained the seven
+nodes and their ranges, and its counts now read 35 nodes in 4 categories.
 
 ---
 
-## What the first full render said, beyond S01
+## What landed 2026-09-02, after the last handoff was written
 
-**Four scenes set a focus that a pan ignores** — 1, 3, 10 and 21. Three of them
-name the pan explicitly; **scene 10's `motion` column is empty** and
-`default_motion` cycles by scene number, so a rectangle drawn on a scene whose
-motion was never chosen lands on a pan every other time and does nothing. The
-panel now writes `zoom_in` alongside a focus when the motion is unset. The three
-explicit ones are yours to decide: change the motion, or drop the focus.
+**S01 no longer crawls.** The hook page was on `pan_ud` — a vertical pan, the
+document sliding upward — with a focus the pan silently ignored. The composite
+route was rejected deliberately: three more documents in the reel have the same
+problem, and a per-document composite does not scale. Instead all four were
+upscaled with `4x_foolhardy_Remacri` (the model `docs/UPSCALE.md` chose, for
+inventing the least), S01 became `static`, and the focus already in the row
+started working.
 
-**Thirty-four commented rows.** `## S01,Six-seven is dead.,…` — leftovers from
-the 34-scene numbering, carrying only the scene's `words`. Verified: **none of
-them decides anything**, so nothing is lost, but they outnumber the live rows.
-Worth deleting.
+| scene | file | was | now | headroom |
+|---|---|---|---|---|
+| S01 | `67_Page_x2.png` | 4096×5640 | 8192×11280 | 2.94× → 5.88× |
+| S08 | `2301-EN_x4.png` | 768×1057 | 3072×4228 | 0.55× → 2.20× |
+| S16 | `GIoS_…_p1_x4.png` | 1024×1410 | 4096×5640 | 0.73× → 2.94× |
+| S17 | `8-5-RU_x4.png` | 768×1057 | 3072×4228 | 0.55× → 2.20× |
 
-**Thirteen scenes are being enlarged**, and this is an editorial fact about the
-picture set rather than a fault. The worst:
+Three of the four were **below 1.0** — the render was stretching them just to
+fill 1080 px, with nothing left for a move. The page went to 2× rather than 4×
+on purpose: 4× would be 370 megapixels and 1.1 GB in memory every time the
+renderer opens it. The arithmetic, and what 2× does not buy, is written into
+`projects/89-in-comfy/REBUILD.md` — the pencilled `67` still cannot reach dead
+centre, because a crop cannot leave its source.
 
-```
-Loznitca_VDay_Treptov.jpg   482 px   2.24×
-2301-EN.jpg / 8-5-RU.jpg    594 px   1.82×
-Karlshorst-Foyer…png        752 px   1.44×
-Who-give-orders-THF.jpg     770 px   1.40×
-```
-
-A larger source for the Loznitsa frame is the single replacement that would most
-improve the picture — and it is also the one shot in the reel with no route to
-clearance (`sources/SOURCES.md`).
-
-**`PIL.UnidentifiedImageError` in the log after every render is not ours.**
-`ui.PreviewVideo` emits `{"images": …, "animated": true}`, the frontend asks
-`/view` for a webp thumbnail of an `.mp4`, and PIL refuses. `comfy_extras/nodes_video.py`
-lines 73 and 202 do exactly the same thing, so core video nodes produce it too.
-The `gifs` key that VideoHelperSuite uses does not exist in frontend 1.49.6 —
-it is VHS's own JS. Left alone deliberately.
+`read_project` now returns one warning where it returned five. `docs/NODES.html`
+was added the same day: the node reference in the repository rather than only on
+a URL.
 
 ---
 
@@ -164,23 +124,14 @@ it is VHS's own JS. Left alone deliberately.
 
 | | |
 |---|---|
-| `projects/89-in-comfy` | 26 scenes, all with pictures. `narration.wav` 141.99 s, 44.1 kHz stereo 24-bit. Aligned, rendered, watchable. |
-| `projects/legends_of_surrender` | Untouched. Its `generated/shots.json` is 20 shots against a 28-scene script, so the panel correctly refuses to draw its timing bars. |
-| Environment | numba 0.67.0 / llvmlite 0.49.0 / numpy 2.4.6. Whisper `medium` (1.42 GB) is now cached locally. |
+| `projects/89-in-comfy` | 26 scenes, all with pictures, rendered end to end on 2026-09-02: 4260 frames, 142.000 s against 141.99 s of narration, drift +10 ms, 85 cues. S01 fixed since. Stops on S01 are still to be placed by hand, in the panel |
+| `projects/legends_of_surrender` | Untouched. Its `generated/shots.json` is 20 shots against a 28-scene script, so the panel correctly refuses to draw timing bars |
+| Environment | numba 0.67.0 / llvmlite 0.49.0 / numpy 2.4.6 / pedalboard 0.9.19 / pyloudnorm 0.1.1. Whisper `medium` cached locally |
+| Registered | 35 MemoActs nodes: 9 reel, 4 sound, 8 effects, 7 page, 7 voice |
 
-## Still open
+## Known and deliberately left alone
 
-- **`docs/WALKTHROUGH.md` §6 is empty.** The crash-test log is the deliverable
-  of walking it, and the walk has now happened — filling it in is what turns
-  this session into the handout.
-- **Item G**, unchanged and still not code: provision machine A by executing
-  `docs/WORKSHOP_MACHINE_SETUP.md` on a clean box, and measure one clean render,
-  one `archive_soft` render and one cold alignment on the rented hardware.
-- **Stable Audio Open's licence** against the Zuwendungsbescheid (`SURVEY.md`).
-  Not a blocker — the pack ships no weights and the sound design works from CC0
-  files — but unanswered.
-- **`sfx.csv` does not exist in any project.** The sound design works as a
-  mechanism and has never been used as material.
-- **`generated/mix.wav`** — the finished mix exists only inside the MP4. A
-  lossless master is one ffmpeg call and is what a sound designer would be
-  handed.
+`PIL.UnidentifiedImageError` in the log after every render is not ours:
+`ui.PreviewVideo` emits `{"images": …, "animated": true}`, the frontend asks
+`/view` for a webp thumbnail of an `.mp4`, and PIL refuses. `comfy_extras/nodes_video.py`
+does the same thing, so core video nodes produce it too.

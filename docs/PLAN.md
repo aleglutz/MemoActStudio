@@ -163,27 +163,44 @@ rewrite, module03. Twenty `.bak` files deleted and the pattern added to
 Both typewriter faces got their `SURVEY.md` rows in the process, which
 `LICENSE-ErikaOrmig.txt` had been asking for in writing.
 
-### H. Bring the audio pack inside (≈0.5 d)
+### H. Bring the audio pack inside — **DONE 2026-09-03**
 
-`custom_nodes/memoacts_audio/` — seven nodes (Pitch/Time, De-esser, Vocal
-Compressor, Normalize, Speech Denoise, Auto-Tune, Loudness Meter), 463 lines on
-pedalboard, pyloudnorm and scipy — is **not a git repository, carries no
-version, and appears in nobody's requirements file**. It is one folder deletion
-from not existing, and it will not be on machine A in September.
+`custom_nodes/memoacts_audio/` — seven nodes on pedalboard, pyloudnorm and
+scipy — was **not a git repository, carried no version, and appeared in
+nobody's requirements file**. It was one folder deletion from not existing, and
+it would not have been on machine A in September.
 
-- Move it into this pack as `nodes_voice.py` + `memoacts_core/voice.py`,
-  category `memoacts/audio`, V3 API like everything else. The seven names do not
-  collide with core: `comfy_extras/nodes_audio.py` supplies
-  `AudioEqualizer3Band`, `AudioAdjustVolume`, `AudioConcat`, `AudioMerge` and
-  `EmptyAudio`, and none of the seven.
-- Add `pedalboard` and `pyloudnorm` to `requirements.txt`. Both are installed
-  here and neither is declared anywhere; `scipy` ships with ComfyUI.
-- `user/default/workflows/MemoActs_VO_Speed_Normalize.json` becomes
-  `example_workflows/voice.json` — a student's machine has no `user/default`
-  of yours.
+It is now `nodes_voice.py` (widgets, ranges, tooltips) + `memoacts_core/voice.py`
+(the DSP, torch-free like the rest of the library), category `memoacts/audio`,
+V3 API. `requirements.txt` and `pyproject.toml` declare `pedalboard` and
+`pyloudnorm`; `docs/WORKSHOP_MACHINE_SETUP.md` §3.3 now installs from the file
+rather than from a hand-typed list, and both licences are in `SURVEY.md` —
+pedalboard is **GPL-3.0**, which this pack already is, and which nothing here
+may be re-licensed out of while that import stands.
 
-Recorded in `docs/WORKSHOP_MACHINE_SETUP.md` §3.3: pedalboard is a compiled
-wheel. Check that it installs on the September image *before* the image is made.
+**The node ids changed**, and that was the one real decision. The seven were
+`AudioPitchTime`, `AudioNormalize`, `AudioDeEsser` and so on — names general
+enough that the Registry will hand them to somebody else eventually, and a
+collision there resolves silently in favour of whichever pack loaded last. They
+are `MemoActsAudio*` now. The cost was one saved workflow, which was being
+rewritten anyway:
+
+`user/default/workflows/MemoActs_VO_Speed_Normalize.json` is
+`example_workflows/voice.json`, and it gained the end it was missing. It used
+to finish at `SaveAudioAdvanced` writing `narration.mp3` — the exact file that
+beats a `narration.wav` in `find_narration`'s alphabetical pick, which is trap
+1 of item I. It now finishes at **Loudness Meter → Set Narration**: measured,
+then written into the project as 24-bit PCM.
+
+The old folder is `custom_nodes/memoacts_audio.disabled` — renamed, not
+deleted, because ComfyUI skips a `.disabled` suffix and a rename is undone in a
+second. Delete it once the September image is built from `requirements.txt`.
+
+Verified end to end rather than by reading: every function exercised on a
+synthetic take, then the graph itself queued on the running server. 20.06 s in,
+17.45 s out at `tempo 1.15` (the arithmetic agrees to the sample), 44.1 kHz
+stereo preserved, 24-bit PCM written, `-13.41 LUFS | peak -1.00 dBFS` off the
+meter, project created and reported.
 
 ### I. The door in — **BUILT 2026-08-29**
 
@@ -348,7 +365,9 @@ the rented hardware. Those three numbers decide the exercise project's length.
 
 1. ~~**L** — commit.~~ **Done 2026-08-29.** Four commits, and the `.bak` files
    are gone.
-2. **H** — the audio pack comes inside. 0.5 d. Blocks G.
+2. ~~**H** — the audio pack comes inside.~~ **Done 2026-09-03.** Seven nodes,
+   renamed `MemoActsAudio*`, with the dependencies declared and the workflow
+   in `example_workflows/`. G is unblocked.
 3. ~~**I** — the narration seam.~~ **Done 2026-08-29**, and it turned out to be
    both ends of the same gap: the door in now makes the project as well as
    filling it.

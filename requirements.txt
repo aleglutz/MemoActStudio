@@ -9,3 +9,9 @@
 # install time. The setup doc has the verification command.
 stable-ts>=2.17
 num2words>=0.5.13
+# The voice workflow (nodes_voice.py). pedalboard is a COMPILED wheel -- check
+# it installs on the September image before the image is made,
+# docs/WORKSHOP_MACHINE_SETUP.md 3.3. scipy is deliberately absent: it ships
+# with ComfyUI, like torch and numpy.
+pedalboard>=0.9
+pyloudnorm>=0.1.1

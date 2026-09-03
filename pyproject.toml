@@ -15,7 +15,8 @@ requires-python = ">=3.10"
 # see docs/WORKSHOP_MACHINE_SETUP.md, where reinstalling torch is called out as
 # something that can break the ComfyUI install itself. ffmpeg is an external
 # binary and must be built with libass.
-dependencies = ["stable-ts>=2.17", "num2words>=0.5.13"]
+dependencies = ["stable-ts>=2.17", "num2words>=0.5.13",
+                "pedalboard>=0.9", "pyloudnorm>=0.1.1"]
 classifiers = [
     "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
     "Topic :: Multimedia :: Video :: Non-Linear Editor",

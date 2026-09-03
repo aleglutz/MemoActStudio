@@ -9,9 +9,11 @@ The reel is five nodes, left to right, and each is one sentence. The voice
 arrives from a workflow of its own, through the node that names a project into
 existence and puts the recording inside it:
 
-    (voice workflow) ─→ Set Narration ─┐
-    "as I want it heard"  "into my      │
-                           project"     ↓
+    Load Audio ─→ Pitch / Time ─→ De-esser ─→ Compressor ─→ Normalize ─┐
+    "as I want it heard"                                               │
+      ┌──────────── Set Narration ←─────────────────────────────────────┘
+      │             "into my project"
+      ↓
     Project ─→ Align ─→ Shot Table ─→ Subtitles ─→ Render Reel
     "my material"  "my words   "I decide   "the words   "the reel
                     become      what is     become       is made"
@@ -48,6 +50,10 @@ from .nodes_page import (MemoActsPageFile, MemoActsPaperMask,
 from .nodes_project import MemoActsProject, MemoActsSetNarration
 from .nodes_shot import MemoActsSetImage, MemoActsSetMotion, MemoActsShotTable
 from .nodes_subs import MemoActsSubtitles
+from .nodes_voice import (MemoActsAudioAutoTune, MemoActsAudioDeEsser,
+                          MemoActsAudioLoudnessMeter, MemoActsAudioNormalize,
+                          MemoActsAudioPitchTime, MemoActsAudioSpeechDenoise,
+                          MemoActsAudioVocalCompressor)
 
 # Importing this registers the /memoacts/... routes the shot-table widget calls.
 # It has to happen at load time, before ComfyUI hands its aiohttp app the route
@@ -63,6 +69,13 @@ class MemoActsExtension(ComfyExtension):
     @override
     async def get_node_list(self) -> list[type[io.ComfyNode]]:
         return [
+            MemoActsAudioPitchTime,
+            MemoActsAudioDeEsser,
+            MemoActsAudioVocalCompressor,
+            MemoActsAudioNormalize,
+            MemoActsAudioSpeechDenoise,
+            MemoActsAudioAutoTune,
+            MemoActsAudioLoudnessMeter,
             MemoActsSetNarration,
             MemoActsProject,
             MemoActsAlign,

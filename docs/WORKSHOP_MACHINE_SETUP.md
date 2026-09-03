@@ -66,8 +66,13 @@ arbitrary:
 3. **Python dependencies** into the embedded interpreter:
 
    ```
-   .\python_embeded\python.exe -m pip install stable-ts num2words pedalboard pyloudnorm
+   .\python_embeded\python.exe -m pip install -r ComfyUI\custom_nodes\MemoActStudio\requirements.txt
    ```
+
+   Four packages: `stable-ts`, `num2words`, `pedalboard`, `pyloudnorm`. As of
+   **2026-09-03 all four are declared in `requirements.txt`** — the voice
+   nodes came into the pack that day and brought the last two with them, which
+   until then were installed on the dev machine and nowhere written down.
 
    ⚠ `stable-ts` pulls `openai-whisper` and depends on torch, which ComfyUI
    already ships — so the increment should be small. Verify it does not
